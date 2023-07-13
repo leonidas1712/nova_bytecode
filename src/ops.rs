@@ -1,12 +1,14 @@
 use std::{fmt::{Display, write}, vec};
+use crate::err::*;
 
 #[derive(Debug)]
-pub enum Code {
+// Instruction
+pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool
 }
 
-impl Display for Code {
+impl Display for Inst {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -75,7 +77,7 @@ impl Lines {
 // represents a series of bytecode instructions along with context
 #[derive(Debug)]
 pub struct Chunk {
-    ops:Vec<Code>,
+    ops:Vec<Inst>,
     constants:Vec<Value>, // pool of constants
     op_lines:Lines, // line numbers
     constant_lines:Lines // two arrs because index goes along with the enum (less confusing)
@@ -88,9 +90,20 @@ impl Chunk {
         }
     }
 
-    pub fn write_chunk(&mut self, op:Code, line:usize) {
+    pub fn write_op(&mut self, op:Inst, line:usize) {
         self.ops.push(op);
         self.op_lines.add_line(line);
+    }
+
+    // easier to use idx even though slightly more overhead
+        // we have no easy way to get the next Inst unlike in C besides idx
+    pub fn get_op(&self, idx:usize)->Result<&Inst> {
+        match self.ops.get(idx) {
+            Some(op) => Ok(op),
+            None => {
+                errn!("Invalid index for op: {}", idx)
+            }
+        }
     }
     
     // Returns index where constant was added
