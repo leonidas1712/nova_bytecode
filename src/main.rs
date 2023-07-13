@@ -25,10 +25,18 @@ fn main() {
     c2.write_op(Inst::OpConstant(i), 1);
 
     let i=c2.add_constant(Value::num(700), 1);
-    c2.write_op(Inst::OpConstant(10), 2);
+    c2.write_op(Inst::OpConstant(i), 2);
     
     let mut vm=vm::VM::new(c2);
-    let res=vm.run().unwrap_err();
-    println!("{}", res.to_string());
+    println!("{:?}", vm.run());
 
+
+    
+    let mut st:[Option<Value>;5]=[None;5];
+    st[0]=Some(Value::num(10));
+    st[1]=Some(Value::num(20));
+
+    println!("{:?}", st);
+
+    // maintain copy on Value so we can preinit the stack
 }

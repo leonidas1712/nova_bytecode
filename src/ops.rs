@@ -1,4 +1,4 @@
-use std::{fmt::{Display, write}, vec};
+use std::{fmt::{Display, write}, vec, rc::Rc};
 use crate::err::*;
 
 #[derive(Debug)]
@@ -15,20 +15,31 @@ impl Display for Inst {
 }
 
 #[derive(Debug)]
-pub enum Value {
-    Number(usize),
+// all objects go through here
+pub enum Obj {
+    ObjString(String),
 }
 
-impl Value {
-    pub fn num(n:usize)->Value {
+#[derive(Debug,Clone,Copy)]
+// Value on the Stack (size known at compile-time)
+    // can't do Rc<Obj> because Rc doesn't impl Copy
+pub enum Value<'obj> {
+    Number(usize),
+    Bool(bool),
+    ObjRef(&'obj Obj)
+}
+
+impl<'obj>  Value<'obj>  {
+    pub fn num(n:usize)->Value<'obj>  {
         Self::Number(n)
     }
 }
 
-impl Display for Value {
+impl<'obj>  Display for Value<'obj>  {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let repr=match &self {
-            Self::Number(n) => n.to_string()
+            Self::Number(n) => n.to_string(),
+            _ => "todo".to_string()
         };
 
         write!(f, "{}", repr)
@@ -76,14 +87,14 @@ impl Lines {
 }
 // represents a series of bytecode instructions along with context
 #[derive(Debug)]
-pub struct Chunk {
+pub struct Chunk<'val>  {
     ops:Vec<Inst>,
-    constants:Vec<Value>, // pool of constants
+    constants:Vec<Value<'val>>, // pool of constants
     op_lines:Lines, // line numbers
     constant_lines:Lines // two arrs because index goes along with the enum (less confusing)
 }
 
-impl Chunk {
+impl<'val> Chunk<'val> {
     pub fn new()->Self {
         Chunk {
             ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new()
@@ -106,7 +117,7 @@ impl Chunk {
     }
 
     // Returns index where constant was added
-    pub fn add_constant(&mut self, value:Value, line:usize)->usize {
+    pub fn add_constant(&mut self, value:Value<'val>, line:usize)->usize {
         let constants=&mut self.constants;
         constants.push(value);
 
@@ -115,7 +126,7 @@ impl Chunk {
     }
 }
 
-impl Display for Chunk {
+impl<'val> Display for Chunk<'val> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut code=String::from("Ops:\n");
         for (idx,op) in self.ops.iter().enumerate() {

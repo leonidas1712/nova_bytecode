@@ -4,14 +4,18 @@ use crate::{errc, errn_i};
 use crate::ops::{*, Inst::*};
 use crate::err::*;
 
+pub struct Stack {
+
+}
+
 // new(chunk), execute()->Result
-pub struct VM {
-    chunk:Chunk,
+pub struct VM<'c> {
+    chunk:Chunk<'c> ,
     ip:usize // index of next op to execute
 }
 
-impl VM {
-    pub fn new(chunk:Chunk)->Self {
+impl<'c>  VM<'c> {
+    pub fn new(chunk:Chunk<'c> )->Self {
         VM {
             chunk,
             ip:0
@@ -38,17 +42,12 @@ impl VM {
                 OpReturn => break,
                 OpConstant(idx) => {
                     let i=*idx;
-                    let get:Result<&Value>=self.chunk.get_constant(i).ok_or(errc_i!("Invalid index for constant:{}", i));
+                    let get:Result<&Value>=self.chunk
+                        .get_constant(i)
+                        .ok_or(errc_i!("Invalid index for constant:{}", i));
+
                     let get=get?;               
                     println!("{}", get);
-                    
-                     // let get=self.chunk.get_constant(i);
-                
-                    // if let Some(c) = get {
-                    //     println!("{}", c.to_string());
-                    // } else {
-                    //     return errc!("Invalid constant index: {}",i);
-                    // }
                 }
             }
         }
