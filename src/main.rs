@@ -21,6 +21,14 @@ fn main() {
     c.write_op(Inst::OpReturn,125);
 
     let mut c2=Chunk::new();
-    let vm=vm::VM::new(c);
+    let i=c2.add_constant(Value::num(500), 1);
+    c2.write_op(Inst::OpConstant(i), 1);
+
+    let i=c2.add_constant(Value::num(700), 1);
+    c2.write_op(Inst::OpConstant(10), 2);
+    
+    let mut vm=vm::VM::new(c2);
+    let res=vm.run().unwrap_err();
+    println!("{}", res.to_string());
 
 }

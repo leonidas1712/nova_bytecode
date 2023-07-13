@@ -1,13 +1,41 @@
+extern crate anyhow;
+
 #[macro_export]
-macro_rules! errn {
+macro_rules! errn_i {
     ($msg:expr) => {
         
-        Err(InterpretErr::Runtime($msg.to_string()))
+        InterpretErr::Runtime($msg.to_string())
     };
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        Err(InterpretErr::Runtime(format!($msg, $($arg),*)))
+        InterpretErr::Runtime(format!($msg, $($arg),*))
+    };
+}
+
+#[macro_export]
+macro_rules! errn {
+    ($msg:expr) => {
+        
+        Err(errn_i($msg))
+    };
+
+    ($msg:expr $(,$arg:expr),*) => {
+        
+        Err(errn_i($msg, $($arg),*))
+    };
+}
+
+#[macro_export]
+macro_rules! errc_i {
+    ($msg:expr) => {
+        
+        InterpretErr::Compile($msg.to_string())
+    };
+
+    ($msg:expr $(,$arg:expr),*) => {
+        
+        InterpretErr::Compile(format!($msg, $($arg),*))
     };
 }
 
@@ -15,17 +43,21 @@ macro_rules! errn {
 macro_rules! errc {
     ($msg:expr) => {
         
-        Err(InterpretErr::Compile($msg.to_string()))
+        Err(errc_i($msg))
     };
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        Err(InterpretErr::Compile(format!($msg, $($arg),*)))
+        Err(errc_i($msg, $($arg),*))
     };
 }
 
+use anyhow::Error;
 pub (crate) use errn;
 pub (crate) use errc;
+pub (crate) use errn_i;
+pub (crate) use errc_i;
+
 
 use std::fmt::Display;
 
@@ -46,4 +78,5 @@ impl Display for InterpretErr {
     }
 }
 
-pub (crate) type Result<T> = std::result::Result<T,InterpretErr>;
+
+pub (crate) type Result<T> = anyhow::Result<T, InterpretErr>;

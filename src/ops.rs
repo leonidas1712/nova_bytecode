@@ -90,22 +90,21 @@ impl Chunk {
         }
     }
 
+     // easier to use idx even though slightly more overhead
+        // we have no easy way to get the next Inst unlike in C besides idx
+    pub fn get_op(&self, idx:usize)->Option<&Inst> {
+        self.ops.get(idx)
+    }
+
     pub fn write_op(&mut self, op:Inst, line:usize) {
         self.ops.push(op);
         self.op_lines.add_line(line);
     }
 
-    // easier to use idx even though slightly more overhead
-        // we have no easy way to get the next Inst unlike in C besides idx
-    pub fn get_op(&self, idx:usize)->Result<&Inst> {
-        match self.ops.get(idx) {
-            Some(op) => Ok(op),
-            None => {
-                errn!("Invalid index for op: {}", idx)
-            }
-        }
+    pub fn get_constant(&self, idx:usize)->Option<&Value> {
+        self.constants.get(idx)
     }
-    
+
     // Returns index where constant was added
     pub fn add_constant(&mut self, value:Value, line:usize)->usize {
         let constants=&mut self.constants;
