@@ -3,7 +3,7 @@ use crate::err::*;
 use std::fmt::Display;
 
 // Fixed size value stack - less overhead than Vec
-impl<T:Display + Copy> Display for Stack<T> {
+impl<T:Display + Copy> Display for FixedStack<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut items:Vec<String>=vec![];
 
@@ -20,15 +20,15 @@ impl<T:Display + Copy> Display for Stack<T> {
 }
 
 const STACK_SIZE:usize=2000;
-pub struct Stack<T:Copy> {
+pub struct FixedStack<T:Copy> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot
 }
 
-impl<T:Copy> Stack <T> {
-    pub fn new()-> Stack<T> {
+impl<T:Copy> FixedStack <T> {
+    pub fn new()-> FixedStack<T> {
         let stack:[Option<T>;STACK_SIZE]=[None;STACK_SIZE];
-        Stack {
+        FixedStack {
             stack,
             stack_top:0
         }
@@ -80,7 +80,7 @@ impl<T:Copy> Stack <T> {
 
 #[test]
 fn test_stack() {
-    let mut st=Stack::new();
+    let mut st=FixedStack::new();
     st.push(Value::Number(10));
     st.push(Value::Bool(false));
 
@@ -113,7 +113,7 @@ fn test_stack() {
 
 #[test]
 fn test_gen() {
-    let mut st=Stack::<Value>::new();
+    let mut st=FixedStack::<Value>::new();
     st.push(Value::Number(10));
     st.push(Value::Bool(false));
 

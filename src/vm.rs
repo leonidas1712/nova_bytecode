@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::ops::{*, Inst::*};
 use crate::err::*;
-use crate::stack::Stack;
+use crate::stack::FixedStack;
 
 
 // new(chunk), execute()->Result
@@ -13,7 +13,7 @@ use crate::stack::Stack;
 pub struct VM<'c> {
     chunk:Chunk<'c>, // 'c: lifetime of Chunk
     ip:usize, // index of next op to execute,
-    value_stack:Stack<Value<'c>> // vals come from chunk
+    value_stack:FixedStack<Value<'c>> // vals come from chunk
 }
 
 impl<'c>  VM<'c> {
@@ -21,7 +21,7 @@ impl<'c>  VM<'c> {
         VM {
             chunk:chunk,
             ip:0,
-            value_stack:Stack::new()
+            value_stack:FixedStack::new()
         }
     }
 
