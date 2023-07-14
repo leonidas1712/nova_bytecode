@@ -1,11 +1,13 @@
 use std::{fmt::{Display}, vec};
+use crate::{err::*, errc};
 
 
 #[derive(Debug)]
 // Instruction
 pub enum Inst {
     OpReturn,
-    OpConstant(usize), // idx in const pool
+    OpConstant(usize), // idx in const pool,
+    OpNegate
 }
 
 impl Display for Inst {
@@ -14,34 +16,28 @@ impl Display for Inst {
     }
 }
 
-
-// #[derive(Debug)]
-// // all objects go through here - easier to return out objects
-// pub enum Obj {
-//     ObjString(String),
-// }
-
-// impl Display for Obj {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let repr = match self {
-//             Self::ObjString(s) => s
-//         };
-//         write!(f, "{}", repr)
-//     }
-// }
+pub type IntType=isize;
 
 #[derive(Debug,Clone,Copy)]
 // Value on the Stack (size known at compile-time)
     // can't do Rc<Obj> because Rc doesn't impl Copy
 pub enum Value<'obj> {
-    Number(usize),
+    Number(IntType),
     Bool(bool),
     ObjString(&'obj String)
 }
 
 impl<'obj>  Value<'obj>  {
-    pub fn num(n:usize)->Value<'obj>  {
+    pub fn num(n:IntType)->Value<'obj>  {
         Self::Number(n)
+    }
+
+    pub fn expect_int(&self)->Result<IntType> {
+        match self {
+            Self::Number(n) => Ok(*n),
+            Self::Bool(b) => Ok(if *b { 1 } else { 0 }),
+            _ => errc!("Expected number but got:{}", self.to_string())
+        }
     }
 }
 

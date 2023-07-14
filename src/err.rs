@@ -53,10 +53,10 @@ macro_rules! errc {
 }
 
 
-pub (crate) use errn;
-
-pub (crate) use errn_i;
-pub (crate) use errc_i;
+pub use errn;
+pub use errn_i;
+pub use errc;
+pub use errc_i;
 
 
 use std::fmt::Display;

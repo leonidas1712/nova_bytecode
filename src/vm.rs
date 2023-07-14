@@ -43,6 +43,7 @@ impl<'c>  VM<'c> {
                     println!("{res}");
                     break;
                 },
+                // get constant at idx in chunk, push onto stack
                 OpConstant(idx) => {
                     let i=*idx;
                     let get:Result<Value>=self.chunk
@@ -51,10 +52,15 @@ impl<'c>  VM<'c> {
 
                     let get=get?.to_owned();
                     self.value_stack.push(get)?;
+                },
+                OpNegate => {
+                    let stack=&mut self.value_stack;
+                    let top=stack.pop()?.expect_int()?;
+                    stack.push(Value::num(top*-1))?;
                 }
             }
 
-            // advance ip
+            // advance ip - may cause issue since ip advanced before match (unavoidable)
             self.ip+=1;
         }
 
