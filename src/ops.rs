@@ -1,8 +1,9 @@
-use std::{fmt::{Display}, vec};
+use std::{fmt::{Display}, vec, rc::Rc};
+use std::ops::Deref;
 use crate::{err::*, errc};
 
-type BinOp=for<'v> fn(&'v Value<'v>,&'v Value<'v>)->Value<'v>;
-type UnaryOp=fn(&mut Value);
+// type BinOp=for<'v> fn(&'v Value<'v>,&'v Value<'v>)->Value<'v>;
+// type UnaryOp=fn(&mut Value);
 
 
 #[derive(Debug)]
@@ -25,9 +26,28 @@ impl Display for Inst {
     }
 }
 
+pub struct Object<T> {
+    pub value:Rc<T>
+}
+
+impl <T> Object <T> {
+    pub fn new(val:T)->Object<T> {
+        Object {
+            value:Rc::new(val)
+        }
+    }
+}
+
+impl <T> Deref for Object<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.value.deref()
+    }
+}
+
 pub type IntType=isize;
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone)]
 // Value on the Stack (size known at compile-time)
     // can't do Rc<Obj> because Rc doesn't impl Copy
 
@@ -36,14 +56,14 @@ pub type IntType=isize;
     // CallStack: owns CallFrame (T=CallFrame)
         // CallFrame: ip(usize), FunctionPtr(&Function), slots(usize)
         // slots is first index in ValueStack that this callframe can use
-pub enum Value<'obj> {
+pub enum Value {
     Number(IntType),
     Bool(bool),
-    ObjString(&'obj String)
+    ObjString(Rc<String>)
 }
 
-impl<'obj>  Value<'obj>  {
-    pub fn num(n:IntType)->Value<'obj>  {
+impl Value {
+    pub fn num(n:IntType)->Value  {
         Self::Number(n)
     }
 
@@ -55,15 +75,15 @@ impl<'obj>  Value<'obj>  {
         }
     }
 
-    pub fn expect_string(&self)->Result<&String> {
-        match self {
-            Self::ObjString(sref) => Ok(sref),
-            _ => errc!("Expected string but got:{}", self.to_string())
-        }
-    }
+    // pub fn expect_string(&self)->Result<&String> {
+    //     match self {
+    //         Self::ObjString(sref) => Ok(sref),
+    //         _ => errc!("Expected string but got:{}", self.to_string())
+    //     }
+    // }
 }
 
-impl<'obj>  Display for Value<'obj>  {
+impl Display for Value  {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let repr=match &self {
             Self::Number(n) => n.to_string(),
@@ -115,14 +135,14 @@ impl Lines {
 }
 // represents a series of bytecode instructions along with context
 #[derive(Debug)]
-pub struct Chunk<'val>  {
+pub struct Chunk  {
     ops:Vec<Inst>,
-    constants:Vec<Value<'val>>, // pool of constants
+    constants:Vec<Value>, // pool of constants
     op_lines:Lines, // line numbers
     constant_lines:Lines // two arrs because index goes along with the enum (less confusing)
 }
 
-impl<'val> Chunk<'val> {
+impl Chunk {
     pub fn new()->Self {
         Chunk {
             ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new()
@@ -145,7 +165,7 @@ impl<'val> Chunk<'val> {
     }
 
     // Returns index where constant was added
-    pub fn add_constant(&mut self, value:Value<'val>, line:usize)->usize {
+    pub fn add_constant(&mut self, value:Value, line:usize)->usize {
         let constants=&mut self.constants;
         constants.push(value);
 
@@ -154,7 +174,7 @@ impl<'val> Chunk<'val> {
     }
 }
 
-impl<'val> Display for Chunk<'val> {
+impl<'val> Display for Chunk {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut code=String::from("Ops:\n");
         for (idx,op) in self.ops.iter().enumerate() {

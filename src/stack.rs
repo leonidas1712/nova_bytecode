@@ -93,6 +93,7 @@ impl<T:Copy> Stack<T> for FixedStack <T> {
     }
 }
 
+// indirection to enforce capacity
 pub struct VecStack<T> {
     stack:Vec<T>,
     cap:usize
@@ -105,7 +106,7 @@ impl <T> VecStack<T> {
 }
 
 impl <T> VecStack<T> {
-    fn push(&mut self,val: T)->Result<()>{
+    pub fn push(&mut self,val: T)->Result<()>{
         if self.stack.len() > self.cap {
             return errn!("Maximum stack size {} exceeded: stack overflow", self.cap);
         }
@@ -114,20 +115,20 @@ impl <T> VecStack<T> {
         Ok(())
     }
 
-    fn pop(&mut self)->Result<T>{
+    pub fn pop(&mut self)->Result<T>{
         self.stack.pop().ok_or(errn_i!("Pop from empty stack"))
     }
 
     // different from fixed stack
-    fn peek(&self) -> Option<&T> {
+    pub fn peek(&self) -> Option<&T> {
         self.stack.last()
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.stack.clear()
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
 }
@@ -163,31 +164,35 @@ fn test_vec_stack() {
 
     st.clear();
     assert!(st.is_empty());
+
+    let mut st:VecStack<String>=VecStack::new(20);
+    st.push(String::from("hi")); // can do non copy
 }
 
 
 #[test]
 fn test_stack() {
-    let mut st=FixedStack::new();
-    st.push(Value::Number(10));
-    st.push(Value::Bool(false));
+    let mut st:FixedStack<usize>=FixedStack::new();
 
-    let third=st.push(Value::Number(30));
+    st.push(10);
+    st.push(20);
+
+    let third=st.push(30);
     assert!(third.is_ok());
-    assert_eq!("[10,false,30]",st.to_string());
+    assert_eq!("[10,20,30]",st.to_string());
 
     while !st.is_empty() {
         let p=st.pop().unwrap();
         println!("Pop:{}", p);
     }
 
-    st.push(Value::Number(30));
-    st.push(Value::Number(40));
+    st.push(30);
+    st.push(40);
     st.pop();
-    st.push(Value::Bool(true)); // [30,true]
+    st.push(50); // [30,50]
 
     let p=st.pop().unwrap();
-    assert_eq!(p.to_string(), "true");
+    assert_eq!(p.to_string(), "50");
 
     let pk=st.peek().unwrap(); // [30]
     assert_eq!("30", pk.to_string());

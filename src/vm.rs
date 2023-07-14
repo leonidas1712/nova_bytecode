@@ -15,22 +15,21 @@ use crate::stack::*;
     }
 */
 
-
-pub struct VM<'c> {
-    chunk:Chunk<'c>, // 'c: lifetime of Chunk
+const VAL_STACK_MAX:usize=2000;
+pub struct VM {
+    chunk:Chunk, // 'c: lifetime of Chunk
     ip:usize, // index of next op to execute,
-    value_stack:FixedStack<Value<'c>> // vals come from chunk,
+    value_stack:VecStack<Value> // vals come from chunk,
     // call_stack: VecStack<CallFrame<'function>>
 }
 
-impl<'c>  VM<'c> {
-    pub fn new(chunk:Chunk<'c> )->VM<'c> {
-        let stack:FixedStack<Value<'c>>=FixedStack::new();
+impl VM {
+    pub fn new(chunk:Chunk)->VM {
 
         VM {
             chunk,
             ip:0,
-            value_stack:stack
+            value_stack:VecStack::new(VAL_STACK_MAX)
         }
     }
 
@@ -43,7 +42,7 @@ impl<'c>  VM<'c> {
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
-    pub fn run(&'c mut self)->Result<Value> {
+    pub fn run(mut self)->Result<Value> {
         // reset
         // self.ip=0;
         // self.value_stack.clear();
@@ -96,12 +95,12 @@ impl<'c>  VM<'c> {
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),    
                 OpConcat => {
-                    let mut stack=&mut self.value_stack;
-                    let left=stack.pop()?;
-                    let left=left.expect_string()?;
-                    let mut left=left.clone();
+                    // let mut stack=&mut self.value_stack;
+                    // let left=stack.pop()?;
+                    // let left=left.expect_string()?;
+                    // let mut left=left.clone();
 
-                    left.push_str("hi");
+                    // left.push_str("hi");
                     
                     // let new_val=Value::ObjString(&left);
                     // stack.push(new_val);
