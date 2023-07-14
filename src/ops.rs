@@ -10,7 +10,7 @@ type UnaryOp=fn(&mut Value);
 // binaryop: takes two args from stack, applies op, pushes onto stack
 pub enum Inst {
     OpReturn,
-    OpConstant(usize), // idx in const pool,
+    OpConstant(usize), // idx in const pool, -> load idx onto stack
     OpNegate,
     OpAdd,
     OpSub,

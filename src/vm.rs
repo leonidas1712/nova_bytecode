@@ -32,7 +32,7 @@ impl<'c>  VM<'c> {
         curr
     }
 
-    pub fn run(&'c mut self)->Result<()> {
+    pub fn run(&'c mut self)->Result<Value> {
         // numeric bin op
         macro_rules! bin_op {
             ($op:tt) => {
@@ -48,7 +48,7 @@ impl<'c>  VM<'c> {
         loop {
             let curr=self.get_curr_inst();
             if curr.is_none() {
-                break;
+                break Ok(Value::Number(1)) // exit code 1
             }  
 
             let curr=curr.unwrap();
@@ -57,8 +57,7 @@ impl<'c>  VM<'c> {
                 // print top of stack and break   
                 OpReturn => {
                     let res=self.value_stack.pop()?;
-                    println!("{res}");
-                    break;
+                    break Ok(res);
                 },
                 // get constant at idx in chunk, push onto stack
                 OpConstant(idx) => {
@@ -87,7 +86,5 @@ impl<'c>  VM<'c> {
             // advance ip - may cause issue since ip advanced before match (unavoidable)
             self.ip+=1;
         }
-
-        Ok(())
     }
 }
