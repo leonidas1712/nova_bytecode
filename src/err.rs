@@ -17,12 +17,12 @@ macro_rules! errn_i {
 macro_rules! errn {
     ($msg:expr) => {
         
-        Err(errn_i($msg))
+        Err(errn_i!($msg))
     };
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        Err(errn_i($msg, $($arg),*))
+        Err(errn_i!($msg, $($arg),*))
     };
 }
 
@@ -43,12 +43,12 @@ macro_rules! errc_i {
 macro_rules! errc {
     ($msg:expr) => {
         
-        Err(errc_i($msg))
+        Err(errc_i!($msg))
     };
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        Err(errc_i($msg, $($arg),*))
+        Err(errc_i!($msg, $($arg),*))
     };
 }
 

@@ -26,8 +26,14 @@ fn main() {
 
     let i=c2.add_constant(Value::num(700), 1);
     c2.write_op(Inst::OpConstant(i), 2);
+
+    let mut string=String::from("this is a string");
+
+    let i=c2.add_constant(Value::ObjString(&string), 1);
+    c2.write_op(Inst::OpConstant(i), 2);
     
     let mut vm=vm::VM::new(c2);
+
     println!("{:?}", vm.run());
 
 

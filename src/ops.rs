@@ -14,11 +14,21 @@ impl Display for Inst {
     }
 }
 
-#[derive(Debug)]
-// all objects go through here
-pub enum Obj {
-    ObjString(String),
-}
+
+// #[derive(Debug)]
+// // all objects go through here - easier to return out objects
+// pub enum Obj {
+//     ObjString(String),
+// }
+
+// impl Display for Obj {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let repr = match self {
+//             Self::ObjString(s) => s
+//         };
+//         write!(f, "{}", repr)
+//     }
+// }
 
 #[derive(Debug,Clone,Copy)]
 // Value on the Stack (size known at compile-time)
@@ -26,7 +36,7 @@ pub enum Obj {
 pub enum Value<'obj> {
     Number(usize),
     Bool(bool),
-    ObjRef(&'obj Obj)
+    ObjString(&'obj String)
 }
 
 impl<'obj>  Value<'obj>  {
@@ -39,7 +49,8 @@ impl<'obj>  Display for Value<'obj>  {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let repr=match &self {
             Self::Number(n) => n.to_string(),
-            _ => "todo".to_string()
+            Self::Bool(b) => b.to_string(),
+            Self::ObjString(s) => s.to_string()
         };
 
         write!(f, "{}", repr)
