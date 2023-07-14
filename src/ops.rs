@@ -75,12 +75,12 @@ impl Value {
         }
     }
 
-    // pub fn expect_string(&self)->Result<&String> {
-    //     match self {
-    //         Self::ObjString(sref) => Ok(sref),
-    //         _ => errc!("Expected string but got:{}", self.to_string())
-    //     }
-    // }
+    pub fn expect_string(&self)->Result<&String> {
+        match self {
+            Self::ObjString(sref) => Ok(sref),
+            _ => errc!("Expected string but got:{}", self.to_string())
+        }
+    }
 }
 
 impl Display for Value  {

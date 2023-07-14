@@ -45,7 +45,44 @@ fn test_stack_ops() {
     
     let mut vm=vm::VM::new(c2);
     let res=vm.run().unwrap();
-    
+
     assert_eq!(res.to_string(), "-5");
     
+}
+
+use std::rc::Rc;
+/*
+    struct Object {
+       enum ObjType
+
+    }
+
+    enum ObjType {
+        String(Rc<String>),
+        Function(Rc<Fn>)
+    }
+*/
+#[test]
+fn test_concat() {
+    let mut c2=Chunk::new();
+
+    // Value::ValObj(Object::new("hi"))
+    // Value::ValObj(Object::new(Function{...}))
+
+    let string1=Rc::new("hi".to_string()); 
+    let string2=Rc::new("hello".to_string());
+
+    let idx=c2.add_constant(Value::ObjString(string1), 1);
+    let idx2=c2.add_constant(Value::ObjString(string2), 1);
+
+    c2.write_op(Inst::OpConstant(idx), 1);
+    c2.write_op(Inst::OpConstant(idx2), 1);
+    
+    c2.write_op(Inst::OpConcat, 1);
+    c2.write_op(Inst::OpReturn, 1);
+    
+    let mut vm=vm::VM::new(c2);
+    let res=vm.run().unwrap();
+
+    assert_eq!(res.to_string(), "hihello");
 }

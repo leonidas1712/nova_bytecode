@@ -86,7 +86,7 @@ impl VM {
                     self.value_stack.push(get)?;
                 },
                 OpNegate => {
-                    let mut stack=&mut self.value_stack;
+                    let stack=&mut self.value_stack;
                     let top=stack.pop()?.expect_int()?;
                     stack.push(Value::num(top*-1))?;
                 },
@@ -94,17 +94,18 @@ impl VM {
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),    
+                // concat last two
                 OpConcat => {
-                    // let mut stack=&mut self.value_stack;
-                    // let left=stack.pop()?;
-                    // let left=left.expect_string()?;
-                    // let mut left=left.clone();
+                    let stack=&mut self.value_stack;
 
-                    // left.push_str("hi");
+                    let right=stack.pop()?;
+                    let right=right.expect_string()?;
                     
-                    // let new_val=Value::ObjString(&left);
-                    // stack.push(new_val);
-                    
+                    let left=stack.pop()?;
+                    let left=left.expect_string()?.clone();
+
+                    let new_val=Value::ObjString(Rc::new(left+right));
+                    stack.push(new_val)?;
                 }     
             }
 
