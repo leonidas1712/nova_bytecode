@@ -3,7 +3,6 @@ use crate::err::*;
 use std::fmt::Display;
 
 // Fixed size value stack - less overhead than Vec
-const STACK_SIZE:usize=2000;
 impl<T:Display + Copy> Display for Stack<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut items:Vec<String>=vec![];
@@ -19,6 +18,8 @@ impl<T:Display + Copy> Display for Stack<T> {
         write!(f, "[{}]", all)
     }
 }
+
+const STACK_SIZE:usize=2000;
 pub struct Stack<T:Copy> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot

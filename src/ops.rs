@@ -16,7 +16,7 @@ pub enum Inst {
     OpSub,
     OpMul,
     OpDiv,
-    OpAddStr
+    OpConcat
 }
 
 impl Display for Inst {
@@ -152,7 +152,17 @@ impl<'val> Display for Chunk<'val> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut code=String::from("Ops:\n");
         for (idx,op) in self.ops.iter().enumerate() {
-            let fmt=format!("{} (line {})\n", op.to_string().as_str(), self.op_lines.get_line(idx).unwrap());
+            
+            let fmt=match op {
+                Inst::OpConstant(i) => {
+                    let c=self.get_constant(*i).unwrap();
+                    let const_string=format!("{}", c.to_string().as_str());
+
+                    format!("OpConstant (line {}) | {}\n", self.op_lines.get_line(idx).unwrap(), const_string)
+                }
+                _ => format!("{} (line {})\n", op.to_string().as_str(), self.op_lines.get_line(idx).unwrap())
+
+            };
             code.push_str(fmt.as_str());
         }
         code.push_str("\n\nConstants:\n");

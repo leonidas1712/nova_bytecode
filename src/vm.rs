@@ -26,13 +26,20 @@ impl<'c>  VM<'c> {
     }
 
     // get current instruction and increase ip
-    fn get_curr_inst(&self)->Option<&Inst> {
+    pub fn get_curr_inst(&self)->Option<&Inst> {
         let curr=self.chunk.get_op(self.ip);
         // self.ip+=1;
         curr
     }
 
+    // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
+        // ref is created
+    // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
     pub fn run(&'c mut self)->Result<Value> {
+        // reset
+        self.ip=0;
+        self.value_stack.clear();
+
         // numeric bin op
         macro_rules! bin_op {
             ($op:tt) => {
@@ -63,10 +70,9 @@ impl<'c>  VM<'c> {
                 OpConstant(idx) => {
                     let i=*idx;
 
-                    let ct=&self.chunk;
-                    let ct2=ct.get_constant(i);
+                    let ct=self.chunk.get_constant(10);
                     
-                    let get:Result<Value>=ct2
+                    let get:Result<Value>=ct
                         .ok_or(errc_i!("Invalid index for constant:{}", i));
 
                     let get=get?;
@@ -80,23 +86,19 @@ impl<'c>  VM<'c> {
                 OpAdd => bin_op!(+),
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
-                OpDiv => bin_op!(/),
-                OpAddStr => {
-                    let stack=&mut self.value_stack;
-
-                    let right=stack.pop()?;
-                    let right=right.expect_string()?;
-
+                OpDiv => bin_op!(/),    
+                OpConcat => {
+                    let mut stack=&mut self.value_stack;
                     let left=stack.pop()?;
                     let left=left.expect_string()?;
+                    let mut left=left.clone();
 
-                    let mut left_new=left.clone();
-                    left_new.push_str(right);
-
-                    // let k=&mut self.chunk;
-                    // let k2=k.add_constant(Value::Bool(true), 1);
+                    left.push_str("hi");
                     
-                }           
+                    // let new_val=Value::ObjString(&left);
+                    // stack.push(new_val);
+                    
+                }     
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)
