@@ -21,13 +21,13 @@ impl<'c>  VM<'c> {
     }
 
     // get current instruction and increase ip
-    fn get_curr_inst(&mut self)->Option<&Inst> {
+    fn get_curr_inst(&self)->Option<&Inst> {
         let curr=self.chunk.get_op(self.ip);
-        self.ip+=1;
+        // self.ip+=1;
         curr
     }
 
-    pub fn run(&mut self)->Result<()> {
+    pub fn run(&'c mut self)->Result<()> {
         loop {
             let curr=self.get_curr_inst();
             if curr.is_none() {
@@ -36,18 +36,26 @@ impl<'c>  VM<'c> {
 
             let curr=curr.unwrap();
 
-            match curr {
-                OpReturn => break,
+            match curr { 
+                // print top of stack and break   
+                OpReturn => {
+                    let res=self.value_stack.pop()?;
+                    println!("{res}");
+                    break;
+                },
                 OpConstant(idx) => {
                     let i=*idx;
                     let get:Result<Value>=self.chunk
                         .get_constant(i)
                         .ok_or(errc_i!("Invalid index for constant:{}", i));
 
-                    let get=get?;               
-                    println!("{}", get);
+                    let get=get?.to_owned();
+                    self.value_stack.push(get)?;
                 }
             }
+
+            // advance ip
+            self.ip+=1;
         }
 
         Ok(())

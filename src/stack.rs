@@ -19,7 +19,6 @@ impl<T:Display + Copy> Display for Stack<T> {
         write!(f, "[{}]", all)
     }
 }
-// Stack<T>?
 pub struct Stack<T:Copy> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot

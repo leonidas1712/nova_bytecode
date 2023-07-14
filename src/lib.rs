@@ -7,26 +7,19 @@ use ops::*;
 
 pub fn run() {
     let mut c2=Chunk::new();
-    let i=c2.add_constant(Value::num(500), 1);
-    c2.write_op(Inst::OpConstant(i), 1);
 
-    let i=c2.add_constant(Value::num(700), 1);
-    c2.write_op(Inst::OpConstant(i), 2);
+    let idx=c2.add_constant(Value::Number(50), 1);
+    c2.write_op(Inst::OpConstant(idx), 1);
 
-    let string=String::from("this is a string");
+    let idx=c2.add_constant(Value::Number(100), 1);
+    c2.write_op(Inst::OpConstant(idx), 1);
 
-    let i=c2.add_constant(Value::ObjString(&string), 1);
-    c2.write_op(Inst::OpConstant(i), 2);
-    
+    c2.write_op(Inst::OpReturn, 2);
+
     let mut vm=vm::VM::new(c2);
 
     println!("{:?}", vm.run());
+    // vm.run();
 
-
-    
-    let mut st:[Option<Value>;5]=[None;5];
-    st[0]=Some(Value::num(10));
-    st[1]=Some(Value::num(20));
-
-    println!("{:?}", st);
+    // println!("{:?}", st);
 }
