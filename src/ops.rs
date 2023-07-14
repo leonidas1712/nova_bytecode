@@ -30,6 +30,12 @@ pub type IntType=isize;
 #[derive(Debug,Clone,Copy)]
 // Value on the Stack (size known at compile-time)
     // can't do Rc<Obj> because Rc doesn't impl Copy
+
+// idea: ValueStack might need to be dynamic so it can own values
+// but CallStack with CallFrames might not need to be
+    // CallStack: owns CallFrame (T=CallFrame)
+        // CallFrame: ip(usize), FunctionPtr(&Function), slots(usize)
+        // slots is first index in ValueStack that this callframe can use
 pub enum Value<'obj> {
     Number(IntType),
     Bool(bool),

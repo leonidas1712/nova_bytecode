@@ -1,34 +1,42 @@
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::rc::{Rc, self};
 
 use crate::ops::{*, Inst::*};
 use crate::err::*;
-use crate::stack::FixedStack;
+use crate::stack::*;
+
 
 
 // new(chunk), execute()->Result
 
+/*
+    fn interpret(&mut self, source:&str) {
+
+    }
+*/
 
 
 pub struct VM<'c> {
     chunk:Chunk<'c>, // 'c: lifetime of Chunk
     ip:usize, // index of next op to execute,
-    value_stack:FixedStack<Value<'c>> // vals come from chunk
+    value_stack:FixedStack<Value<'c>> // vals come from chunk,
+    // call_stack: VecStack<CallFrame<'function>>
 }
 
 impl<'c>  VM<'c> {
-    pub fn new(chunk:Chunk<'c> )->Self {
+    pub fn new(chunk:Chunk<'c> )->VM<'c> {
+        let stack:FixedStack<Value<'c>>=FixedStack::new();
+
         VM {
-            chunk:chunk,
+            chunk,
             ip:0,
-            value_stack:FixedStack::new()
+            value_stack:stack
         }
     }
 
     // get current instruction and increase ip
     pub fn get_curr_inst(&self)->Option<&Inst> {
         let curr=self.chunk.get_op(self.ip);
-        // self.ip+=1;
         curr
     }
 
@@ -37,8 +45,8 @@ impl<'c>  VM<'c> {
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
     pub fn run(&'c mut self)->Result<Value> {
         // reset
-        self.ip=0;
-        self.value_stack.clear();
+        // self.ip=0;
+        // self.value_stack.clear();
 
         // numeric bin op
         macro_rules! bin_op {
@@ -70,7 +78,7 @@ impl<'c>  VM<'c> {
                 OpConstant(idx) => {
                     let i=*idx;
 
-                    let ct=self.chunk.get_constant(10);
+                    let ct=self.chunk.get_constant(i);
                     
                     let get:Result<Value>=ct
                         .ok_or(errc_i!("Invalid index for constant:{}", i));

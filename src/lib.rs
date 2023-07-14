@@ -44,12 +44,8 @@ fn test_stack_ops() {
     println!("{}", c2);
     
     let mut vm=vm::VM::new(c2);
-
-    let vm2=&mut vm;
-    let res=vm2.run();
-
-    // vm.get_curr_inst();
-
-    // assert_eq!(res.to_string(), "-5");
+    let res=vm.run().unwrap();
+    
+    assert_eq!(res.to_string(), "-5");
     
 }
