@@ -52,9 +52,9 @@ macro_rules! errc {
     };
 }
 
-use anyhow::Error;
+
 pub (crate) use errn;
-pub (crate) use errc;
+
 pub (crate) use errn_i;
 pub (crate) use errc_i;
 

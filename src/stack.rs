@@ -1,4 +1,4 @@
-use crate::ops::{*, Inst::*};
+use crate::ops::{*};
 use crate::err::*;
 
 // Fixed size value stack - less overhead than Vec

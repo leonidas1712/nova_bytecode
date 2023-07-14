@@ -1,5 +1,5 @@
-use std::{fmt::{Display, write}, vec, rc::Rc};
-use crate::err::*;
+use std::{fmt::{Display}, vec};
+
 
 #[derive(Debug)]
 // Instruction

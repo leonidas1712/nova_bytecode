@@ -1,7 +1,7 @@
-use crate::{errc, errn_i};
+
 use crate::ops::{*, Inst::*};
 use crate::err::*;
-use crate::stack::*;
+
 
 // new(chunk), execute()->Result
 pub struct VM<'c> {
