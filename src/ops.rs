@@ -12,8 +12,10 @@ pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool,
     OpNegate,
-    OpBinary(BinOp),
-    OpUnary(UnaryOp)
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpDiv
 }
 
 impl Display for Inst {
