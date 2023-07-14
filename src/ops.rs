@@ -123,8 +123,8 @@ impl<'val> Chunk<'val> {
         self.op_lines.add_line(line);
     }
 
-    pub fn get_constant(&self, idx:usize)->Option<&Value> {
-        self.constants.get(idx)
+    pub fn get_constant(&self, idx:usize)->Option<Value> {
+        self.constants.get(idx).map(|v| v.to_owned())
     }
 
     // Returns index where constant was added
