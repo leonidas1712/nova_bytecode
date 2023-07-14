@@ -80,7 +80,23 @@ impl<'c>  VM<'c> {
                 OpAdd => bin_op!(+),
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
-                OpDiv => bin_op!(/)            
+                OpDiv => bin_op!(/),
+                OpAddStr => {
+                    let stack=&mut self.value_stack;
+
+                    let right=stack.pop()?;
+                    let right=right.expect_string()?;
+
+                    let left=stack.pop()?;
+                    let left=left.expect_string()?;
+
+                    let mut left_new=left.clone();
+                    left_new.push_str(right);
+
+                    // let k=&mut self.chunk;
+                    // let k2=k.add_constant(Value::Bool(true), 1);
+                    
+                }           
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)

@@ -15,7 +15,8 @@ pub enum Inst {
     OpAdd,
     OpSub,
     OpMul,
-    OpDiv
+    OpDiv,
+    OpAddStr
 }
 
 impl Display for Inst {
@@ -45,6 +46,13 @@ impl<'obj>  Value<'obj>  {
             Self::Number(n) => Ok(*n),
             Self::Bool(b) => Ok(if *b { 1 } else { 0 }),
             _ => errc!("Expected number but got:{}", self.to_string())
+        }
+    }
+
+    pub fn expect_string(&self)->Result<&String> {
+        match self {
+            Self::ObjString(sref) => Ok(sref),
+            _ => errc!("Expected string but got:{}", self.to_string())
         }
     }
 }
@@ -84,7 +92,6 @@ impl Lines {
         }
     }
 
-    // idx 2
     // index if we uncompress e.g  (12,2), (14,3), (12,1)..
     pub fn get_line(&self, idx:usize)->Option<usize> {
         // idx < start+occurences => end

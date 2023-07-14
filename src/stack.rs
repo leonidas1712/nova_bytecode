@@ -46,7 +46,7 @@ impl<T:Copy> Stack <T> {
     pub fn pop(&mut self)->Result<T>{
         let stack_top=self.stack_top;
         if stack_top == 0 {
-           return errn!("Pop from empty value stack");
+           return errn!("Pop from empty stack");
         } 
 
         let res=self.stack.get(stack_top - 1).unwrap();
@@ -54,7 +54,7 @@ impl<T:Copy> Stack <T> {
 
         match res {
             Some(val) => Ok(*val),
-            None => errn!("Popped none value from stack")
+            None => errn!("Popped None from stack")
         }
     }
 
