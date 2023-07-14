@@ -57,6 +57,12 @@ impl<'c>  VM<'c> {
                     let stack=&mut self.value_stack;
                     let top=stack.pop()?.expect_int()?;
                     stack.push(Value::num(top*-1))?;
+                },
+                OpBinary(func) => {
+                    
+                },
+                OpUnary(func) => {
+                    
                 }
             }
 

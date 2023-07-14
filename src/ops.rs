@@ -1,13 +1,19 @@
 use std::{fmt::{Display}, vec};
 use crate::{err::*, errc};
 
+type BinOp=for<'v> fn(&'v Value<'v>,&'v Value<'v>)->Value<'v>;
+type UnaryOp=fn(&mut Value);
+
 
 #[derive(Debug)]
 // Instruction
+// binaryop: takes two args from stack, applies op, pushes onto stack
 pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool,
-    OpNegate
+    OpNegate,
+    OpBinary(BinOp),
+    OpUnary(UnaryOp)
 }
 
 impl Display for Inst {
