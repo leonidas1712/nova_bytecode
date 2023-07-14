@@ -37,7 +37,7 @@ impl<'val> Stack <'val> {
         self.stack_top -= 1;
 
         match res {
-            Some(val) => Ok(val.clone()),
+            Some(val) => Ok(*val),
             None => errn!("Popped none value from stack")
         }
     }
@@ -83,6 +83,7 @@ fn test_stack() {
     let mut st=Stack::new();
     st.push(Value::Number(10));
     st.push(Value::Bool(false));
+
     let third=st.push(Value::Number(30));
     assert!(third.is_ok());
 
