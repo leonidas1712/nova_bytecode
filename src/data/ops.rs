@@ -39,10 +39,28 @@ pub type IntType=isize;
     // CallStack: owns CallFrame (T=CallFrame)
         // CallFrame: ip(usize), FunctionPtr(&Function), slots(usize)
         // slots is first index in ValueStack that this callframe can use
+
+
+// Alt Obj repr:
+     /*
+        struct Object {
+           enum ObjType
+    
+        }
+    
+        enum ObjType {
+            String(Rc<String>),
+            Function(Rc<Fn>)
+        }
+    */
+
+
+// Observation: Rc may only be needed for Function (?)
+    // Function is referred to in callframe as well but other values may only be on val stack?
 pub enum Value {
     Number(IntType),
     Bool(bool),
-    ObjString(Rc<String>)
+    ObjString(String)
 }
 
 impl Value {

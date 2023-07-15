@@ -17,8 +17,9 @@ const VAL_STACK_MAX:usize=2000;
 pub struct VM {
     chunk:Chunk, // 'c: lifetime of Chunk
     ip:usize, // index of next op to execute,
-    value_stack:VecStack<Value> // vals come from chunk,
+    value_stack:VecStack<Value> // this should have same layout as Compiler.locals,
     // call_stack: VecStack<CallFrame<'function>>
+        // call frame refers to function potentially on value stack
 }
 
 impl VM {
@@ -102,7 +103,7 @@ impl VM {
                     let left=stack.pop()?;
                     let left=left.expect_string()?.clone();
 
-                    let new_val=Value::ObjString(Rc::new(left+right));
+                    let new_val=Value::ObjString(left+right);
                     stack.push(new_val)?;
                 }     
             }

@@ -3,17 +3,7 @@ pub mod utils;
 pub mod vm;
 
 pub fn run() {
- /*
-        struct Object {
-           enum ObjType
-    
-        }
-    
-        enum ObjType {
-            String(Rc<String>),
-            Function(Rc<Fn>)
-        }
-    */
+
 }  
 
 #[cfg(test)]
@@ -63,8 +53,8 @@ pub mod tests {
         // Value::ValObj(Object::new("hi"))
         // Value::ValObj(Object::new(Function{...}))
     
-        let string1=Rc::new("hi".to_string()); 
-        let string2=Rc::new("hello".to_string());
+        let string1="hi".to_string(); 
+        let string2="hello".to_string();
     
         let idx=c2.add_constant(Value::ObjString(string1), 1);
         let idx2=c2.add_constant(Value::ObjString(string2), 1);
