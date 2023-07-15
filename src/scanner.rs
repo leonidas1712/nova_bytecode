@@ -4,7 +4,7 @@ use std::iter::Peekable;
 
 use crate::utils::constants::*;
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy, PartialEq)]
 pub enum TokenType {
     // Single char
     TokenLeftParen,
@@ -23,7 +23,13 @@ pub enum TokenType {
     TokenPrint,
     TokenReturn,
     TokenVar,
+    TokenIf,
+    TokenTrue,
+    TokenFalse,
+    TokenAnd,
+    TokenOr,
     TokenIdent,
+    TokenPipe,
 
     // Literals
     TokenNumber,
@@ -39,7 +45,9 @@ pub enum TokenType {
     TokenLessEq, // <=
     TokenGt, // >
     TokenGtEq, // >=
-    // err
+
+    // misc
+    TokenComment,
     TokenError,
 }
 
