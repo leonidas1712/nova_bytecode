@@ -17,6 +17,11 @@ pub const SLASH:char='/';
 pub const STAR:char='*';
 pub const MINUS:char='-';
 
+pub const EQ:char='=';
+pub const BANG:char='!';
+pub const LESS_THAN:char='<';
+pub const GT_THAN:char='>';
+
 
 
 pub type NumType = i64;

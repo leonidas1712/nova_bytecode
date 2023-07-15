@@ -29,6 +29,15 @@ pub enum TokenType {
     TokenNumber,
     TokenFloat,
 
+    // Comp
+    TokenEqual, // =
+    TokenEqEq, // ==
+    TokenNotEq, // !=
+    TokenNot, // !
+    TokenLess, // <
+    TokenLessEq, // <=
+    TokenGt, // >
+    TokenGtEq, // >=
     // err
     TokenError,
 }
@@ -53,17 +62,54 @@ impl<'src> Display for Token<'src> {
 
 pub struct Scanner<'src> {
     source:&'src str,
-    chars:Peekable<Chars<'src>>,
+    chars:LookaheadChars<'src>,
     start:usize, // index in source for start of curr lexeme
     current:usize, // index of current char
-    line:usize // line_num
+    line:usize, // line_num,
+}
+
+// store lookahead of one char i.e the Option<char> after peek
+pub struct LookaheadChars<'src> {
+    chars:Peekable<Chars<'src>>,
+    peek:Option<char> // current peek (chars always points one step ahead of peek)
+}
+
+impl<'src> LookaheadChars<'src> {
+    pub fn new<'source>(source:&'source str)->LookaheadChars<'source> {
+        let mut chars=source.chars().peekable();
+        let peek=chars.next();
+
+        LookaheadChars { chars, peek }
+    }
+
+    pub fn peek(&self)->Option<char> {
+        self.peek
+    }
+
+    pub fn peek_next(&mut self)->Option<char> {
+        self.chars.peek().map(|c| c.to_owned())
+    }
+}
+
+impl<'src> Iterator for LookaheadChars<'src> {
+    type Item = char;
+    fn next(&mut self) -> Option<Self::Item> {
+        let nxt=self.peek;
+        self.peek=self.chars.next();
+        nxt
+    }
 }
 
 impl<'src> Scanner<'src> {
     pub fn new<'source>(source:&'source str)->Scanner<'source>{
-        let chars=source.chars().peekable();
+        let chars=LookaheadChars::new(source);
         Scanner { source, chars, start: 0, current: 0, line: 1 }
     }
+
+    pub fn peek(&mut self)->Option<char> {
+        self.chars.peek()
+    }
+
     // increment, return next char (as &str)
         // str slice of next k chars (k=1)
     fn advance(&mut self)->Option<char>{
@@ -72,9 +118,10 @@ impl<'src> Scanner<'src> {
     }
 
     // advance iterator while pred(char) true
+    // when this stops, current points to first char where pred was false
     fn advance_while<F>(&mut self, pred:F) where F:Fn(char)->bool {
-        while let Some(pk) = self.chars.peek() {
-            if pred(*pk) {
+        while let Some(pk) = self.peek() {
+            if pred(pk) {
                 self.advance();
             } else {
                 break;
@@ -95,8 +142,8 @@ impl<'src> Scanner<'src> {
 
         let mut float=false;
 
-        if let Some(pk) = self.chars.peek() {
-            if pk==&DOT {
+        if let Some(pk) = self.peek() {
+            if pk==DOT {
                 self.advance();
                 self.advance_while(|char| char.is_ascii_digit());
                 float=true;
@@ -107,7 +154,36 @@ impl<'src> Scanner<'src> {
     }
 
     fn skip_whitespace(&mut self) {
+        // if let Some(pk) = self.peek() {
+        //     // Handle comment: peek is slash + right after is also slash
+        //     if pk==SLASH && self.chars.next_if_eq(SLASH).is_some() { // change to use self.peek_next
+        //         // skip until \n
+        //         self.advance_while(|char| char!=NEWLINE);
+        //         self.advance(); // past \n
+        //     }
+        // } 
         self.advance_while(|char| char.is_ascii_whitespace());
+    }
+
+    // return true and advance if peek is char, else false
+    fn match_char(&mut self, char:char)->bool {
+        if let Some(ch) = self.peek() {
+            ch==char
+        } else {
+            false
+        }
+    }
+
+    // check next char: if equal to match_next, use if_match and advance. else, just ret else_match
+    fn make_two_char(&mut self, match_next:char, if_match:TokenType, else_match:TokenType)->Option<Token<'src>> {
+        if let Some(pk) = self.peek() {
+            if pk==match_next {
+                self.advance();
+                return Some(self.make_token(if_match))
+            } 
+            return Some(self.make_token(else_match))
+        }
+        None
     }
 
     // collect consumed into String repr for debugging
@@ -119,6 +195,8 @@ impl<'src> Scanner<'src> {
 
 impl<'src> Iterator for Scanner<'src> {
     type Item = Token<'src>;
+    // advance: self.current+=1;
+    // make_token: self.start=self.current
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_whitespace();
@@ -133,6 +211,7 @@ impl<'src> Iterator for Scanner<'src> {
         
         let mut make=|tok_type| Some(self.make_token(tok_type));
 
+        // make_two_char(match_next:char, if_match:TokenType, else_match:TokenType)
         match nxt {
             Some(char) => {
                 match char {
@@ -146,6 +225,12 @@ impl<'src> Iterator for Scanner<'src> {
                     SLASH => make(TokenSlash),
                     STAR => make(TokenStar),
                     char if char.is_ascii_digit() => Some(self.number()),
+
+                    // two char tokens - can replace with trie search later
+                    EQ => self.make_two_char(EQ, TokenEqEq, TokenEqual),
+                    BANG => self.make_two_char(EQ, TokenNotEq, TokenNot),
+                    LESS_THAN => self.make_two_char(EQ, TokenLessEq, TokenLess), // trie search needed: '<' -> '<' for pipe, '=' for '<='
+                    GT_THAN => self.make_two_char(EQ, TokenGtEq, TokenGt),
                     _ => make(TokenIdent)
                 }
             },
@@ -153,6 +238,30 @@ impl<'src> Iterator for Scanner<'src> {
             None => make(TokenError) // err since OOB for start already checked
         }
     }
+}
+
+#[test]
+fn test_lookahead() {
+    let inp="23";
+    let mut s=LookaheadChars::new(inp);
+    assert_eq!(s.peek(), Some('2')); // 2
+    assert_eq!(s.peek_next(), Some('3')); // 3
+    s.next();
+ 
+    assert_eq!(s.peek(), Some('3')); // 3
+    assert_eq!(s.peek_next(), None); // None
+
+    s.next();
+
+    assert_eq!(s.peek(), None); // None
+    assert_eq!(s.peek_next(), None); // None
+
+
+    s.next();
+    s.next();
+
+    assert_eq!(s.peek(), None); // None
+    assert_eq!(s.peek_next(), None); // None
 }
 
 #[test]
@@ -165,6 +274,29 @@ fn test_scanner() {
     let inp="  30   40 \n 50   \t 60 \r   700.30  ";
     let mut s=Scanner::new(inp);
     assert_eq!(s.serialize(), "[TokenNumber('30'),TokenNumber('40'),TokenNumber('50'),TokenNumber('60'),TokenFloat('700.30')]");
+}
+
+#[test]
+fn test_scanner_two() {
+    let inp="4 == 2 = 3 == 5";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenNumber('4'),TokenEqEq('=='),TokenNumber('2'),TokenEqual('='),TokenNumber('3'),TokenEqEq('=='),TokenNumber('5')]");
+
+    let inp="!4 != !0 != 5";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenNot('!'),TokenNumber('4'),TokenNotEq('!='),TokenNot('!'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('5')]");
+
+    let inp="4 < 5 <= 6 > 5 >= 10 < 9 >=2>8";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenNumber('4'),TokenLess('<'),TokenNumber('5'),TokenLessEq('<='),TokenNumber('6'),TokenGt('>'),TokenNumber('5'),TokenGtEq('>='),TokenNumber('10'),TokenLess('<'),TokenNumber('9'),TokenGtEq('>='),TokenNumber('2'),TokenGt('>'),TokenNumber('8')]");
+}
+
+#[test]
+fn test_comment() {
+    // let inp="\n\t 2/3 // c1 \n 40 // c2\n  ";
+    let inp="2/3";
+    let mut s=Scanner::new(inp);
+    dbg!(s.serialize());
 }
 
 
