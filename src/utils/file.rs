@@ -1,9 +1,8 @@
 extern crate shellexpand;
 
-use std::fs::{read_to_string, write, File, OpenOptions};
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-use crate::data::ops::Value;
 use crate::utils::err::*;
 use crate::vm::VM;
 

@@ -4,7 +4,6 @@ pub mod data;
 pub mod utils;
 pub mod vm;
 
-use data::ops::Value;
 use vm::VM;
 use rustyline::{DefaultEditor, error::ReadlineError};
 
@@ -68,8 +67,6 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 
 #[cfg(test)]
 pub mod tests {
-    use std::rc::Rc;
-
     use crate::data::ops::*;
     use crate::vm;
 
@@ -137,7 +134,5 @@ pub mod tests {
 
         let res=vm.run(c3, true).unwrap(); // re-use possible
         assert_eq!(res.to_string(), "true");
-
-        let res=vm.run(Chunk::new(), true);
     }
 }

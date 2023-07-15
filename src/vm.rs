@@ -20,6 +20,7 @@ pub struct VM {
 }
 
 pub fn compile(source:&str)->Result<Chunk> {
+    println!("Compiling:{source}");
     Ok(Chunk::new())
 }
 
