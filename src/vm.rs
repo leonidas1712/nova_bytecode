@@ -23,10 +23,10 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new(chunk:Chunk)->VM {
+    pub fn new()->VM {
 
         VM {
-            chunk,
+            chunk:Chunk::new(),
             ip:0,
             value_stack:VecStack::new(VAL_STACK_MAX)
         }
@@ -38,15 +38,19 @@ impl VM {
         curr
     }
 
+    fn reset(&mut self) {
+        self.chunk=Chunk::new();
+        self.ip=0;
+        self.value_stack.clear();
+    }
+
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
-    pub fn run(mut self)->Result<Value> {
-        // reset
-        // self.ip=0;
-        // self.value_stack.clear();
+    pub fn run(&mut self, chunk:Chunk)->Result<Value> {
+        self.reset();
+        self.chunk=chunk;
 
-        // numeric bin op
         macro_rules! bin_op {
             ($op:tt) => {
                 {

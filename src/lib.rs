@@ -2,7 +2,9 @@ pub mod data;
 pub mod utils;
 pub mod vm;
 
-pub fn run() {
+use vm::VM;
+
+pub fn nova_repl(vm:VM) {
 
 }  
 
@@ -38,8 +40,8 @@ pub mod tests {
     
         println!("{}", c2);
         
-        let mut vm=vm::VM::new(c2);
-        let res=vm.run().unwrap();
+        let mut vm=vm::VM::new();
+        let res=vm.run(c2).unwrap();
     
         assert_eq!(res.to_string(), "-5");
         
@@ -65,9 +67,17 @@ pub mod tests {
         c2.write_op(Inst::OpConcat, 1);
         c2.write_op(Inst::OpReturn, 1);
         
-        let mut vm=vm::VM::new(c2);
-        let res=vm.run().unwrap();
+        let mut vm=vm::VM::new();
+        let res=vm.run(c2).unwrap();
     
         assert_eq!(res.to_string(), "hihello");
+
+        let mut c3=Chunk::new();
+        let idx=c3.add_constant(Value::Bool(true), 1);
+        c3.write_op(Inst::OpConstant(idx), 1);
+        c3.write_op(Inst::OpReturn, 2);
+
+        let res=vm.run(c3).unwrap(); // re-use possible
+        assert_eq!(res.to_string(), "true");
     }
 }
