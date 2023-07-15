@@ -1,14 +1,17 @@
 extern crate rustyline;
+
 pub mod data;
 pub mod utils;
 pub mod vm;
 
+use data::ops::Value;
 use vm::VM;
 use rustyline::{DefaultEditor, error::ReadlineError};
 
 use utils::constants::*;
+use utils::err::*;
 
-pub fn nova_repl(mut vm:VM) {
+pub fn nova_repl(mut vm:VM)->Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
 
     println!();
@@ -60,6 +63,7 @@ pub fn nova_repl(mut vm:VM) {
             _ => (),
         }
     }
+    Ok(())
 }  
 
 #[cfg(test)]
@@ -95,7 +99,7 @@ pub mod tests {
         println!("{}", c2);
         
         let mut vm=vm::VM::new();
-        let res=vm.run(c2).unwrap();
+        let res=vm.run(c2, true).unwrap();
     
         assert_eq!(res.to_string(), "-5");
         
@@ -122,7 +126,7 @@ pub mod tests {
         c2.write_op(Inst::OpReturn, 1);
         
         let mut vm=vm::VM::new();
-        let res=vm.run(c2).unwrap();
+        let res=vm.run(c2, true).unwrap();
     
         assert_eq!(res.to_string(), "hihello");
 
@@ -131,9 +135,9 @@ pub mod tests {
         c3.write_op(Inst::OpConstant(idx), 1);
         c3.write_op(Inst::OpReturn, 2);
 
-        let res=vm.run(c3).unwrap(); // re-use possible
+        let res=vm.run(c3, true).unwrap(); // re-use possible
         assert_eq!(res.to_string(), "true");
 
-        let res=vm.run(Chunk::new());
+        let res=vm.run(Chunk::new(), true);
     }
 }

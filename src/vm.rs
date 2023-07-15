@@ -1,6 +1,3 @@
-
-
-
 use crate::data::{ops::*, stack::*};
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
@@ -51,8 +48,11 @@ impl VM {
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
-    pub fn run(&mut self, chunk:Chunk)->Result<Value> {
-        self.reset();
+    pub fn run(&mut self, chunk:Chunk, reset:bool)->Result<Value> {
+        if reset {
+            self.reset();
+        }
+
         self.chunk=chunk;
 
         macro_rules! bin_op {
@@ -121,8 +121,12 @@ impl VM {
         }
     }
 
-    pub fn interpret(&mut self, source:&str)->Result<Value>{
+    pub fn interpret_with_reset(&mut self, source:&str, reset:bool)->Result<Value>{
         let chunk=compile(source)?; // turn source into bytecode, consts etc
-        self.run(chunk)
+        self.run(chunk, reset)
+    }
+
+    pub fn interpret(&mut self, source:&str)->Result<Value>{
+        self.interpret_with_reset(source, true)
     }
 }

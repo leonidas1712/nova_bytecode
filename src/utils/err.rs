@@ -52,31 +52,67 @@ macro_rules! errc {
     };
 }
 
+#[macro_export]
+macro_rules! err_other_i {
+    ($msg:expr) => {
+        
+        InterpretErr::Other($msg.to_string())
+    };
+
+    ($msg:expr $(,$arg:expr),*) => {
+        
+        InterpretErr::Other(format!($msg, $($arg),*))
+    };
+}
+
+#[macro_export]
+macro_rules! err_other {
+    ($msg:expr) => {
+        
+        Err(err_other_i!($msg))
+    };
+
+    ($msg:expr $(,$arg:expr),*) => {
+        
+        Err(err_other_i!($msg, $($arg),*))
+    };
+}
+
 
 pub use errn;
 pub use errn_i;
 pub use errc;
 pub use errc_i;
+pub use err_other;
+pub use err_other_i;
 
 
 use std::fmt::Display;
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub enum InterpretErr {
     Compile(String),
-    Runtime(String)
+    Runtime(String),
+    Other(String)
 }
 
 impl Display for InterpretErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg=match self {
             Self::Compile(m) => format!("CompileError -  {}", m),
-            Self::Runtime(m) => format!("RuntimeError - {}", m)
+            Self::Runtime(m) => format!("RuntimeError - {}", m),
+            Self::Other(m) => m.to_string()
         };
 
         write!(f, "{}", msg)
     }
 }
 
+impl std::fmt::Debug for InterpretErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
 
-pub (crate) type Result<T> = anyhow::Result<T, InterpretErr>;
+
+pub type Result<T> = anyhow::Result<T, InterpretErr>;
