@@ -226,12 +226,19 @@ impl<'src> Scanner<'src> {
     // e.g '==' => last match is TokenEqEq
     // advance the scanner
     fn check_trie(&mut self)->TokenType{
-        // let curr_node=&self.trie.root;
-        // self.trie.root.get_child('c');
-        // while let Some(pk) = self.peek() {
-        //     let try_get=curr_node.get_child(pk);
-        // }
-        TokenIdent
+        let mut curr_node=&KEYWORDS_TRIE.root;
+
+        while let Some(pk) = self.peek() {
+            let try_get=curr_node.get_child(pk);
+            if let Some(child) = try_get {
+                curr_node=child;
+                self.advance();
+            } else {
+                break;
+            }
+        }
+
+        curr_node.get_value().unwrap_or(TokenIdent)
     }
 
     // collect consumed into String repr for debugging
