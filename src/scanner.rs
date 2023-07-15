@@ -345,6 +345,11 @@ pub fn test_many() {
     let code = "fun func_name( if_m, fun_c, func_d) {\n\tlet x = 200.35;\n\tx\n}";
     let mut s=Scanner::new(code);
     assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('if_m'),TokenComma(','),TokenIdent('fun_c'),TokenComma(','),TokenIdent('func_d'),TokenRightParen(')'),TokenLeftBrace('{'),TokenLet('let'),TokenIdent('x'),TokenEqual('='),TokenFloat('200.35'),TokenSemiColon(';'),TokenIdent('x'),TokenRightBrace('}')]");
+
+    let code = "fun func_name(ab, cd, if_m, falser) {\n\tif (x < 2) { ab + cd / m }\n\telse { 90 + falser }\n}";
+    let mut s=Scanner::new(code);
+    assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('ab'),TokenComma(','),TokenIdent('cd'),TokenComma(','),TokenIdent('if_m'),TokenComma(','),TokenIdent('falser'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIf('if'),TokenLeftParen('('),TokenIdent('x'),TokenLess('<'),TokenNumber('2'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIdent('ab'),TokenPlus('+'),TokenIdent('cd'),TokenSlash('/'),TokenIdent('m'),TokenRightBrace('}'),TokenElse('else'),TokenLeftBrace('{'),TokenNumber('90'),TokenPlus('+'),TokenIdent('falser'),TokenRightBrace('}'),TokenRightBrace('}')]");
+
 }
 
 
