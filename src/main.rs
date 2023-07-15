@@ -16,7 +16,7 @@ fn run_main()->Result<()> {
         nova_repl(VM::new())
     } else if argc == 2 {
         let file_name=cmd_args.get(1).unwrap();
-        println!("Importing:{file_name}");
+        println!("Importing:{file_name}\n");
         let vm=run_file(&file_name)?;
         nova_repl(vm)
     } else {
