@@ -35,7 +35,7 @@ macro_rules! errc_i {
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        InterpretErr::Compile(format!($msg, $($arg),*))
+        InterpretErr::Compile(format!($msg,$($arg),*))
     };
 }
 
@@ -48,7 +48,7 @@ macro_rules! errc {
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        Err(errc_i!($msg, $($arg),*))
+        Err(errc_i!($msg,$($arg),*))
     };
 }
 

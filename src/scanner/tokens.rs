@@ -72,15 +72,26 @@ pub use TokenType::*;
 // prt
     // start:0, 
 
-#[derive(Debug)]
+#[derive(Debug,Clone, Copy)]
 pub struct Token<'src> {
     pub token_type:TokenType,
     pub content:&'src str,
+    pub line:usize
 }
 
 impl<'src> Display for Token<'src> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}('{}')", self.token_type, self.content)
+    }
+}
+
+impl<'src>  Token<'src> {
+    pub fn is_err(&self)->bool {
+        self.token_type.eq(&TokenError)
+    }
+    
+    pub fn debug_print(&self)->String {
+        format!("{}:line {}", self.to_string(), self.line)
     }
 }
 

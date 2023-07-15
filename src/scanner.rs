@@ -52,7 +52,7 @@ impl<'src> Scanner<'src> {
     fn make_token(&mut self, token_type:TokenType)->Token<'src> {
         let content=&self.source[self.start..self.current];
         self.start=self.current;
-        Token { token_type, content }
+        Token { token_type, content, line:self.line }
     }
 
     // call when peek is ascii digit
@@ -125,7 +125,6 @@ impl<'src> Scanner<'src> {
 
         if let None = node {
             // ident handle here - loop while isdigit is alpha etc
-            // return self.make_token(TokenIdent);
             return self.identifier();
         }
 
@@ -143,9 +142,6 @@ impl<'src> Scanner<'src> {
                 break;
             }
         }
-
-        dbg!(length);
-        dbg!(char);
         // if single char token: immediately return the type (dont filter out)
 
         // true: dont use as identifier (use value from trie for type)
@@ -174,10 +170,8 @@ impl<'src> Scanner<'src> {
         .map(|ty| self.make_token(ty));
 
         if let Some(tok) = get {
-            dbg!(&tok);
             tok
         } else {
-            dbg!("ident");
             self.identifier()
         }
     }
@@ -194,6 +188,7 @@ impl<'src> Iterator for Scanner<'src> {
     // advance: self.current+=1;
     // make_token: self.start=self.current
 
+    // scan_token
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_whitespace();
 
@@ -300,8 +295,6 @@ fn test_string() {
 
 #[test]
 fn test_scanner_trie() {
-    let t=&KEYWORDS_TRIE;
-
     let inp="\n(23) 1+2-3/4*5;\n c,z 2.0";
     let mut s=Scanner::new(inp);
     assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('23'),TokenRightParen(')'),TokenNumber('1'),TokenPlus('+'),TokenNumber('2'),TokenMinus('-'),TokenNumber('3'),TokenSlash('/'),TokenNumber('4'),TokenStar('*'),TokenNumber('5'),TokenSemiColon(';'),TokenIdent('c'),TokenComma(','),TokenIdent('z'),TokenFloat('2.0')]");
@@ -310,7 +303,6 @@ fn test_scanner_trie() {
     let mut s=Scanner::new(inp);
     assert_eq!(s.serialize(), "[TokenNumber('1'),TokenEqual('='),TokenNumber('2'),TokenNumber('3'),TokenEqEq('=='),TokenNumber('4'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('1'),TokenNumber('5'),TokenLess('<'),TokenNumber('2'),TokenNumber('3'),TokenLessEq('<='),TokenNumber('4'),TokenNumber('3'),TokenGt('>'),TokenNumber('4'),TokenComma(','),TokenNumber('3'),TokenGtEq('>='),TokenNumber('4')]");
 }
-
 // 1.first char no match with trie e.g xyz
 // 2. matches but doesnt complete e.g ifxy
 // 3. matches and next is non ident char e.g if 123
