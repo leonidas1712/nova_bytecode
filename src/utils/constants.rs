@@ -27,6 +27,9 @@ pub const OPEN_STRING:char='"';
 // multi char tokens
 pub const EQ_EQ:&str="==";
 pub const NOT_EQ:&str="!=";
+pub const LT_EQ:&str="<=";
+pub const GT_EQ:&str=">=";
+
 
 
 

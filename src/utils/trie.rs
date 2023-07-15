@@ -66,12 +66,10 @@ impl Trie {
         Trie { root: TrieNode::empty() }
     }
 
-    pub fn add_key_char(&mut self, key:char, ty:TokenType) {
-        self.add_key(key.to_string().as_str(), ty);
-    }
-
-    pub fn add_key(&mut self, key:&str, ty:TokenType) {
-        let mut chars=key.chars().peekable();
+    pub fn add_key<K>(&mut self, key:K, ty:TokenType) 
+    where K:ToString {
+        let to_string=key.to_string();
+        let mut chars=to_string.chars().peekable();
         let mut node=&mut self.root;
 
         while let Some(char) = chars.next() {
@@ -130,26 +128,33 @@ impl Trie {
 
 
 // keywords trie
-pub fn setup_keywords() {
+pub fn setup_keywords()->Trie{
     let mut trie=Trie::new();
-    trie.add_key_char(OPEN_EXPR, TokenLeftParen);
-    trie.add_key_char(CLOSE_EXPR, TokenRightParen);
-    trie.add_key_char(STMT_END, TokenSemiColon);
-    trie.add_key_char(COMMA, TokenComma);
-    trie.add_key_char(DOT, TokenDot);
-    trie.add_key_char(PLUS, TokenPlus);    
-    trie.add_key_char(MINUS, TokenMinus);
-    trie.add_key_char(SLASH, TokenSlash);
-    trie.add_key_char(STAR, TokenStar);
-    trie.add_key_char(EQ, TokenEqual);
+    trie.add_key(OPEN_EXPR, TokenLeftParen);
+    trie.add_key(CLOSE_EXPR, TokenRightParen);
+    trie.add_key(STMT_END, TokenSemiColon);
+    trie.add_key(COMMA, TokenComma);
+    trie.add_key(DOT, TokenDot);
+    trie.add_key(PLUS, TokenPlus);
+    trie.add_key(MINUS, TokenMinus);
+    trie.add_key(SLASH, TokenSlash);
+    trie.add_key(STAR, TokenStar);
+
+    // comp
+    trie.add_key(EQ, TokenEqual);
+    trie.add_key(LESS_THAN, TokenLess);
+    trie.add_key(GT_THAN, TokenGt);
+    trie.add_key(BANG, TokenNot);
+
 
     // two char
     trie.add_key(EQ_EQ, TokenEqEq);
     trie.add_key(NOT_EQ, TokenNotEq);
-    
+    trie.add_key(LT_EQ, TokenLessEq);
+    trie.add_key(GT_EQ, TokenGtEq);
 
+    trie
 
-    
 }
 
 use TokenType::*;
