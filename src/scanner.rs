@@ -349,6 +349,10 @@ pub fn test_many() {
     let code = "fun func_name(ab, cd, if_m, falser) {\n\tif (x < 2) { ab + cd / m }\n\telse { 90 + falser }\n}";
     let mut s=Scanner::new(code);
     assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('ab'),TokenComma(','),TokenIdent('cd'),TokenComma(','),TokenIdent('if_m'),TokenComma(','),TokenIdent('falser'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIf('if'),TokenLeftParen('('),TokenIdent('x'),TokenLess('<'),TokenNumber('2'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIdent('ab'),TokenPlus('+'),TokenIdent('cd'),TokenSlash('/'),TokenIdent('m'),TokenRightBrace('}'),TokenElse('else'),TokenLeftBrace('{'),TokenNumber('90'),TokenPlus('+'),TokenIdent('falser'),TokenRightBrace('}'),TokenRightBrace('}')]");
+
+    let code="(x $ y + map >> succ)";
+    let mut s=Scanner::new(code);
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenIdent('x'),TokenInfix('$'),TokenIdent('y'),TokenPlus('+'),TokenIdent('map'),TokenPipe('>>'),TokenIdent('succ'),TokenRightParen(')')]");
 }
 
 
