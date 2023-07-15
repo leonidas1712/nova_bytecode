@@ -1,5 +1,5 @@
 use std::{fmt::{Display}, vec, rc::Rc};
-use std::ops::Deref;
+
 use crate::utils::{err::*};
 
 // Inst, Chunk, Value
