@@ -29,6 +29,9 @@ pub const GT_THAN:char='>';
 
 pub const OPEN_STRING:char='"';
 
+pub const LEFT_BRACE:char='{';
+pub const RIGHT_BRACE:char='}';
+
 // multi char tokens
 pub const EQ_EQ:&str="==";
 pub const NOT_EQ:&str="!=";
@@ -39,8 +42,12 @@ pub const GT_EQ:&str=">=";
 // keywords trie
 fn setup_keywords()->Trie{
     let mut trie=Trie::new();
+
     trie.add_key(OPEN_EXPR, TokenLeftParen);
     trie.add_key(CLOSE_EXPR, TokenRightParen);
+    trie.add_key(LEFT_BRACE, TokenLeftBrace);
+    trie.add_key(RIGHT_BRACE, TokenRightBrace);
+    
     trie.add_key(STMT_END, TokenSemiColon);
     trie.add_key(COMMA, TokenComma);
     trie.add_key(DOT, TokenDot);

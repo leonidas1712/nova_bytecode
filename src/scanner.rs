@@ -1,124 +1,6 @@
-
-
-
-
 use crate::utils::constants::*;
-
-
 pub mod tokens;
-
 use tokens::*;
-
-// #[derive(Debug,Clone,Copy, PartialEq)]
-// pub enum TokenType {
-//     // Single char
-//     TokenLeftParen,
-//     TokenRightParen,
-//     TokenLeftBrace,
-//     TokenRightBrace,
-//     TokenComma,
-//     TokenDot,
-//     TokenMinus,
-//     TokenPlus,
-//     TokenSemiColon,
-//     TokenSlash,
-//     TokenStar,
-
-//     // Keywords
-//     TokenPrint,
-//     TokenReturn,
-//     TokenVar,
-//     TokenIf,
-//     TokenTrue,
-//     TokenFalse,
-//     TokenAnd,
-//     TokenOr,
-//     TokenIdent,
-//     TokenPipe,
-
-//     // Literals
-//     TokenNumber,
-//     TokenFloat,
-//     TokenString,
-
-//     // Comp
-//     TokenEqual, // =
-//     TokenEqEq, // ==
-//     TokenNotEq, // !=
-//     TokenNot, // !
-//     TokenLess, // <
-//     TokenLessEq, // <=
-//     TokenGt, // >
-//     TokenGtEq, // >=
-
-//     // misc
-//     TokenComment,
-//     TokenError,
-// }
-
-// impl Display for TokenType {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:?}", self)
-//     }
-// }
-
-// use TokenType::*;
-
-// // start:0, curr:1
-// // prt
-//     // start:0, 
-
-// #[derive(Debug)]
-// pub struct Token<'src> {
-//     token_type:TokenType,
-//     pub content:&'src str,
-// }
-
-// impl<'src> Display for Token<'src> {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:?}('{}')", self.token_type, self.content)
-//     }
-// }
-
-// pub struct Scanner<'src> {
-//     source:&'src str,
-//     chars:LookaheadChars<'src>,
-//     start:usize, // index in source for start of curr lexeme
-//     current:usize, // index of current char
-//     line:usize, // line_num,
-// }
-
-// // store lookahead of one char i.e the Option<char> after peek
-// pub struct LookaheadChars<'src> {
-//     chars:Peekable<Chars<'src>>,
-//     peek:Option<char> // current peek (chars always points one step ahead of peek)
-// }
-
-// impl<'src> LookaheadChars<'src> {
-//     pub fn new<'source>(source:&'source str)->LookaheadChars<'source> {
-//         let mut chars=source.chars().peekable();
-//         let peek=chars.next();
-
-//         LookaheadChars { chars, peek }
-//     }
-
-//     pub fn peek(&self)->Option<char> {
-//         self.peek
-//     }
-
-//     pub fn peek_next(&mut self)->Option<char> {
-//         self.chars.peek().map(|c| c.to_owned())
-//     }
-// }
-
-// impl<'src> Iterator for LookaheadChars<'src> {
-//     type Item = char;
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let nxt=self.peek;
-//         self.peek=self.chars.next();
-//         nxt
-//     }
-// }
 
 pub struct Scanner<'src> {
     source:&'src str,
@@ -237,8 +119,18 @@ impl<'src> Scanner<'src> {
     // no match: token ident, else use the last match possible
     // e.g '==' => last match is TokenEqEq
     // advance the scanner
-    fn check_trie(&mut self)->TokenType{
+    fn check_trie(&mut self, char:char)->Token<'src>{
         let mut curr_node=&KEYWORDS_TRIE.root;
+
+        let node=curr_node.get_child(char);
+
+        if let None = node {
+            // ident handle here - loop while isdigit is alpha etc
+            return self.make_token(TokenIdent);
+        }
+
+        curr_node=node.unwrap();
+
 
         while let Some(pk) = self.peek() {
             let try_get=curr_node.get_child(pk);
@@ -250,7 +142,8 @@ impl<'src> Scanner<'src> {
             }
         }
 
-        curr_node.get_value().unwrap_or(TokenIdent)
+        let ty=curr_node.get_value().unwrap_or(TokenIdent);
+        self.make_token(ty)
     }
 
     // collect consumed into String repr for debugging
@@ -262,6 +155,55 @@ impl<'src> Scanner<'src> {
 
 
 // main next
+// impl<'src> Iterator for Scanner<'src> {
+//     type Item = Token<'src>;
+//     // advance: self.current+=1;
+//     // make_token: self.start=self.current
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.skip_whitespace();
+
+//         self.start=self.current;
+
+//         if self.start >= self.source.len() {
+//             return None;
+//         }
+
+//         let nxt=self.advance();
+        
+//         let mut make=|tok_type| Some(self.make_token(tok_type));
+
+//         // make_two_char(match_next:char, if_match:TokenType, else_match:TokenType)
+//         match nxt {
+//             Some(char) => {
+//                 match char {
+//                     OPEN_EXPR => make(TokenLeftParen),
+//                     OPEN_STRING => Some(self.string()), // stay
+//                     CLOSE_EXPR => make(TokenRightParen),
+//                     STMT_END => make(TokenSemiColon),
+//                     COMMA => make(TokenComma),
+//                     DOT => make(TokenDot),
+//                     PLUS => make(TokenPlus),
+//                     MINUS => make(TokenMinus),
+//                     SLASH => make(TokenSlash),
+//                     STAR => make(TokenStar),
+//                     char if char.is_ascii_digit() => Some(self.number()), // stay
+
+//                     // two char tokens - can replace with trie search later
+//                     EQ => self.make_two_char(EQ, TokenEqEq, TokenEqual),
+//                     BANG => self.make_two_char(EQ, TokenNotEq, TokenNot),
+//                     LESS_THAN => self.make_two_char(EQ, TokenLessEq, TokenLess), // trie search needed: '<' -> '<' for pipe, '=' for '<='
+//                     GT_THAN => self.make_two_char(EQ, TokenGtEq, TokenGt),
+//                     _ => make(TokenIdent)
+//                 }
+//             },
+
+//             None => make(TokenError) // err since OOB for start already checked
+//         }
+//     }
+// }
+
+
 impl<'src> Iterator for Scanner<'src> {
     type Item = Token<'src>;
     // advance: self.current+=1;
@@ -278,38 +220,22 @@ impl<'src> Iterator for Scanner<'src> {
 
         let nxt=self.advance();
         
-        let mut make=|tok_type| Some(self.make_token(tok_type));
+        // let mut make=|tok_type| Some(self.make_token(tok_type));
 
         // make_two_char(match_next:char, if_match:TokenType, else_match:TokenType)
         match nxt {
             Some(char) => {
                 match char {
-                    OPEN_EXPR => make(TokenLeftParen),
                     OPEN_STRING => Some(self.string()), // stay
-                    CLOSE_EXPR => make(TokenRightParen),
-                    STMT_END => make(TokenSemiColon),
-                    COMMA => make(TokenComma),
-                    DOT => make(TokenDot),
-                    PLUS => make(TokenPlus),
-                    MINUS => make(TokenMinus),
-                    SLASH => make(TokenSlash),
-                    STAR => make(TokenStar),
                     char if char.is_ascii_digit() => Some(self.number()), // stay
-
-                    // two char tokens - can replace with trie search later
-                    EQ => self.make_two_char(EQ, TokenEqEq, TokenEqual),
-                    BANG => self.make_two_char(EQ, TokenNotEq, TokenNot),
-                    LESS_THAN => self.make_two_char(EQ, TokenLessEq, TokenLess), // trie search needed: '<' -> '<' for pipe, '=' for '<='
-                    GT_THAN => self.make_two_char(EQ, TokenGtEq, TokenGt),
-                    _ => make(TokenIdent)
+                    _ => Some(self.check_trie(char))
                 }
             },
 
-            None => make(TokenError) // err since OOB for start already checked
+            None => Some(self.make_token(TokenError)) // err since OOB for start already checked
         }
     }
 }
-
 #[test]
 fn test_lookahead() {
     let inp="23";
@@ -390,13 +316,14 @@ fn test_string() {
 #[test]
 fn test_scanner_trie() {
     let t=&KEYWORDS_TRIE;
-    t.get_all().iter().for_each(|x| println!("{x}"));
-    // let t=Trie::setup();
-    // let inp="x=2";
-    // let k=&t.root.get_child('=');
-    // dbg!(&k);
 
-    // dbg!(k.unwrap().get_child(''));
+    let inp="\n(23) 1+2-3/4*5;\n c,z 2.0";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('23'),TokenRightParen(')'),TokenNumber('1'),TokenPlus('+'),TokenNumber('2'),TokenMinus('-'),TokenNumber('3'),TokenSlash('/'),TokenNumber('4'),TokenStar('*'),TokenNumber('5'),TokenSemiColon(';'),TokenIdent('c'),TokenComma(','),TokenIdent('z'),TokenFloat('2.0')]");
+
+    let inp="\n1=2 3==4 0!=1 5<2 3<=4 3>4, 3>=4";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenNumber('1'),TokenEqual('='),TokenNumber('2'),TokenNumber('3'),TokenEqEq('=='),TokenNumber('4'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('1'),TokenNumber('5'),TokenLess('<'),TokenNumber('2'),TokenNumber('3'),TokenLessEq('<='),TokenNumber('4'),TokenNumber('3'),TokenGt('>'),TokenNumber('4'),TokenComma(','),TokenNumber('3'),TokenGtEq('>='),TokenNumber('4')]");
 }
 
 // scanner.start: pointer to start of current lexeme being scanned
