@@ -2,6 +2,7 @@ use crate::utils::constants::*;
 pub mod tokens;
 use tokens::*;
 
+#[derive(Debug)]
 pub struct Scanner<'src> {
     source:&'src str,
     chars:LookaheadChars<'src>,

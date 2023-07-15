@@ -72,7 +72,7 @@ pub use TokenType::*;
 // prt
     // start:0, 
 
-#[derive(Debug,Clone, Copy)]
+#[derive(Debug,Clone, Copy, PartialEq, Eq)]
 pub struct Token<'src> {
     pub token_type:TokenType,
     pub content:&'src str,
@@ -99,6 +99,8 @@ impl<'src>  Token<'src> {
 }
 
 // store lookahead of one char i.e the Option<char> after peek
+
+#[derive(Debug)]
 pub struct LookaheadChars<'src> {
     chars:Peekable<Chars<'src>>,
     peek:Option<char> // current peek (chars always points one step ahead of peek)

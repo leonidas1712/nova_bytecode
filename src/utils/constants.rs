@@ -1,7 +1,13 @@
-use super::trie::Trie;
-use crate::scanner::tokens::*;
-
 extern crate lazy_static;
+
+use std::collections::HashMap;
+
+use crate::scanner::tokens::*;
+use crate::parser::*;
+
+use super::trie::Trie;
+
+
 
 // Single char tokens
 pub const OPEN_EXPR: char = '(';
@@ -121,6 +127,13 @@ lazy_static! {
     pub static ref KEYWORDS_TRIE:Trie = {
         let trie=setup_keywords();
         trie
+    };
+
+    pub static ref PARSE_RULE_TABLE:HashMap<TokenType,ParseRule> = {
+        let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
+        let p=ParseRule::new(RulePrefix, Parser::number, PrecNone);
+        m.insert(TokenNumber, p);
+        m
     };
 }
 
