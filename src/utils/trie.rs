@@ -2,7 +2,7 @@
 use std::collections::{HashMap, HashSet};
 use std::vec;
 
-use crate::scanner::{TokenType, Token};
+use crate::scanner::tokens::{TokenType, Token};
 use crate::utils::constants::*;
 
 #[derive(Debug)]

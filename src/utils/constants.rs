@@ -1,5 +1,5 @@
 use super::trie::Trie;
-use crate::scanner::TokenType::*;
+use crate::scanner::tokens::TokenType::*;
 
 extern crate lazy_static;
 

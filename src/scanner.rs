@@ -5,76 +5,120 @@ use std::iter::Peekable;
 use crate::utils::constants::*;
 use crate::utils::trie::{Trie,TrieNode};
 
-#[derive(Debug,Clone,Copy, PartialEq)]
-pub enum TokenType {
-    // Single char
-    TokenLeftParen,
-    TokenRightParen,
-    TokenLeftBrace,
-    TokenRightBrace,
-    TokenComma,
-    TokenDot,
-    TokenMinus,
-    TokenPlus,
-    TokenSemiColon,
-    TokenSlash,
-    TokenStar,
+pub mod tokens;
 
-    // Keywords
-    TokenPrint,
-    TokenReturn,
-    TokenVar,
-    TokenIf,
-    TokenTrue,
-    TokenFalse,
-    TokenAnd,
-    TokenOr,
-    TokenIdent,
-    TokenPipe,
+use tokens::*;
 
-    // Literals
-    TokenNumber,
-    TokenFloat,
-    TokenString,
+// #[derive(Debug,Clone,Copy, PartialEq)]
+// pub enum TokenType {
+//     // Single char
+//     TokenLeftParen,
+//     TokenRightParen,
+//     TokenLeftBrace,
+//     TokenRightBrace,
+//     TokenComma,
+//     TokenDot,
+//     TokenMinus,
+//     TokenPlus,
+//     TokenSemiColon,
+//     TokenSlash,
+//     TokenStar,
 
-    // Comp
-    TokenEqual, // =
-    TokenEqEq, // ==
-    TokenNotEq, // !=
-    TokenNot, // !
-    TokenLess, // <
-    TokenLessEq, // <=
-    TokenGt, // >
-    TokenGtEq, // >=
+//     // Keywords
+//     TokenPrint,
+//     TokenReturn,
+//     TokenVar,
+//     TokenIf,
+//     TokenTrue,
+//     TokenFalse,
+//     TokenAnd,
+//     TokenOr,
+//     TokenIdent,
+//     TokenPipe,
 
-    // misc
-    TokenComment,
-    TokenError,
-}
+//     // Literals
+//     TokenNumber,
+//     TokenFloat,
+//     TokenString,
 
-impl Display for TokenType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+//     // Comp
+//     TokenEqual, // =
+//     TokenEqEq, // ==
+//     TokenNotEq, // !=
+//     TokenNot, // !
+//     TokenLess, // <
+//     TokenLessEq, // <=
+//     TokenGt, // >
+//     TokenGtEq, // >=
 
-use TokenType::*;
+//     // misc
+//     TokenComment,
+//     TokenError,
+// }
 
-// start:0, curr:1
-// prt
-    // start:0, 
+// impl Display for TokenType {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:?}", self)
+//     }
+// }
 
-#[derive(Debug)]
-pub struct Token<'src> {
-    token_type:TokenType,
-    pub content:&'src str,
-}
+// use TokenType::*;
 
-impl<'src> Display for Token<'src> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}('{}')", self.token_type, self.content)
-    }
-}
+// // start:0, curr:1
+// // prt
+//     // start:0, 
+
+// #[derive(Debug)]
+// pub struct Token<'src> {
+//     token_type:TokenType,
+//     pub content:&'src str,
+// }
+
+// impl<'src> Display for Token<'src> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "{:?}('{}')", self.token_type, self.content)
+//     }
+// }
+
+// pub struct Scanner<'src> {
+//     source:&'src str,
+//     chars:LookaheadChars<'src>,
+//     start:usize, // index in source for start of curr lexeme
+//     current:usize, // index of current char
+//     line:usize, // line_num,
+// }
+
+// // store lookahead of one char i.e the Option<char> after peek
+// pub struct LookaheadChars<'src> {
+//     chars:Peekable<Chars<'src>>,
+//     peek:Option<char> // current peek (chars always points one step ahead of peek)
+// }
+
+// impl<'src> LookaheadChars<'src> {
+//     pub fn new<'source>(source:&'source str)->LookaheadChars<'source> {
+//         let mut chars=source.chars().peekable();
+//         let peek=chars.next();
+
+//         LookaheadChars { chars, peek }
+//     }
+
+//     pub fn peek(&self)->Option<char> {
+//         self.peek
+//     }
+
+//     pub fn peek_next(&mut self)->Option<char> {
+//         self.chars.peek().map(|c| c.to_owned())
+//     }
+// }
+
+// impl<'src> Iterator for LookaheadChars<'src> {
+//     type Item = char;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         let nxt=self.peek;
+//         self.peek=self.chars.next();
+//         nxt
+//     }
+// }
 
 pub struct Scanner<'src> {
     source:&'src str,
@@ -82,38 +126,6 @@ pub struct Scanner<'src> {
     start:usize, // index in source for start of curr lexeme
     current:usize, // index of current char
     line:usize, // line_num,
-}
-
-// store lookahead of one char i.e the Option<char> after peek
-pub struct LookaheadChars<'src> {
-    chars:Peekable<Chars<'src>>,
-    peek:Option<char> // current peek (chars always points one step ahead of peek)
-}
-
-impl<'src> LookaheadChars<'src> {
-    pub fn new<'source>(source:&'source str)->LookaheadChars<'source> {
-        let mut chars=source.chars().peekable();
-        let peek=chars.next();
-
-        LookaheadChars { chars, peek }
-    }
-
-    pub fn peek(&self)->Option<char> {
-        self.peek
-    }
-
-    pub fn peek_next(&mut self)->Option<char> {
-        self.chars.peek().map(|c| c.to_owned())
-    }
-}
-
-impl<'src> Iterator for LookaheadChars<'src> {
-    type Item = char;
-    fn next(&mut self) -> Option<Self::Item> {
-        let nxt=self.peek;
-        self.peek=self.chars.next();
-        nxt
-    }
 }
 
 impl<'src> Scanner<'src> {
