@@ -138,10 +138,6 @@ lazy_static! {
 }
 
 
-
-
-pub type NumType = i64;
-
 // Keywords
 pub const LET_NAME: &str = "let";
 pub const IF_NAME: &str = "if";

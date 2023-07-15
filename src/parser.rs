@@ -6,7 +6,7 @@ use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
-use crate::data;
+use crate::data::*;
 
 
 #[derive(Clone, Copy)]
@@ -72,17 +72,35 @@ impl<'src> Parser<'src> {
         Parser { scanner, prev_tok: None, curr_tok: None, line:1 }
     }
 
+    fn get_prev(&self)->Result<Token<'src>> {
+        match self.prev_tok {
+            Some(tok) => {
+                Ok(tok)
+            },
+            // report always returns Err
+            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
+        }
+    }
+
     // ParseFn: assume that the token to parse is set in self.prev
     // add err handling
 
-    // TokenError cons
+    // get_prev()?; 
+
+    // expect_token_type(ty)->Result<()>
     pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
-        match self.prev_tok {
-            Some(tok) => {
-                Ok(())
-            },
-            None => self.report_msg(Token::err(self.line), "Expected a number")
-        }
+        let prev=self.get_prev()?;
+        self.expect_token_type(prev, TokenNumber, "number")?; // only errs when bug in parser
+
+        // convert to number
+        let value:IntType = prev.content.parse().unwrap();
+        let value=Value::Number(value);
+
+        let idx=chunk.add_constant(value, prev.line);
+        chunk.write_op(Inst::OpConstant(idx), prev.line);
+
+        Ok(())
+       
     }
 
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
@@ -167,6 +185,8 @@ impl<'src> Parser<'src> {
         self.curr_tok.is_none()
     }
 
+    // Error Handling
+
     // always returns err variant
     fn report_msg(&self, token:Token<'_>, msg:&str)->Result<()> {
         let mut reported_msg=format!("[line {}] Error", token.line);
@@ -186,6 +206,20 @@ impl<'src> Parser<'src> {
     // without token
     fn report_err(&self, msg:&str)->Result<()> {
         self.report_msg(Token::err(self.line), msg)
+    }
+
+    // expect_token_type(prev, "number")?;
+    fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
+        match token.token_type {
+            // err msgs
+            token_type if !token_type.eq(&ty) => {
+                let msg=format!("Expected a {} but got '{}'", type_string, token.content);
+                self.report_err(&msg)
+            },
+            _ => {
+                Ok(())
+            }
+        }
     }
 }
 
