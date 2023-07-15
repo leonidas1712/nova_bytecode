@@ -50,6 +50,12 @@ pub enum TokenType {
     TokenError,
 }
 
+impl TokenType {
+    pub fn is_single(&self)->bool {
+        true
+    }
+}
+
 impl Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)

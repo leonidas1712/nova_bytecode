@@ -131,21 +131,47 @@ impl<'src> Scanner<'src> {
 
         curr_node=node.unwrap();
 
-        let if_=10;
-
+        let mut length=1;
 
         while let Some(pk) = self.peek() {
             let try_get=curr_node.get_child(pk);
             if let Some(child) = try_get {
                 curr_node=child;
                 self.advance();
+                length+=1;
             } else {
-                // curr_node=&KEYWORDS_TRIE.root;
                 break;
             }
         }
-        
-        let get=curr_node.get_value().map(|ty| self.make_token(ty));
+
+        dbg!(length);
+        dbg!(char);
+        // if single char token: immediately return the type (dont filter out)
+
+        // true: dont use as identifier (use value from trie for type)
+        // false: use as identifier 
+            // e.g 'if': use value we got
+            // 'if3': var name
+
+        let mut use_trie_value=|| {
+            // first char not alphanum or _
+            if !is_valid_ident_char(char) {
+                return true;
+            }
+
+            // e.g 'ifr': use as ident
+            if let Some(pk) = self.peek() {
+                if is_valid_ident_char(pk) {
+                    return false;
+                } 
+            }
+
+            true
+        };
+
+        let get=curr_node.get_value()
+        .filter(|_| use_trie_value())
+        .map(|ty| self.make_token(ty));
 
         if let Some(tok) = get {
             dbg!(&tok);
@@ -154,7 +180,6 @@ impl<'src> Scanner<'src> {
             dbg!("ident");
             self.identifier()
         }
-        // curr_node.get_value().map(|ty| self.make_token(ty)).unwrap_or_else(|| self.identifier())
     }
 
     // collect consumed into String repr for debugging
@@ -292,7 +317,10 @@ fn test_ident() {
     // let mut s=Scanner::new(inp);
     // assert_eq!(s.serialize(),  "[TokenIdent('xyz__123__su'),TokenIdent('ab12cd'),TokenNumber('23')]");
 
-    let inp="ifr";
+    // !false => Not, False
+    // ! false => Not,False
+    // ifr => false
+    let inp="iffalse";
     let mut s=Scanner::new(inp);
     dbg!(s.serialize());
 }
