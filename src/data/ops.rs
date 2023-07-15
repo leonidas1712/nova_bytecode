@@ -1,6 +1,8 @@
 use std::{fmt::{Display}, vec, rc::Rc};
 use std::ops::Deref;
-use crate::{err::*, errc};
+use crate::utils::{err::*};
+
+// Inst, Chunk, Value
 
 // type BinOp=for<'v> fn(&'v Value<'v>,&'v Value<'v>)->Value<'v>;
 // type UnaryOp=fn(&mut Value);
@@ -23,25 +25,6 @@ pub enum Inst {
 impl Display for Inst {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
-    }
-}
-
-pub struct Object<T> {
-    pub value:Rc<T>
-}
-
-impl <T> Object <T> {
-    pub fn new(val:T)->Object<T> {
-        Object {
-            value:Rc::new(val)
-        }
-    }
-}
-
-impl <T> Deref for Object<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        self.value.deref()
     }
 }
 

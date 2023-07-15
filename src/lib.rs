@@ -1,20 +1,10 @@
-pub mod ops;
+pub mod data;
+pub mod utils;
 pub mod vm;
-pub mod err;
-pub mod stack;
 
-use ops::*;
+use data::ops::*;
 
 pub fn run() {
-    // let mut s1=String::from("hi");
-    // let s2=String::from("hello");
-    // s1.push_str(&s2);
-    // println!("{s2}");
-    // println!("{s1}");
-
-    let s1="hi";
-    let s2="he";
-    let k=s1.to_owned();
 
 }  
 

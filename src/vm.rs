@@ -1,11 +1,9 @@
 use std::cell::RefCell;
 use std::rc::{Rc, self};
 
-use crate::ops::{*, Inst::*};
-use crate::err::*;
-use crate::stack::*;
-
-
+use crate::data::{ops::*, stack::*};
+use crate::utils::err::*;
+use crate::data::ops::Inst::*;
 
 // new(chunk), execute()->Result
 

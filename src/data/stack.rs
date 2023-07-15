@@ -1,5 +1,5 @@
-use crate::ops::{*};
-use crate::err::*;
+use crate::data::ops::{*};
+use crate::utils::err::*;
 use std::fmt::Display;
 use std::vec;
 
