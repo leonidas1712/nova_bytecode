@@ -7,6 +7,6 @@ use crate::data::ops::*;
 pub fn compile(source:&str)->Result<Chunk> {
     println!("Compiling:{source}");
     let mut first=source.char_indices();
-    let get_first=first.next();
+    let _get_first=first.next();
     Ok(Chunk::new())
 }

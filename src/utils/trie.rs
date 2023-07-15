@@ -1,9 +1,11 @@
 // trie to store TokenType indexed by &str (char)
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap,HashSet};
 use std::vec;
 
-use crate::scanner::tokens::{TokenType, Token};
+use crate::scanner::tokens::{TokenType};
 use crate::utils::constants::*;
+
+use TokenType::*;
 
 #[derive(Debug)]
 pub struct TrieNode {
@@ -127,7 +129,7 @@ impl Trie {
 // advance until result reached or keyword invalidated
 // advance until the last match
 
-use TokenType::*;
+
 
 #[test]
 fn trie_test() {
