@@ -82,7 +82,6 @@ pub struct Scanner<'src> {
     start:usize, // index in source for start of curr lexeme
     current:usize, // index of current char
     line:usize, // line_num,
-    trie:Trie
 }
 
 // store lookahead of one char i.e the Option<char> after peek
@@ -120,7 +119,7 @@ impl<'src> Iterator for LookaheadChars<'src> {
 impl<'src> Scanner<'src> {
     pub fn new<'source>(source:&'source str)->Scanner<'source>{
         let chars=LookaheadChars::new(source);
-        Scanner { source, chars, start: 0, current: 0, line: 1, trie:Trie::setup() }
+        Scanner { source, chars, start: 0, current: 0, line: 1 }
     }
 
     pub fn peek(&mut self)->Option<char> {
@@ -227,7 +226,7 @@ impl<'src> Scanner<'src> {
     // e.g '==' => last match is TokenEqEq
     // advance the scanner
     fn check_trie(&mut self)->TokenType{
-        let curr_node=&self.trie.root;
+        // let curr_node=&self.trie.root;
         // self.trie.root.get_child('c');
         // while let Some(pk) = self.peek() {
         //     let try_get=curr_node.get_child(pk);
@@ -371,10 +370,12 @@ fn test_string() {
 
 #[test]
 fn test_scanner_trie() {
-    let t=Trie::setup();
-    let inp="x=2";
-    let k=&t.root.get_child('=');
-    dbg!(&k);
+    let t=&KEYWORDS_TRIE;
+    t.get_all().iter().for_each(|x| println!("{x}"));
+    // let t=Trie::setup();
+    // let inp="x=2";
+    // let k=&t.root.get_child('=');
+    // dbg!(&k);
 
     // dbg!(k.unwrap().get_child(''));
 }

@@ -1,3 +1,8 @@
+use super::trie::Trie;
+use crate::scanner::TokenType::*;
+
+extern crate lazy_static;
+
 // Single char tokens
 pub const OPEN_EXPR: char = '(';
 pub const CLOSE_EXPR: char = ')';
@@ -29,6 +34,43 @@ pub const EQ_EQ:&str="==";
 pub const NOT_EQ:&str="!=";
 pub const LT_EQ:&str="<=";
 pub const GT_EQ:&str=">=";
+
+
+// keywords trie
+fn setup_keywords()->Trie{
+    let mut trie=Trie::new();
+    trie.add_key(OPEN_EXPR, TokenLeftParen);
+    trie.add_key(CLOSE_EXPR, TokenRightParen);
+    trie.add_key(STMT_END, TokenSemiColon);
+    trie.add_key(COMMA, TokenComma);
+    trie.add_key(DOT, TokenDot);
+    trie.add_key(PLUS, TokenPlus);
+    trie.add_key(MINUS, TokenMinus);
+    trie.add_key(SLASH, TokenSlash);
+    trie.add_key(STAR, TokenStar);
+
+    // comp
+    trie.add_key(EQ, TokenEqual);
+    trie.add_key(LESS_THAN, TokenLess);
+    trie.add_key(GT_THAN, TokenGt);
+    trie.add_key(BANG, TokenNot);
+
+
+    // two char
+    trie.add_key(EQ_EQ, TokenEqEq);
+    trie.add_key(NOT_EQ, TokenNotEq);
+    trie.add_key(LT_EQ, TokenLessEq);
+    trie.add_key(GT_EQ, TokenGtEq);
+
+    trie
+}
+
+lazy_static! {
+    pub static ref KEYWORDS_TRIE:Trie = {
+        let trie=setup_keywords();
+        trie
+    };
+}
 
 
 

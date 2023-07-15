@@ -66,11 +66,6 @@ impl Trie {
         Trie { root: TrieNode::empty() }
     }
 
-    // preloaded with keywords
-    pub fn setup()->Trie {
-        setup_keywords()
-    }
-
     pub fn add_key<K>(&mut self, key:K, ty:TokenType) 
     where K:ToString {
         let to_string=key.to_string();
@@ -131,36 +126,6 @@ impl Trie {
 
 // advance until result reached or keyword invalidated
 // advance until the last match
-
-
-// keywords trie
-fn setup_keywords()->Trie{
-    let mut trie=Trie::new();
-    trie.add_key(OPEN_EXPR, TokenLeftParen);
-    trie.add_key(CLOSE_EXPR, TokenRightParen);
-    trie.add_key(STMT_END, TokenSemiColon);
-    trie.add_key(COMMA, TokenComma);
-    trie.add_key(DOT, TokenDot);
-    trie.add_key(PLUS, TokenPlus);
-    trie.add_key(MINUS, TokenMinus);
-    trie.add_key(SLASH, TokenSlash);
-    trie.add_key(STAR, TokenStar);
-
-    // comp
-    trie.add_key(EQ, TokenEqual);
-    trie.add_key(LESS_THAN, TokenLess);
-    trie.add_key(GT_THAN, TokenGt);
-    trie.add_key(BANG, TokenNot);
-
-
-    // two char
-    trie.add_key(EQ_EQ, TokenEqEq);
-    trie.add_key(NOT_EQ, TokenNotEq);
-    trie.add_key(LT_EQ, TokenLessEq);
-    trie.add_key(GT_EQ, TokenGtEq);
-
-    trie
-}
 
 use TokenType::*;
 

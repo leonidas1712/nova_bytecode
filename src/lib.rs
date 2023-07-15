@@ -1,4 +1,6 @@
 extern crate rustyline;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod data;
 pub mod utils;
