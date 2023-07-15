@@ -106,6 +106,10 @@ impl<'src> Scanner<'src> {
         self.make_token(if float { TokenFloat } else { TokenNumber })
     }
 
+    fn skip_whitespace(&mut self) {
+        self.advance_while(|char| char.is_ascii_whitespace());
+    }
+
     // collect consumed into String repr for debugging
     fn serialize(self)->String {
         let s=self.into_iter().map(|tok| tok.to_string()).collect::<Vec<String>>().join(",");
@@ -117,6 +121,8 @@ impl<'src> Iterator for Scanner<'src> {
     type Item = Token<'src>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        self.skip_whitespace();
+
         self.start=self.current;
 
         if self.start >= self.source.len() {
@@ -153,11 +159,12 @@ impl<'src> Iterator for Scanner<'src> {
 fn test_scanner() {
     let inp="(2345) 23";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('2345'),TokenRightParen(')'),TokenIdent(' '),TokenNumber('23')]");
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('2345'),TokenRightParen(')'),TokenNumber('23')]");
 
-    // let inp="(200.355 500 30.3)";
-    // let mut s=Scanner::new(inp);
-    // dbg!(s.serialize());
+    
+    let inp="  30   40 \n 50   \t 60 \r   700.30  ";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenNumber('30'),TokenNumber('40'),TokenNumber('50'),TokenNumber('60'),TokenFloat('700.30')]");
 }
 
 
