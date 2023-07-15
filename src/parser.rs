@@ -1,6 +1,10 @@
-use crate::scanner::{tokens::*, Scanner, self};
+use std::collections::HashMap;
+use std::vec;
+
+use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::err::*;
+use crate::data;
 
 pub struct Parser<'src> {
     scanner:Scanner<'src>,
@@ -9,10 +13,33 @@ pub struct Parser<'src> {
 }
 
 // Parser's job: go from Token stream to a Chunk with all Insts and Consts (compile)
+
+type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk);
+
+#[derive(PartialEq, Eq, Hash)]
+pub struct ParseRule {
+
+}
+
 impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
         let scanner=Scanner::new(source);
         Parser { scanner, prev_tok: None, curr_tok: None }
+    }
+
+    fn test(&self) {
+       let mut v:HashMap<ParseRule,ParseFn>=HashMap::new();
+       v.insert(ParseRule {  }, Parser::number);
+       v.insert(ParseRule {  }, Parser::unary);
+
+    }
+
+    fn number(&mut self, chunk: &mut Chunk)->(){
+
+    }
+
+    fn unary(&mut self, chunk:&mut Chunk) {
+
     }
 
     // Err, Err - report consecutive errors until non-err or end
@@ -65,10 +92,23 @@ impl<'src> Parser<'src> {
     Compiling chunk: a ref to the chunk being compiled (can change over time)
 
     compile(source, *chunk):
-        initScanner(source)
+        initScanner(source)       
         compilingChunk = chunk
+
+        advance()
+        expression()
+
         consume(EOF, Expect end of expr)
         endCompiler() => chunk.add OPRETURN
 
         error reporting
+*/
+
+
+/*
+We map each token type to a different kind of expression. We define a function for each expression that outputs the appropriate bytecode. 
+Then we build an array of function pointers. The indexes in the array correspond to the TokenType enum values,
+and the function at each index is the code to compile an expression of that token type.
+
+
 */
