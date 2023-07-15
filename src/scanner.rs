@@ -3,6 +3,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 
 use crate::utils::constants::*;
+use crate::utils::trie::{Trie,TrieNode};
 
 #[derive(Debug,Clone,Copy, PartialEq)]
 pub enum TokenType {
@@ -81,6 +82,7 @@ pub struct Scanner<'src> {
     start:usize, // index in source for start of curr lexeme
     current:usize, // index of current char
     line:usize, // line_num,
+    trie:Trie
 }
 
 // store lookahead of one char i.e the Option<char> after peek
@@ -118,7 +120,7 @@ impl<'src> Iterator for LookaheadChars<'src> {
 impl<'src> Scanner<'src> {
     pub fn new<'source>(source:&'source str)->Scanner<'source>{
         let chars=LookaheadChars::new(source);
-        Scanner { source, chars, start: 0, current: 0, line: 1 }
+        Scanner { source, chars, start: 0, current: 0, line: 1, trie:Trie::setup() }
     }
 
     pub fn peek(&mut self)->Option<char> {
@@ -209,15 +211,6 @@ impl<'src> Scanner<'src> {
         }
     }
 
-    // return true and advance if peek is char, else false
-    fn match_char(&mut self, char:char)->bool {
-        if let Some(ch) = self.peek() {
-            ch==char
-        } else {
-            false
-        }
-    }
-
     // check next char: if equal to match_next, use if_match and advance. else, just ret else_match
     fn make_two_char(&mut self, match_next:char, if_match:TokenType, else_match:TokenType)->Option<Token<'src>> {
         if let Some(pk) = self.peek() {
@@ -230,6 +223,18 @@ impl<'src> Scanner<'src> {
         None
     }
 
+    // no match: token ident, else use the last match possible
+    // e.g '==' => last match is TokenEqEq
+    // advance the scanner
+    fn check_trie(&mut self)->TokenType{
+        let curr_node=&self.trie.root;
+        // self.trie.root.get_child('c');
+        // while let Some(pk) = self.peek() {
+        //     let try_get=curr_node.get_child(pk);
+        // }
+        TokenIdent
+    }
+
     // collect consumed into String repr for debugging
     fn serialize(self)->String {
         let s=self.into_iter().map(|tok| tok.to_string()).collect::<Vec<String>>().join(",");
@@ -237,6 +242,8 @@ impl<'src> Scanner<'src> {
     }
 }
 
+
+// main next
 impl<'src> Iterator for Scanner<'src> {
     type Item = Token<'src>;
     // advance: self.current+=1;
@@ -260,7 +267,7 @@ impl<'src> Iterator for Scanner<'src> {
             Some(char) => {
                 match char {
                     OPEN_EXPR => make(TokenLeftParen),
-                    OPEN_STRING => Some(self.string()),
+                    OPEN_STRING => Some(self.string()), // stay
                     CLOSE_EXPR => make(TokenRightParen),
                     STMT_END => make(TokenSemiColon),
                     COMMA => make(TokenComma),
@@ -269,7 +276,7 @@ impl<'src> Iterator for Scanner<'src> {
                     MINUS => make(TokenMinus),
                     SLASH => make(TokenSlash),
                     STAR => make(TokenStar),
-                    char if char.is_ascii_digit() => Some(self.number()),
+                    char if char.is_ascii_digit() => Some(self.number()), // stay
 
                     // two char tokens - can replace with trie search later
                     EQ => self.make_two_char(EQ, TokenEqEq, TokenEqual),
@@ -362,6 +369,15 @@ fn test_string() {
     assert_eq!(s.serialize(),  "[TokenNumber('2'),TokenString(' some string lit '),TokenNumber('3')]");
 }
 
+#[test]
+fn test_scanner_trie() {
+    let t=Trie::setup();
+    let inp="x=2";
+    let k=&t.root.get_child('=');
+    dbg!(&k);
+
+    // dbg!(k.unwrap().get_child(''));
+}
 
 // scanner.start: pointer to start of current lexeme being scanned
 // scanner.current = current char being looked at

@@ -58,12 +58,17 @@ impl TrieNode {
 
 // new, add_key(key:&str, ty:TokenType), get_type(key:&str)->Option<TokenType>
 pub struct Trie {
-    root:TrieNode
+    pub root:TrieNode
 }
 
 impl Trie {
     pub fn new()->Trie {
         Trie { root: TrieNode::empty() }
+    }
+
+    // preloaded with keywords
+    pub fn setup()->Trie {
+        setup_keywords()
     }
 
     pub fn add_key<K>(&mut self, key:K, ty:TokenType) 
@@ -82,7 +87,8 @@ impl Trie {
         node.set_value(ty);
     }
 
-    pub fn get_type(&self, key:&str)->Option<TokenType>{
+    pub fn get_type<K>(&self, key:K)->Option<TokenType> where K:ToString{
+        let key=key.to_string();
         let mut chars=key.chars().peekable();
         let mut node=&self.root;
 
@@ -128,7 +134,7 @@ impl Trie {
 
 
 // keywords trie
-pub fn setup_keywords()->Trie{
+fn setup_keywords()->Trie{
     let mut trie=Trie::new();
     trie.add_key(OPEN_EXPR, TokenLeftParen);
     trie.add_key(CLOSE_EXPR, TokenRightParen);
@@ -154,7 +160,6 @@ pub fn setup_keywords()->Trie{
     trie.add_key(GT_EQ, TokenGtEq);
 
     trie
-
 }
 
 use TokenType::*;
