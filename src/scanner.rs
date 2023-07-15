@@ -212,7 +212,7 @@ impl<'src> Iterator for Scanner<'src> {
                 }
             },
 
-            None => Some(self.make_token(TokenError)) // err since OOB for start already checked
+            None => Some(self.make_token(TokenError("Error"))) // err since OOB for start already checked
         }
     }
 }

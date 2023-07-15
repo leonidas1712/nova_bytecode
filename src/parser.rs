@@ -16,9 +16,14 @@ pub struct Parser<'src> {
 
 type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk);
 
-#[derive(PartialEq, Eq, Hash)]
-pub struct ParseRule {
+pub enum Precedence {
+    PrecNone,
+    PrecOr
+}
 
+pub struct ParseRule {
+    infix:ParseFn<'static>,
+    prec:Precedence
 }
 
 impl<'src> Parser<'src> {
@@ -28,9 +33,10 @@ impl<'src> Parser<'src> {
     }
 
     fn test(&self) {
-       let mut v:HashMap<ParseRule,ParseFn>=HashMap::new();
-       v.insert(ParseRule {  }, Parser::number);
-       v.insert(ParseRule {  }, Parser::unary);
+       let mut v:HashMap<TokenType,ParseRule>=HashMap::new();
+    
+    //    v.insert(ParseRule {  }, Parser::number);
+    //    v.insert(ParseRule {  }, Parser::unary);
 
     }
 

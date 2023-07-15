@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::str::Chars;
 use std::iter::Peekable;
 
-#[derive(Debug,Clone,Copy, PartialEq)]
+#[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
 pub enum TokenType {
     // Single char
     TokenLeftParen,
@@ -48,9 +48,9 @@ pub enum TokenType {
 
     // misc
     TokenComment,
-    TokenError,
+    TokenError(&'static str),
     TokenLambda,
-    TokenInfix
+    TokenInfix,
 }
 
 
@@ -87,9 +87,12 @@ impl<'src> Display for Token<'src> {
 
 impl<'src>  Token<'src> {
     pub fn is_err(&self)->bool {
-        self.token_type.eq(&TokenError)
+        match self.token_type {
+            TokenError(_) => true,
+            _ => false
+        }
     }
-    
+
     pub fn debug_print(&self)->String {
         format!("{}:line {}", self.to_string(), self.line)
     }
