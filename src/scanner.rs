@@ -158,23 +158,6 @@ impl<'src> Scanner<'src> {
     }
 
     fn skip_whitespace(&mut self) {
-        // if let Some(pk) = self.peek() {
-        //     // Handle comment: peek is slash + right after is also slash
-        //     if pk==SLASH && self.chars.next_if_eq(SLASH).is_some() { // change to use self.peek_next
-        //         // skip until \n
-        //         self.advance_while(|char| char!=NEWLINE);
-        //         self.advance(); // past \n
-        //     }
-        // } 
-
-        // current peek slash + peek next is slash. one of these is empty: false
-        let peek_is_slash=self.peek().map(|ch| ch==SLASH);
-        let peek_next_is_slash=self.peek_next().map(|ch| ch==SLASH);
-
-        let is_comm=peek_is_slash.zip(peek_next_is_slash).map(|tup| tup.0 && tup.1).unwrap_or(false);
-        
-        // self.advance_while(|char| char.is_ascii_whitespace());
-
         while let Some(pk) = self.peek() {
             match pk {
                 NEWLINE => {
@@ -183,6 +166,17 @@ impl<'src> Scanner<'src> {
                 },
                 pk if pk.is_ascii_whitespace() => {
                     self.advance();
+                },
+                SLASH => {         
+                    let is_comm=self.peek_next().map(|ch| ch==SLASH).unwrap_or(false);
+                    if !is_comm {
+                        return;
+                    }
+                    
+                    // advance until \n
+                    self.advance_while(|ch| ch!=NEWLINE);
+                    self.advance();
+                    self.line+=1;
                 },
                 _ => break
             }
@@ -326,14 +320,19 @@ fn test_scanner_two() {
 
 #[test]
 fn test_comment() {
-    // let inp="\n\t 2/3 // c1 \n 40 // c2\n  ";
     let inp="2/3";
     let mut s=Scanner::new(inp);
-    dbg!(s.serialize());
+    assert_eq!(s.serialize(), "[TokenNumber('2'),TokenSlash('/'),TokenNumber('3')]");
 
-    let inp="6 //COMM";
+    let inp="\n\t 2/3 // c1 \n 40 // c2\n  400 // \t another comment \n 50 ";
     let mut s=Scanner::new(inp);
-    dbg!(s.serialize());
+    assert_eq!(s.serialize(), "[TokenNumber('2'),TokenSlash('/'),TokenNumber('3'),TokenNumber('40'),TokenNumber('400'),TokenNumber('50')]");
+}
+
+#[test]
+fn test_string() {
+    let inp="\" some string literal \"";
+    // TokenString("some string..")
 }
 
 

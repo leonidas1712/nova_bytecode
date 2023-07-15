@@ -22,6 +22,8 @@ pub const BANG:char='!';
 pub const LESS_THAN:char='<';
 pub const GT_THAN:char='>';
 
+pub const OPEN_STRING:char='"';
+
 
 
 pub type NumType = i64;
