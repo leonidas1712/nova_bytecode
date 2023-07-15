@@ -110,6 +110,10 @@ impl<'src> Scanner<'src> {
         self.chars.peek()
     }
 
+    pub fn peek_next(&mut self)->Option<char> {
+        self.chars.peek_next()
+    }
+
     // increment, return next char (as &str)
         // str slice of next k chars (k=1)
     fn advance(&mut self)->Option<char>{
@@ -162,7 +166,27 @@ impl<'src> Scanner<'src> {
         //         self.advance(); // past \n
         //     }
         // } 
-        self.advance_while(|char| char.is_ascii_whitespace());
+
+        // current peek slash + peek next is slash. one of these is empty: false
+        let peek_is_slash=self.peek().map(|ch| ch==SLASH);
+        let peek_next_is_slash=self.peek_next().map(|ch| ch==SLASH);
+
+        let is_comm=peek_is_slash.zip(peek_next_is_slash).map(|tup| tup.0 && tup.1).unwrap_or(false);
+        
+        // self.advance_while(|char| char.is_ascii_whitespace());
+
+        while let Some(pk) = self.peek() {
+            match pk {
+                NEWLINE => {
+                    self.advance();
+                    self.line += 1;
+                },
+                pk if pk.is_ascii_whitespace() => {
+                    self.advance();
+                },
+                _ => break
+            }
+        }
     }
 
     // return true and advance if peek is char, else false
@@ -222,7 +246,9 @@ impl<'src> Iterator for Scanner<'src> {
                     DOT => make(TokenDot),
                     PLUS => make(TokenPlus),
                     MINUS => make(TokenMinus),
-                    SLASH => make(TokenSlash),
+                    SLASH => {
+                        make(TokenSlash) 
+                    },
                     STAR => make(TokenStar),
                     char if char.is_ascii_digit() => Some(self.number()),
 
@@ -274,6 +300,13 @@ fn test_scanner() {
     let inp="  30   40 \n 50   \t 60 \r   700.30  ";
     let mut s=Scanner::new(inp);
     assert_eq!(s.serialize(), "[TokenNumber('30'),TokenNumber('40'),TokenNumber('50'),TokenNumber('60'),TokenFloat('700.30')]");
+
+    let inp="xy\ny\nz\ntext";
+    let mut s=Scanner::new(inp);
+    while let Some(_) = s.peek() {
+        s.next();
+    }
+    assert_eq!(s.line, 4);
 }
 
 #[test]
@@ -295,6 +328,10 @@ fn test_scanner_two() {
 fn test_comment() {
     // let inp="\n\t 2/3 // c1 \n 40 // c2\n  ";
     let inp="2/3";
+    let mut s=Scanner::new(inp);
+    dbg!(s.serialize());
+
+    let inp="6 //COMM";
     let mut s=Scanner::new(inp);
     dbg!(s.serialize());
 }
