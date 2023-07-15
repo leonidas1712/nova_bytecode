@@ -22,6 +22,10 @@ pub struct VM {
         // call frame refers to function potentially on value stack
 }
 
+pub fn compile(source:&str)->Result<Chunk> {
+    Ok(Chunk::new())
+}
+
 impl VM {
     pub fn new()->VM {
 
@@ -115,5 +119,10 @@ impl VM {
             // advance ip - may cause issue since ip advanced before match (unavoidable)
             self.ip+=1;
         }
+    }
+
+    pub fn interpret(&mut self, source:&str)->Result<Value>{
+        let chunk=compile(source)?; // turn source into bytecode, consts etc
+        self.run(chunk)
     }
 }

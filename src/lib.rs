@@ -8,7 +8,7 @@ use rustyline::{DefaultEditor, error::ReadlineError};
 
 use utils::constants::*;
 
-pub fn nova_repl(_vm:VM) {
+pub fn nova_repl(mut vm:VM) {
     let mut rl = DefaultEditor::new().unwrap();
 
     println!();
@@ -41,8 +41,16 @@ pub fn nova_repl(_vm:VM) {
                     continue;
                 }
 
-                println!("You typed:{}", inp);
-               
+
+                match vm.interpret(&inp) {
+                    Ok(val) => {
+                        println!("{}", val.to_string());
+                    },
+
+                    Err(err) => {
+                        println!("{}", err.to_string());
+                    }
+                }               
             }
 
             Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
@@ -125,5 +133,7 @@ pub mod tests {
 
         let res=vm.run(c3).unwrap(); // re-use possible
         assert_eq!(res.to_string(), "true");
+
+        let res=vm.run(Chunk::new());
     }
 }
