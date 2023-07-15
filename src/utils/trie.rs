@@ -66,6 +66,10 @@ impl Trie {
         Trie { root: TrieNode::empty() }
     }
 
+    pub fn add_key_char(&mut self, key:char, ty:TokenType) {
+        self.add_key(key.to_string().as_str(), ty);
+    }
+
     pub fn add_key(&mut self, key:&str, ty:TokenType) {
         let mut chars=key.chars().peekable();
         let mut node=&mut self.root;
@@ -119,6 +123,33 @@ impl Trie {
         let mut st:Vec<char>=vec![];
         Self::get_all_from_node(&self.root, &mut st)
     }
+}
+
+// advance until result reached or keyword invalidated
+// advance until the last match
+
+
+// keywords trie
+pub fn setup_keywords() {
+    let mut trie=Trie::new();
+    trie.add_key_char(OPEN_EXPR, TokenLeftParen);
+    trie.add_key_char(CLOSE_EXPR, TokenRightParen);
+    trie.add_key_char(STMT_END, TokenSemiColon);
+    trie.add_key_char(COMMA, TokenComma);
+    trie.add_key_char(DOT, TokenDot);
+    trie.add_key_char(PLUS, TokenPlus);    
+    trie.add_key_char(MINUS, TokenMinus);
+    trie.add_key_char(SLASH, TokenSlash);
+    trie.add_key_char(STAR, TokenStar);
+    trie.add_key_char(EQ, TokenEqual);
+
+    // two char
+    trie.add_key(EQ_EQ, TokenEqEq);
+    trie.add_key(NOT_EQ, TokenNotEq);
+    
+
+
+    
 }
 
 use TokenType::*;

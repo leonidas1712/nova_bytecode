@@ -267,9 +267,7 @@ impl<'src> Iterator for Scanner<'src> {
                     DOT => make(TokenDot),
                     PLUS => make(TokenPlus),
                     MINUS => make(TokenMinus),
-                    SLASH => {
-                        make(TokenSlash) 
-                    },
+                    SLASH => make(TokenSlash),
                     STAR => make(TokenStar),
                     char if char.is_ascii_digit() => Some(self.number()),
 
