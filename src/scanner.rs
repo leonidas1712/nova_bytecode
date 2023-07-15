@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::str::Chars;
 use std::iter::Peekable;
 
@@ -41,9 +42,14 @@ use TokenType::*;
 #[derive(Debug)]
 pub struct Token<'src> {
     token_type:TokenType,
-    content:&'src str,
+    pub content:&'src str,
 }
 
+impl<'src> Display for Token<'src> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}('{}')", self.token_type, self.content)
+    }
+}
 
 pub struct Scanner<'src> {
     source:&'src str,
@@ -99,6 +105,12 @@ impl<'src> Scanner<'src> {
 
         self.make_token(if float { TokenFloat } else { TokenNumber })
     }
+
+    // collect consumed into String repr for debugging
+    fn serialize(self)->String {
+        let s=self.into_iter().map(|tok| tok.to_string()).collect::<Vec<String>>().join(",");
+        format!("[{s}]")
+    }
 }
 
 impl<'src> Iterator for Scanner<'src> {
@@ -119,8 +131,15 @@ impl<'src> Iterator for Scanner<'src> {
             Some(char) => {
                 match char {
                     OPEN_EXPR => make(TokenLeftParen),
-                    char if char.is_ascii_digit() => Some(self.number()),
                     CLOSE_EXPR => make(TokenRightParen),
+                    STMT_END => make(TokenSemiColon),
+                    COMMA => make(TokenComma),
+                    DOT => make(TokenDot),
+                    PLUS => make(TokenPlus),
+                    MINUS => make(TokenMinus),
+                    SLASH => make(TokenSlash),
+                    STAR => make(TokenStar),
+                    char if char.is_ascii_digit() => Some(self.number()),
                     _ => make(TokenIdent)
                 }
             },
@@ -134,15 +153,11 @@ impl<'src> Iterator for Scanner<'src> {
 fn test_scanner() {
     let inp="(2345) 23";
     let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('2345'),TokenRightParen(')'),TokenIdent(' '),TokenNumber('23')]");
 
-    s.into_iter().for_each(|tok| println!("{:?}", tok));
-
-    println!("");
-
-    let inp="(200.355 500 30.3)";
-    let mut s=Scanner::new(inp);
-    s.into_iter().for_each(|tok| println!("{:?}", tok));
-
+    // let inp="(200.355 500 30.3)";
+    // let mut s=Scanner::new(inp);
+    // dbg!(s.serialize());
 }
 
 

@@ -1,4 +1,4 @@
-// Tokens
+// Single char tokens
 pub const OPEN_EXPR: char = '(';
 pub const CLOSE_EXPR: char = ')';
 pub const NEWLINE: char = '\n';
@@ -9,6 +9,15 @@ pub const CLOSE_LIST: char = ']';
 pub const SPACE: char = ' ';
 pub const EMPTY: char = '\0';
 pub const DOT:char='.';
+pub const STMT_END:char = ';';
+pub const COMMA:char=',';
+
+pub const PLUS:char='+';
+pub const SLASH:char='/';
+pub const STAR:char='*';
+pub const MINUS:char='-';
+
+
 
 pub type NumType = i64;
 
@@ -66,7 +75,6 @@ pub const LAMBDA_TYPE: &str = "lambda";
 pub const COMP_OPR: &str = "$";
 pub const COMP_LEFT: &str = "@";
 pub const PIPE: &str = ">>";
-pub const STMT_END: &str = ";";
 
 // Some useful token arrays
 // pub const SPLIT_TOKENS: [&'static str; 12] = [
