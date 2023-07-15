@@ -1,5 +1,6 @@
 // trie to store TokenType indexed by &str (char)
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::vec;
 
 use crate::scanner::{TokenType, Token};
 use crate::utils::constants::*;
@@ -7,7 +8,7 @@ use crate::utils::constants::*;
 #[derive(Debug)]
 pub struct TrieNode {
     pub char:char,
-    children:HashMap<char,TrieNode>,
+    pub children:HashMap<char,TrieNode>,
     pub value:Option<TokenType> // mark node as terminal with value
 }
 impl TrieNode {
@@ -93,6 +94,31 @@ impl Trie {
 
         node.get_value()
     }
+
+    // only for debugging: ok to do String
+    pub fn get_all_from_node(node:&TrieNode, stack:&mut Vec<char>)->Vec<String>{
+        let mut strings:Vec<String>=vec![];
+        // terminal
+        if let Some(ty) = node.get_value() {
+            let name:String=stack.iter().collect();
+            let ty=ty.to_string();
+            strings.push(format!("{}:{}", name, ty));
+        }
+
+        for (char,child) in node.children.iter() {
+            stack.push(char.to_owned());
+            let mut results=Self::get_all_from_node(child, stack);
+            strings.append(&mut results);
+            stack.pop();
+        }
+
+        strings
+    }
+
+    pub fn get_all(&self)->Vec<String>{
+        let mut st:Vec<char>=vec![];
+        Self::get_all_from_node(&self.root, &mut st)
+    }
 }
 
 use TokenType::*;
@@ -127,10 +153,17 @@ fn trie_test_overlap() {
     t.add_key(">=", TokenGtEq);
     t.add_key("/", TokenSlash);
     t.add_key("//", TokenComment);
+    t.add_key("if", TokenIf);
 
     assert_eq!(t.get_type(">"), Some(TokenGt));
     assert_eq!(t.get_type(">>"), Some(TokenPipe));
     assert_eq!(t.get_type(">="), Some(TokenGtEq));
     assert_eq!(t.get_type("/"), Some(TokenSlash));
     assert_eq!(t.get_type("//"), Some(TokenComment));
+    assert_eq!(t.get_type("x1"), None); // ident
+
+    let st:HashSet<String>=t.get_all().into_iter().collect();
+    let exp:Vec<String>=vec!["/:TokenSlash", ">=:TokenGtEq", ">:TokenGt", ">>:TokenPipe", "if:TokenIf", "//:TokenComment"].into_iter().map(|x| x.to_owned()).collect();
+    let exp:HashSet<String>=exp.into_iter().collect();
+    assert_eq!(st, exp);
 }

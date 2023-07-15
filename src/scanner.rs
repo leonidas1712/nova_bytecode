@@ -51,6 +51,12 @@ pub enum TokenType {
     TokenError,
 }
 
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 use TokenType::*;
 
 // start:0, curr:1
