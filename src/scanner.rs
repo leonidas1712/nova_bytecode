@@ -10,6 +10,11 @@ pub struct Scanner<'src> {
     line:usize, // line_num,
 }
 
+// valid char for ident: alphanumeric or '_'
+fn is_valid_ident_char(char:char)->bool {
+    char.is_alphanumeric() || char==UNDERSCORE
+}
+
 impl<'src> Scanner<'src> {
     pub fn new<'source>(source:&'source str)->Scanner<'source>{
         let chars=LookaheadChars::new(source);
@@ -104,16 +109,10 @@ impl<'src> Scanner<'src> {
         }
     }
 
-    // check next char: if equal to match_next, use if_match and advance. else, just ret else_match
-    fn make_two_char(&mut self, match_next:char, if_match:TokenType, else_match:TokenType)->Option<Token<'src>> {
-        if let Some(pk) = self.peek() {
-            if pk==match_next {
-                self.advance();
-                return Some(self.make_token(if_match))
-            } 
-            return Some(self.make_token(else_match))
-        }
-        None
+    // xyz_123
+    fn identifier(&mut self)->Token<'src> {
+        self.advance_while(|ch| is_valid_ident_char(ch));
+        self.make_token(TokenIdent)
     }
 
     // no match: token ident, else use the last match possible
@@ -126,10 +125,13 @@ impl<'src> Scanner<'src> {
 
         if let None = node {
             // ident handle here - loop while isdigit is alpha etc
-            return self.make_token(TokenIdent);
+            // return self.make_token(TokenIdent);
+            return self.identifier();
         }
 
         curr_node=node.unwrap();
+
+        let if_=10;
 
 
         while let Some(pk) = self.peek() {
@@ -138,12 +140,21 @@ impl<'src> Scanner<'src> {
                 curr_node=child;
                 self.advance();
             } else {
+                // curr_node=&KEYWORDS_TRIE.root;
                 break;
             }
         }
+        
+        let get=curr_node.get_value().map(|ty| self.make_token(ty));
 
-        let ty=curr_node.get_value().unwrap_or(TokenIdent);
-        self.make_token(ty)
+        if let Some(tok) = get {
+            dbg!(&tok);
+            tok
+        } else {
+            dbg!("ident");
+            self.identifier()
+        }
+        // curr_node.get_value().map(|ty| self.make_token(ty)).unwrap_or_else(|| self.identifier())
     }
 
     // collect consumed into String repr for debugging
@@ -152,57 +163,6 @@ impl<'src> Scanner<'src> {
         format!("[{s}]")
     }
 }
-
-
-// main next
-// impl<'src> Iterator for Scanner<'src> {
-//     type Item = Token<'src>;
-//     // advance: self.current+=1;
-//     // make_token: self.start=self.current
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.skip_whitespace();
-
-//         self.start=self.current;
-
-//         if self.start >= self.source.len() {
-//             return None;
-//         }
-
-//         let nxt=self.advance();
-        
-//         let mut make=|tok_type| Some(self.make_token(tok_type));
-
-//         // make_two_char(match_next:char, if_match:TokenType, else_match:TokenType)
-//         match nxt {
-//             Some(char) => {
-//                 match char {
-//                     OPEN_EXPR => make(TokenLeftParen),
-//                     OPEN_STRING => Some(self.string()), // stay
-//                     CLOSE_EXPR => make(TokenRightParen),
-//                     STMT_END => make(TokenSemiColon),
-//                     COMMA => make(TokenComma),
-//                     DOT => make(TokenDot),
-//                     PLUS => make(TokenPlus),
-//                     MINUS => make(TokenMinus),
-//                     SLASH => make(TokenSlash),
-//                     STAR => make(TokenStar),
-//                     char if char.is_ascii_digit() => Some(self.number()), // stay
-
-//                     // two char tokens - can replace with trie search later
-//                     EQ => self.make_two_char(EQ, TokenEqEq, TokenEqual),
-//                     BANG => self.make_two_char(EQ, TokenNotEq, TokenNot),
-//                     LESS_THAN => self.make_two_char(EQ, TokenLessEq, TokenLess), // trie search needed: '<' -> '<' for pipe, '=' for '<='
-//                     GT_THAN => self.make_two_char(EQ, TokenGtEq, TokenGt),
-//                     _ => make(TokenIdent)
-//                 }
-//             },
-
-//             None => make(TokenError) // err since OOB for start already checked
-//         }
-//     }
-// }
-
 
 impl<'src> Iterator for Scanner<'src> {
     type Item = Token<'src>;
@@ -226,8 +186,8 @@ impl<'src> Iterator for Scanner<'src> {
         match nxt {
             Some(char) => {
                 match char {
-                    OPEN_STRING => Some(self.string()), // stay
-                    char if char.is_ascii_digit() => Some(self.number()), // stay
+                    OPEN_STRING => Some(self.string()), 
+                    char if char.is_ascii_digit() => Some(self.number()),
                     _ => Some(self.check_trie(char))
                 }
             },
@@ -324,6 +284,17 @@ fn test_scanner_trie() {
     let inp="\n1=2 3==4 0!=1 5<2 3<=4 3>4, 3>=4";
     let mut s=Scanner::new(inp);
     assert_eq!(s.serialize(), "[TokenNumber('1'),TokenEqual('='),TokenNumber('2'),TokenNumber('3'),TokenEqEq('=='),TokenNumber('4'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('1'),TokenNumber('5'),TokenLess('<'),TokenNumber('2'),TokenNumber('3'),TokenLessEq('<='),TokenNumber('4'),TokenNumber('3'),TokenGt('>'),TokenNumber('4'),TokenComma(','),TokenNumber('3'),TokenGtEq('>='),TokenNumber('4')]");
+}
+
+#[test]
+fn test_ident() {
+    // let inp="xyz__123__su \n ab12cd\n 23";
+    // let mut s=Scanner::new(inp);
+    // assert_eq!(s.serialize(),  "[TokenIdent('xyz__123__su'),TokenIdent('ab12cd'),TokenNumber('23')]");
+
+    let inp="ifr";
+    let mut s=Scanner::new(inp);
+    dbg!(s.serialize());
 }
 
 // scanner.start: pointer to start of current lexeme being scanned

@@ -28,6 +28,7 @@ pub enum TokenType {
     TokenOr,
     TokenIdent,
     TokenPipe,
+    TokenFunc,
 
     // Literals
     TokenNumber,

@@ -32,6 +32,8 @@ pub const OPEN_STRING:char='"';
 pub const LEFT_BRACE:char='{';
 pub const RIGHT_BRACE:char='}';
 
+pub const UNDERSCORE:char='_';
+
 // multi char tokens
 pub const EQ_EQ:&str="==";
 pub const NOT_EQ:&str="!=";
@@ -47,7 +49,7 @@ fn setup_keywords()->Trie{
     trie.add_key(CLOSE_EXPR, TokenRightParen);
     trie.add_key(LEFT_BRACE, TokenLeftBrace);
     trie.add_key(RIGHT_BRACE, TokenRightBrace);
-    
+
     trie.add_key(STMT_END, TokenSemiColon);
     trie.add_key(COMMA, TokenComma);
     trie.add_key(DOT, TokenDot);
@@ -68,6 +70,10 @@ fn setup_keywords()->Trie{
     trie.add_key(NOT_EQ, TokenNotEq);
     trie.add_key(LT_EQ, TokenLessEq);
     trie.add_key(GT_EQ, TokenGtEq);
+
+    // keywords
+    trie.add_key("false", TokenFalse);
+    trie.add_key("if", TokenIf);
 
     trie
 }
