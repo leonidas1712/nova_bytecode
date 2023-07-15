@@ -20,20 +20,21 @@ pub enum TokenType {
     // Keywords
     TokenPrint,
     TokenReturn,
-    TokenVar,
     TokenIf,
+    TokenElse,
     TokenTrue,
     TokenFalse,
     TokenAnd,
     TokenOr,
-    TokenIdent,
     TokenPipe,
     TokenFunc,
+    TokenLet,
 
     // Literals
     TokenNumber,
     TokenFloat,
     TokenString,
+    TokenIdent,
 
     // Comp
     TokenEqual, // =
@@ -48,7 +49,10 @@ pub enum TokenType {
     // misc
     TokenComment,
     TokenError,
+    TokenLambda,
+    TokenInfix
 }
+
 
 impl TokenType {
     pub fn is_single(&self)->bool {

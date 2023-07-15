@@ -1,5 +1,5 @@
 use super::trie::Trie;
-use crate::scanner::tokens::TokenType::*;
+use crate::scanner::tokens::*;
 
 extern crate lazy_static;
 
@@ -33,12 +33,39 @@ pub const LEFT_BRACE:char='{';
 pub const RIGHT_BRACE:char='}';
 
 pub const UNDERSCORE:char='_';
+pub const INFIX:char='$';
 
 // multi char tokens
 pub const EQ_EQ:&str="==";
 pub const NOT_EQ:&str="!=";
 pub const LT_EQ:&str="<=";
 pub const GT_EQ:&str=">=";
+
+// keywords
+// Keywords
+// TokenPrint,
+// TokenReturn,
+// TokenIf,
+// TokenElse,
+// TokenTrue,
+// TokenFalse,
+// TokenAnd,
+// TokenOr,
+// TokenPipe,
+// TokenFunc,
+// TokenLet,
+pub const TOKEN_PRINT: &str = "print";
+pub const TOKEN_RETURN: &str = "return";
+pub const TOKEN_IF: &str = "if";
+pub const TOKEN_ELSE: &str = "else";
+pub const TOKEN_TRUE: &str = "true";
+pub const TOKEN_FALSE: &str = "false";
+pub const TOKEN_AND: &str = "and";
+pub const TOKEN_OR: &str = "or";
+pub const TOKEN_PIPE: &str = ">>";
+pub const TOKEN_LAMBDA:&str="->";
+pub const TOKEN_FUNC: &str = "fun";
+pub const TOKEN_LET: &str = "let";
 
 
 // keywords trie
@@ -72,8 +99,20 @@ fn setup_keywords()->Trie{
     trie.add_key(GT_EQ, TokenGtEq);
 
     // keywords
-    trie.add_key("false", TokenFalse);
-    trie.add_key("if", TokenIf);
+    trie.add_key(TOKEN_PRINT, TokenPrint);
+    trie.add_key(TOKEN_RETURN, TokenReturn);
+    trie.add_key(TOKEN_IF, TokenIf);
+    trie.add_key(TOKEN_ELSE, TokenElse);
+    trie.add_key(TOKEN_TRUE, TokenTrue);
+    trie.add_key(TOKEN_FALSE, TokenFalse);
+    trie.add_key(TOKEN_AND, TokenAnd);
+    trie.add_key(TOKEN_OR, TokenOr);
+    trie.add_key(TOKEN_PIPE, TokenPipe);
+    trie.add_key(TOKEN_LAMBDA, TokenLambda);
+    trie.add_key(TOKEN_FUNC, TokenFunc);
+    trie.add_key(TOKEN_LET, TokenLet);
+    trie.add_key(INFIX, TokenInfix);
+
 
     trie
 }
@@ -137,7 +176,7 @@ pub const BUILTINS: [&'static str; 26] = [
 ];
 
 // Lambda
-pub const LAMBDA: &str = "->";
+// pub const LAMBDA: &str = "->";
 pub const LAMBDA_TYPE: &str = "lambda";
 
 // Binary operations

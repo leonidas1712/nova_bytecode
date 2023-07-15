@@ -311,19 +311,44 @@ fn test_scanner_trie() {
     assert_eq!(s.serialize(), "[TokenNumber('1'),TokenEqual('='),TokenNumber('2'),TokenNumber('3'),TokenEqEq('=='),TokenNumber('4'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('1'),TokenNumber('5'),TokenLess('<'),TokenNumber('2'),TokenNumber('3'),TokenLessEq('<='),TokenNumber('4'),TokenNumber('3'),TokenGt('>'),TokenNumber('4'),TokenComma(','),TokenNumber('3'),TokenGtEq('>='),TokenNumber('4')]");
 }
 
+// 1.first char no match with trie e.g xyz
+// 2. matches but doesnt complete e.g ifxy
+// 3. matches and next is non ident char e.g if 123
+// 4. matches, next is ident char, => !x
+// 5. mix: !x if false iffalser iffalse
+
 #[test]
 fn test_ident() {
-    // let inp="xyz__123__su \n ab12cd\n 23";
-    // let mut s=Scanner::new(inp);
-    // assert_eq!(s.serialize(),  "[TokenIdent('xyz__123__su'),TokenIdent('ab12cd'),TokenNumber('23')]");
-
-    // !false => Not, False
-    // ! false => Not,False
-    // ifr => false
-    let inp="iffalse";
+    let inp="\txyz_123\n";
     let mut s=Scanner::new(inp);
-    dbg!(s.serialize());
+    assert_eq!(s.serialize(),"[TokenIdent('xyz_123')]");
+
+    let inp="ifxy";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),"[TokenIdent('ifxy')]");
+
+    let inp="if xy";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),"[TokenIf('if'),TokenIdent('xy')]");
+
+    let inp="if !ifr";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),  "[TokenIf('if'),TokenNot('!'),TokenIdent('ifr')]");
+
+    let inp="falsefun fun funfalse for!x";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),"[TokenIdent('falsefun'),TokenFunc('fun'),TokenIdent('funfalse'),TokenIdent('for'),TokenNot('!'),TokenIdent('x')]");
 }
+
+#[test]
+pub fn test_many() {
+    let code = "fun func_name( if_m, fun_c, func_d) {\n\tlet x = 200.35;\n\tx\n}";
+    let mut s=Scanner::new(code);
+    assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('if_m'),TokenComma(','),TokenIdent('fun_c'),TokenComma(','),TokenIdent('func_d'),TokenRightParen(')'),TokenLeftBrace('{'),TokenLet('let'),TokenIdent('x'),TokenEqual('='),TokenFloat('200.35'),TokenSemiColon(';'),TokenIdent('x'),TokenRightBrace('}')]");
+}
+
+
+
 
 // scanner.start: pointer to start of current lexeme being scanned
 // scanner.current = current char being looked at
