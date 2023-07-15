@@ -1,13 +1,14 @@
 // Tokens
-pub const OPEN_EXPR: &str = "(";
-pub const CLOSE_EXPR: &str = ")";
-pub const NEWLINE: &str = "\n";
-pub const TAB: &str = "\t";
-pub const VAR_SEP: &str = ",";
-pub const OPEN_LIST: &str = "[";
-pub const CLOSE_LIST: &str = "]";
-pub const SPACE: &str = " ";
-pub const EMPTY: &str = "\0";
+pub const OPEN_EXPR: char = '(';
+pub const CLOSE_EXPR: char = ')';
+pub const NEWLINE: char = '\n';
+pub const TAB: char = '\t';
+pub const VAR_SEP: char = ',';
+pub const OPEN_LIST: char = '[';
+pub const CLOSE_LIST: char = ']';
+pub const SPACE: char = ' ';
+pub const EMPTY: char = '\0';
+pub const DOT:char='.';
 
 pub type NumType = i64;
 
@@ -68,18 +69,18 @@ pub const PIPE: &str = ">>";
 pub const STMT_END: &str = ";";
 
 // Some useful token arrays
-pub const SPLIT_TOKENS: [&'static str; 12] = [
-    OPEN_EXPR, CLOSE_EXPR, NEWLINE, TAB, VAR_SEP, OPEN_LIST, CLOSE_LIST, SPACE, LAMBDA, COMP_OPR,
-    PIPE, STMT_END,
-];
+// pub const SPLIT_TOKENS: [&'static str; 12] = [
+//     OPEN_EXPR, CLOSE_EXPR, NEWLINE, TAB, VAR_SEP, OPEN_LIST, CLOSE_LIST, SPACE, LAMBDA, COMP_OPR,
+//     PIPE, STMT_END,
+// ];
 
-pub const DONT_ADD: [&'static str; 5] = [NEWLINE, TAB, VAR_SEP, SPACE, EMPTY];
+// pub const DONT_ADD: [&'static str; 5] = [NEWLINE, TAB, VAR_SEP, SPACE, EMPTY];
 
-pub const OPEN_TOKENS: [&'static str; 2] = [OPEN_EXPR, OPEN_LIST];
-pub const CLOSE_TOKENS: [&'static str; 2] = [CLOSE_EXPR, CLOSE_LIST];
+// pub const OPEN_TOKENS: [&'static str; 2] = [OPEN_EXPR, OPEN_LIST];
+// pub const CLOSE_TOKENS: [&'static str; 2] = [CLOSE_EXPR, CLOSE_LIST];
 
-pub const EXPR_TUP: (&'static str, &'static str) = (OPEN_EXPR, CLOSE_EXPR);
-pub const LIST_TUP: (&'static str, &'static str) = (OPEN_LIST, CLOSE_LIST);
+// pub const EXPR_TUP: (&'static str, &'static str) = (OPEN_EXPR, CLOSE_EXPR);
+// pub const LIST_TUP: (&'static str, &'static str) = (OPEN_LIST, CLOSE_LIST);
 
 // ASTNode types
 pub const EXPRESSION: &str = "expression";
@@ -95,41 +96,41 @@ pub const CMD_PREFIX: &str = ":";
 
 pub const COMMENT: &str = "#";
 
-pub const RESERVED_KEYWORDS: [&'static str; 36] = [
-    LET_NAME,
-    FN_NAME,
-    IF_NAME,
-    EQUALS,
-    PUTS,
-    PRINT,
-    OR,
-    AND,
-    IMPORT,
-    CHAIN,
-    CONS,
-    SET,
-    GET,
-    CAR,
-    CDR,
-    LAMBDA,
-    VAR_SEP,
-    OPEN_EXPR,
-    CLOSE_EXPR,
-    OPEN_LIST,
-    CLOSE_LIST,
-    TRUE,
-    FALSE,
-    AND,
-    OR,
-    LCAR,
-    LCDR,
-    LCONS,
-    GT,
-    LT,
-    LAMBDA_TYPE,
-    COMP_OPR,
-    COMP_LEFT,
-    PIPE,
-    FAT_ARROW,
-    CMD_PREFIX,
-];
+// pub const RESERVED_KEYWORDS: [&'static str; 36] = [
+//     LET_NAME,
+//     FN_NAME,
+//     IF_NAME,
+//     EQUALS,
+//     PUTS,
+//     PRINT,
+//     OR,
+//     AND,
+//     IMPORT,
+//     CHAIN,
+//     CONS,
+//     SET,
+//     GET,
+//     CAR,
+//     CDR,
+//     LAMBDA,
+//     VAR_SEP,
+//     OPEN_EXPR,
+//     CLOSE_EXPR,
+//     OPEN_LIST,
+//     CLOSE_LIST,
+//     TRUE,
+//     FALSE,
+//     AND,
+//     OR,
+//     LCAR,
+//     LCDR,
+//     LCONS,
+//     GT,
+//     LT,
+//     LAMBDA_TYPE,
+//     COMP_OPR,
+//     COMP_LEFT,
+//     PIPE,
+//     FAT_ARROW,
+//     CMD_PREFIX,
+// ];

@@ -3,6 +3,8 @@ extern crate rustyline;
 pub mod data;
 pub mod utils;
 pub mod vm;
+pub mod compiler;
+pub mod scanner;
 
 use vm::VM;
 use rustyline::{DefaultEditor, error::ReadlineError};

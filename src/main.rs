@@ -25,11 +25,19 @@ fn run_main()->Result<()> {
 }
 
 fn main()->ExitCode {
-    match run_main() {
-        Ok(_) => ExitCode::SUCCESS,
-        Err(err) => {
-            eprintln!("{}", err.to_string());
-            ExitCode::FAILURE
-        }
-    }
+    // match run_main() {
+    //     Ok(_) => ExitCode::SUCCESS,
+    //     Err(err) => {
+    //         eprintln!("{}", err.to_string());
+    //         ExitCode::FAILURE
+    //     }
+    // }
+
+    let k=vec![1,2,3,4,5];
+    let k2=k.iter();
+
+    let mut k2=k2.skip_while(|x| x<= &&3);
+
+    dbg!(k2.next());
+    ExitCode::SUCCESS
 }

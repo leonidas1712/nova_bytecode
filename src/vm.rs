@@ -1,6 +1,7 @@
 use crate::data::{ops::*, stack::*};
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
+use crate::compiler::compile;
 
 // new(chunk), execute()->Result
 
@@ -17,11 +18,6 @@ pub struct VM {
     value_stack:VecStack<Value> // this should have same layout as Compiler.locals,
     // call_stack: VecStack<CallFrame<'function>>
         // call frame refers to function potentially on value stack
-}
-
-pub fn compile(source:&str)->Result<Chunk> {
-    println!("Compiling:{source}");
-    Ok(Chunk::new())
 }
 
 impl VM {
@@ -122,6 +118,7 @@ impl VM {
         }
     }
 
+    // false: don't reset for run
     pub fn interpret_with_reset(&mut self, source:&str, reset:bool)->Result<Value>{
         let chunk=compile(source)?; // turn source into bytecode, consts etc
         self.run(chunk, reset)
