@@ -28,6 +28,7 @@ pub enum TokenType {
     // Literals
     TokenNumber,
     TokenFloat,
+    TokenString,
 
     // Comp
     TokenEqual, // =
@@ -157,6 +158,17 @@ impl<'src> Scanner<'src> {
         self.make_token(if float { TokenFloat } else { TokenNumber })
     }
 
+    // when current char is open_string
+    fn string(&mut self)->Token<'src> {
+        self.start=self.current; // idx already at first char
+        self.advance_while(|ch| ch!=OPEN_STRING);
+
+        let tok=self.make_token(TokenString); // start=idx of first char, curr=idx of terminator
+
+        self.advance(); // move past terminator
+        tok
+    }
+
     fn skip_whitespace(&mut self) {
         while let Some(pk) = self.peek() {
             match pk {
@@ -234,6 +246,7 @@ impl<'src> Iterator for Scanner<'src> {
             Some(char) => {
                 match char {
                     OPEN_EXPR => make(TokenLeftParen),
+                    OPEN_STRING => Some(self.string()),
                     CLOSE_EXPR => make(TokenRightParen),
                     STMT_END => make(TokenSemiColon),
                     COMMA => make(TokenComma),
@@ -331,8 +344,10 @@ fn test_comment() {
 
 #[test]
 fn test_string() {
-    let inp="\" some string literal \"";
+    let inp="2\" some string lit \"3";
     // TokenString("some string..")
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),  "[TokenNumber('2'),TokenString(' some string lit '),TokenNumber('3')]");
 }
 
 
