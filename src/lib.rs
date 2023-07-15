@@ -1,11 +1,57 @@
+extern crate rustyline;
 pub mod data;
 pub mod utils;
 pub mod vm;
 
 use vm::VM;
+use rustyline::{DefaultEditor, error::ReadlineError};
 
-pub fn nova_repl(vm:VM) {
+use utils::constants::*;
 
+pub fn nova_repl(_vm:VM) {
+    let mut rl = DefaultEditor::new().unwrap();
+
+    println!();
+    println!("Welcome to Nova: a highly expressive, dynamically typed functional programming language.\nType an expression to get started.\n");
+
+    loop {
+        let readline = rl.readline(">>> ");
+
+        match readline {
+            Ok(inp) => {
+                let inp = inp.trim().to_string();
+                if inp.len() == 0 {
+                    continue;
+                }
+
+                if QUIT_STRINGS.contains(&inp.as_str()) {
+                    println!("See you again!");
+                    break;
+                }
+
+                if ["cl", "clear"].contains(&inp.as_str()) {
+                    let _ = rl.clear_screen();
+                    continue;
+                }
+
+                rl.add_history_entry(inp.clone().trim()).unwrap();
+
+                if inp.starts_with(CMD_PREFIX) {
+                    println!("Command: {}", &inp[CMD_PREFIX.len()..]);
+                    continue;
+                }
+
+                println!("You typed:{}", inp);
+               
+            }
+
+            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
+                println!("See you again!");
+                break;
+            }
+            _ => (),
+        }
+    }
 }  
 
 #[cfg(test)]
