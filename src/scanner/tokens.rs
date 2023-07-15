@@ -48,7 +48,7 @@ pub enum TokenType {
 
     // misc
     TokenComment,
-    TokenError(&'static str),
+    TokenError,
     TokenLambda,
     TokenInfix,
 }
@@ -86,9 +86,17 @@ impl<'src> Display for Token<'src> {
 }
 
 impl<'src>  Token<'src> {
+    pub fn err(line:usize)->Token<'src> {
+        Token {
+            token_type:TokenError,
+            content:"",
+            line
+        }
+    }
+
     pub fn is_err(&self)->bool {
         match self.token_type {
-            TokenError(_) => true,
+            TokenError => true,
             _ => false
         }
     }

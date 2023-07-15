@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::format;
 use std::vec;
 
 use crate::scanner::{tokens::*, Scanner};
@@ -7,10 +8,6 @@ use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
 use crate::data;
 
-
-
-
-type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk);
 
 #[derive(Clone, Copy)]
 pub enum Precedence {
@@ -28,6 +25,8 @@ pub enum RuleType {
 }
 
 pub use RuleType::*;
+
+type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
 
 #[derive(Clone, Copy)]
 pub struct ParseRule {
@@ -75,22 +74,30 @@ impl<'src> Parser<'src> {
 
     // ParseFn: assume that the token to parse is set in self.prev
     // add err handling
-    pub fn number(&mut self, chunk: &mut Chunk)->(){
-        let tok=self.prev_tok.unwrap();
-        
+
+    // TokenError cons
+    pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
+        match self.prev_tok {
+            Some(tok) => {
+                Ok(())
+            },
+            None => self.report_msg(Token::err(self.line), "Expected a number")
+        }
     }
 
-    pub fn unary(&mut self, chunk:&mut Chunk) {
-
+    pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
+        Ok(())
     }
 
-    fn expression(&mut self, chunk:&mut Chunk) {
-
+    fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
+        Ok(())
     }
 
-    fn parse_precedence(&mut self, chunk: &mut Chunk) {
+    fn parse_precedence(&mut self, chunk: &mut Chunk)->Result<()> {
         self.advance();
         // get rule based on parser.prev.type
+
+        Ok(())
 
     }
 
@@ -128,10 +135,11 @@ impl<'src> Parser<'src> {
                 Ok(())
             } else {
                 let msg=format!("Expected {} but got {}", ty, tok);
-                errc!(msg)
+                self.report_msg(tok, &msg)
             }
         } else {
-            errc!("Expected {} but got end of input.", ty)
+            let msg=format!("Expected {} but got end of input.", ty);
+            self.report_err(&msg)
         }
     }
 
@@ -139,7 +147,7 @@ impl<'src> Parser<'src> {
         // at first: only exprs
 
         self.advance();
-        self.expression(chunk);
+        self.expression(chunk)?;
         self.end_compile(chunk);
         // consume(EOF, expect end of expr)
         Ok(())
@@ -157,6 +165,27 @@ impl<'src> Parser<'src> {
 
     pub fn is_done(&self)->bool {
         self.curr_tok.is_none()
+    }
+
+    // always returns err variant
+    fn report_msg(&self, token:Token<'_>, msg:&str)->Result<()> {
+        let mut reported_msg=format!("[line {}] Error", token.line);
+        let token_part=if self.is_done() {
+            "at end".to_string()
+        } else {
+            match token.token_type {
+                TokenError => String::from(""),
+                _ => format!("at '{}'", token.content)
+            }
+        };
+
+        let msg=format!("{} {}: {}", reported_msg, token_part, msg);
+        errc!(msg)
+    }
+
+    // without token
+    fn report_err(&self, msg:&str)->Result<()> {
+        self.report_msg(Token::err(self.line), msg)
     }
 }
 
