@@ -1,13 +1,13 @@
 // trie to store TokenType indexed by &str (char)
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::vec;
 use std::fmt::Display;
 
 use crate::scanner::tokens::{TokenType};
 use crate::utils::constants::*;
+use crate::scanner::tokens::*;
 
-use TokenType::*;
 
 #[derive(Debug)]
 pub struct TrieNode<V> where V:Hash {

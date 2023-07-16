@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use std::fmt::format;
+
+
 use std::vec;
 
-use crate::scanner::delim::{Delimiter, DelimiterScanner, self};
+use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::err::*;
-use crate::{data::*, vm};
+
 use Inst::*;
 
 use super::rules::*;
@@ -35,7 +35,8 @@ impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
         let scanner=Scanner::new(source);
         let delimiters:Vec<Delimiter> = vec![
-            Delimiter::new(TokenLeftParen, TokenRightParen, false)
+            Delimiter::new(TokenLeftParen, TokenRightParen, false),
+            Delimiter::new(TokenStringQuote, TokenStringQuote, true)
         ];
 
         let delim_scanner=DelimiterScanner::new(delimiters);
@@ -109,7 +110,23 @@ impl<'src> Parser<'src> {
 
     fn grouping(&mut self, chunk:&mut Chunk)->Result<()> {
         self.expression(chunk)?;
-        self.consume(TokenRightParen)
+        self.consume(TokenRightParen)?;
+        Ok(())
+    }
+
+    // curr should be TokenString
+    // advance so that curr is right past ending quote
+    fn string(&mut self, chunk: &mut Chunk)->Result<()> {
+        let string=self.consume_one_of(vec![TokenString,TokenStringQuote])?;
+        let content=if string.token_type!=TokenStringQuote { string.content.to_string() } else { String::from("") };
+
+        let value=Value::ObjString(content); // copies out  
+        chunk.write_constant(value, string.line);
+
+        if string.token_type!=TokenStringQuote {
+            self.consume(TokenStringQuote)?;
+        }
+        Ok(())
     }
 
     // call based on enum
@@ -118,7 +135,8 @@ impl<'src> Parser<'src> {
             ParseNumber => self.number(chunk),
             ParseUnary => self.unary(chunk),
             ParseBinary => self.binary(chunk),
-            ParseGrouping => self.grouping(chunk)
+            ParseGrouping => self.grouping(chunk),
+            ParseString => self.string(chunk)
         }
     }
 
@@ -217,19 +235,38 @@ impl<'src> Parser<'src> {
     }
 
     // EOF is implicit so consume means we expect some actual token type
-    fn consume(&mut self, ty:TokenType)->Result<()>{
+    /// ty is the expected token to match curr_tok
+    fn consume(&mut self, ty:TokenType)->Result<Token<'src>>{
         let type_string=ty.get_repr();
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
-                Ok(())
+                Ok(tok)
             } else {
                 let msg=format!("Expected {} but got {}", type_string, tok.content);
-                self.report_msg(tok, &msg)
+                Err(self.report_msg(tok, &msg).unwrap_err())
             }
         } else {
             let msg=format!("Expected {} but got end of input.", type_string);
-            self.report_err(&msg)
+            Err(self.report_err(&msg).unwrap_err())
+        }
+    }
+
+    fn consume_one_of(&mut self, ty:Vec<TokenType>)->Result<Token<'src>>{
+        let type_string:Vec<String>=ty.iter().map(|x| format!("'{}'", x.get_repr())).collect();
+        let type_string=type_string.join(", ");
+
+        if let Some(tok) = self.curr_tok {
+            if ty.contains(&tok.token_type) {
+                self.advance()?;
+                Ok(tok)
+            } else {
+                let msg=format!("Expected one of {} but got {}", type_string, tok.content);
+                Err(self.report_msg(tok, &msg).unwrap_err())
+            }
+        } else {
+            let msg=format!("Expected one of {} but got end of input.", type_string);
+            Err(self.report_err(&msg).unwrap_err())
         }
     }
 

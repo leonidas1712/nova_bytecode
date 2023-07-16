@@ -82,9 +82,7 @@ impl<'src> Scanner<'src> {
     // is string T: advance while, emit TokenString, end
 
     // if char is not OPEN_STRING this method only called when string=true
-    fn string(&mut self, char:Option<char>)->Token<'src> {
-        let char=char.expect("Empty char passed to string");
-
+    fn string(&mut self, char:char)->Token<'src> {
         if char==OPEN_STRING {
             if self.is_string {
                 self.advance();
@@ -220,7 +218,10 @@ impl<'src> Iterator for Scanner<'src> {
         let peek=self.peek();
 
         if self.is_string {
-            return Some(self.string(peek));
+            if peek.is_none() {
+                return None;
+            }
+            return Some(self.string(peek.unwrap()));
         }
 
 
@@ -239,7 +240,7 @@ impl<'src> Iterator for Scanner<'src> {
             Some(char) => {
                 match char {
                     // char if self.is_string => Some(self.string(char)),
-                    char if self.is_string || char==OPEN_STRING => Some(self.string(nxt)), 
+                    char if self.is_string || char==OPEN_STRING => Some(self.string(char)), 
                     char if char.is_ascii_digit() => Some(self.number()),
                     _ => Some(self.check_trie(char))
                 }

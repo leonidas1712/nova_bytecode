@@ -89,7 +89,7 @@ impl Display for Value  {
         let repr=match &self {
             Self::Number(n) => n.to_string(),
             Self::Bool(b) => b.to_string(),
-            Self::ObjString(s) => s.to_string()
+            Self::ObjString(s) => format!("\"{}\"", s.to_string())
         };
 
         write!(f, "{}", repr)

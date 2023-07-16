@@ -1,4 +1,4 @@
-use crate::utils::constants::*;
+
 use crate::scanner::tokens::*;
 
 // ParseRule, Precedence
@@ -85,7 +85,8 @@ pub enum ParseFn {
     ParseNumber,
     ParseUnary,
     ParseBinary,
-    ParseGrouping
+    ParseGrouping,
+    ParseString
 }
 
 pub use ParseFn::*;
@@ -118,6 +119,7 @@ impl ParseRule {
             TokenStar => ParseRule::new(None, Some(ParseBinary), PrecFactor),
             TokenSlash => ParseRule::new(None, Some(ParseBinary), PrecFactor),
             TokenLeftParen => ParseRule::new(Some(ParseGrouping), None, PrecNone),
+            TokenStringQuote => ParseRule::new(Some(ParseString), None, PrecNone),
             _ => ParseRule::new(None, None, PrecNone)
         }
     }

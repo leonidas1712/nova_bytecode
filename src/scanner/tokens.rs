@@ -68,20 +68,29 @@ impl TokenType {
         // TokenSingleQuote, // delim - "\""
 
         let delims=|| {
-            match self {
+            let try_char=match self {
                 TokenLeftParen => OPEN_EXPR,
                 TokenRightParen => CLOSE_EXPR,
                 TokenLeftBrace => LEFT_BRACE,
                 TokenRightBrace => RIGHT_BRACE,
                 TokenStringQuote => STRING_QUOTE,
                 _ =>  {
-                    log::debug!("Delims called on unsupported: {}", self);
                     't'
                 }
+            };
+            if try_char!= 't' {
+                return try_char.to_string();
             }
+
+            let try_others=match self {
+                TokenString => "string",
+                _ => "token"
+            };
+
+            try_others.to_string()
         };
         
-        trie.unwrap_or_else(|| delims().to_string())
+        trie.unwrap_or_else(|| delims())
     }
 }
 
