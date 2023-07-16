@@ -53,7 +53,6 @@ pub enum TokenType {
     TokenError,
     TokenLambda,
     TokenInfix,
-    
 }
 
 

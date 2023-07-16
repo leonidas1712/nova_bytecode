@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::format;
 use std::vec;
 
+use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::err::*;
@@ -14,17 +15,14 @@ use super::rules::ParseRule;
 // add stacks to track () and string ""
 // open token, close token for each pair
 // creates a new stack for each pair and tracks => hashmap
-#[derive(Debug)]
-pub struct Delimiters {
-    
-}
 
 #[derive(Debug)]
 pub struct Parser<'src> {
     scanner:Scanner<'src>,
     prev_tok:Option<Token<'src>>,
     curr_tok:Option<Token<'src>>,
-    line:usize
+    line:usize,
+    delim_scanner:DelimiterScanner
 }
 
 /*
@@ -36,7 +34,13 @@ pub struct Parser<'src> {
 impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
         let scanner=Scanner::new(source);
-        Parser { scanner, prev_tok: None, curr_tok: None, line:1 }
+        let delimiters:Vec<Delimiter> = vec![
+            Delimiter::new(TokenLeftParen, TokenRightParen, false)
+        ];
+
+        let delim_scanner=DelimiterScanner::new(delimiters);
+
+        Parser { scanner, prev_tok: None, curr_tok: None, line:1, delim_scanner }
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
@@ -194,6 +198,12 @@ impl<'src> Parser<'src> {
 
         // set current tok to next
         while let Some(tok) = self.scanner.next() {
+            let res=self.delim_scanner.advance(tok.token_type);
+
+            if let Err(delim_err) = res {
+                self.report_msg(tok, delim_err)?;
+            }
+
             self.curr_tok.replace(tok); // current = next token
             self.line=tok.line;
             if !tok.is_err() {
@@ -214,7 +224,7 @@ impl<'src> Parser<'src> {
                 self.advance()?;
                 Ok(())
             } else {
-                let msg=format!("Expected {} but got {}", type_string, tok);
+                let msg=format!("Expected {} but got {}", type_string, tok.content);
                 self.report_msg(tok, &msg)
             }
         } else {
