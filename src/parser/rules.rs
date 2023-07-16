@@ -15,7 +15,7 @@ pub enum Precedence {
     PrecFactor, // *, /
     PrecUnary, // !, - e.g -2, !false
     PrecCall, // () -> for calling a function
-    PrecPrimary
+    PrecPrimary // (expression), number, string, ident, etc
 }
 
 impl Precedence {

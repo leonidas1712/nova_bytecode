@@ -233,6 +233,20 @@ impl<'src> Parser<'src> {
 
         Ok(())
     }
+    
+    /// Match token type against curr_tok: return false if not the same, else advance and return true
+    fn match_token(&mut self, ty:TokenType)->bool {
+        match self.curr_tok {
+            Some(tok) => {
+                if !(tok.token_type==ty) {
+                    return false;
+                }
+                self.advance();
+                return true;
+            },
+            None => false
+        }
+    }
 
     // EOF is implicit so consume means we expect some actual token type
     /// ty is the expected token to match curr_tok
@@ -369,33 +383,22 @@ impl<'src> Parser<'src> {
 
 
 /*
-    Parser::advance() => set previous to current, set current to next scan token
-    advance returns Result<()> (InterpretErr for err msgs)
-    error helpers: take the parser.current to report error
 
-    Compiling chunk: a ref to the chunk being compiled (can change over time)
-
-    compile(source, *chunk):
-        initScanner(source)       
-        compilingChunk = chunk
-
-        advance()
-        expression()
-
-        consume(EOF, Expect end of expr)
-        endCompiler() => chunk.add OPRETURN
-
-        error reporting
-
-    expression():
-        parsePrecedence(PREC_ASSIGN)
-
-    parsePrecedence():
-        advance();
-        get prefix rule from table according to parser.previous.tokentype
-        run that
-
-    ParseRule: ParseFn prefix, ParseFn infix, Precedence
+    compile:
+        while has next():
+            declaration()
+    
+    declaration()
+        -> if match(let) -> let_declaration()
+        -> else: statement()
+    
+    statement(): -> statements must have a stack effect of zero (leave the stack unchanged after done)
+        -> check current token type -> if print, or a func call => make call
+        -> else: exprStmt (calls expression, consumes semicolon, then pops from stack) 
+    
+    to make everything an expression: dont use statements except for var assignment?
+        - let x = 2; statement
+        - (let x = 2) - expr
 */
 
 
@@ -404,6 +407,9 @@ impl<'src> Parser<'src> {
     
     expression -> literal | func_defn | assignment | stmt
     assignment
+
+   
+
 */
 
 #[test]

@@ -1,0 +1,62 @@
+program -> (expression | declaration)+  // one or more expressions/statements
+
+declaration -> letDecl | statement
+
+letDecl -> "let" IDENT ("=" expression); // let x = 2;
+
+expression  -> letExpr | logic_or
+
+letExpr ->  (let (IDENT expression)+ (expression)?)
+
+// ops
+logic_or ...
+primary - true | false | number | string | ident | '(' expression ')'
+
+
+// inner
+statement -> exprStmt | block
+
+exprStmt -> expression ';'
+
+block       -> '{' declaration* expression }'                      // Block of statements + expr ret value
+
+
+
+// util
+IDENT  -> (letter)+(letter|_|digit)*
+
+letter      -> 'a' | 'b' | ... | 'z' | 'A' | 'B' | ... | 'Z'
+
+digit       -> '0' | '1' | ... | '9'
+
++ => one or more, * => zero or more, ?=> 0 or 1
+
+
+
+expression->assignment->...->unary -> call -> primary -> "(" expression ")"
+inner expr=2+2
+=> primary '+' primary
+
+let x 2 => error, no equals and not in grouping
+let x=2; => ok
+let x=2 => err, no semicolon
+(let x 2) => ok
+(let x 2); => ok (expr stmt)
+
+(let x map x)(lst) => evaluates map(lst)
+(let x map x)(lst);
+
+
+Examples:
+ 3 + (let y 2) => outputs 3+2, y is not set in global scope
+    3 + (let y 2 y) => 3+2, y not set in global scope
+    (let x 3) + (let y 2) => 3+2, x,y not set in global scope (i.e if its inside expressions or blocks its not in global scope)
+
+    let x 2 => sets x in global
+    let x 2; => sets x in global (semicolon optional)
+
+    3 + let x 2; => error because let x 2; is not an expression
+    
+    (x + (let x 20 (x + 30))) => this is valid
+    x + { let x 20;  x + 2 } => valid (semicolon allowed inside block, blocks return result of last expression inside them)
+    x + (let x 20; x + 2) => error, statements not allowed inside an expression  (expression ending in semicolon is a statement)
