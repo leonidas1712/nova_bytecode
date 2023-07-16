@@ -200,16 +200,17 @@ impl<'src> Parser<'src> {
 
     // EOF is implicit so consume means we expect some actual token type
     fn consume(&mut self, ty:TokenType)->Result<()>{
+        let type_string=ty.get_repr().unwrap();
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
                 Ok(())
             } else {
-                let msg=format!("Expected {} but got {}", ty, tok);
+                let msg=format!("Expected {} but got {}", type_string, tok);
                 self.report_msg(tok, &msg)
             }
         } else {
-            let msg=format!("Expected {} but got end of input.", ty);
+            let msg=format!("Expected {} but got end of input.", type_string);
             self.report_err(&msg)
         }
     }
@@ -280,19 +281,6 @@ impl<'src> Parser<'src> {
             None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
         }
     }
-
-    /// Expect that this token maps to a rule. Returns error "Unrecognised token" otherwise
-    // fn expect_rule(&self, token:Token)->Result<ParseRule> {
-    //     let rule=ParseRule::get_rule(token.token_type);
-
-    //     if rule.is_none() {
-    //         let msg=format!("Unrecognised token: {}", token.content);
-    //         self.report_msg(token, msg)?; // returns out 
-    //     }
-
-    //     let rule=rule.unwrap();
-    //     Ok(rule) 
-    // }
 
     /// Expect that token type matches given type and returns error with expected type_string otherwise
     fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {

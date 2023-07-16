@@ -57,13 +57,8 @@ pub enum TokenType {
 
 impl TokenType {
     //  actual repr e.g LeftParen -> '('
-     pub fn get_repr(&self)->String {
-        match self {
-            TokenLeftParen => OPEN_EXPR.to_string(),
-            TokenRightParen => CLOSE_EXPR.to_string(),
-            TokenEqEq => EQ_EQ.to_string(),
-            _ => "ok".to_string()
-        }
+     pub fn get_repr(&self)->Option<String> {
+        KEYWORDS_TRIE.get_key_from_value(*self).map(|x| x.to_string())
     }
 }
 
