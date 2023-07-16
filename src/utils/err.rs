@@ -30,12 +30,12 @@ macro_rules! errn {
 macro_rules! errc_i {
     ($msg:expr) => {
         
-        InterpretErr::Compile($msg.to_string())
+        InterpretErr::Parse($msg.to_string())
     };
 
     ($msg:expr $(,$arg:expr),*) => {
         
-        InterpretErr::Compile(format!($msg,$($arg),*))
+        InterpretErr::Parse(format!($msg,$($arg),*))
     };
 }
 
@@ -91,7 +91,7 @@ use std::fmt::Display;
 
 // #[derive(Debug)]
 pub enum InterpretErr {
-    Compile(String),
+    Parse(String),
     Runtime(String),
     Other(String)
 }
@@ -99,8 +99,8 @@ pub enum InterpretErr {
 impl Display for InterpretErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg=match self {
-            Self::Compile(m) => format!("CompileError -  {}", m),
-            Self::Runtime(m) => format!("RuntimeError - {}", m),
+            Self::Parse(m) => format!("(ParseError) {}", m),
+            Self::Runtime(m) => format!("(RuntimeError) {}", m),
             Self::Other(m) => m.to_string()
         };
 

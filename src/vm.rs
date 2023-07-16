@@ -1,15 +1,8 @@
 use crate::data::{ops::*, stack::*};
+use crate::parser::Parser;
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
 use crate::compiler::compile;
-
-// new(chunk), execute()->Result
-
-/*
-    fn interpret(&mut self, source:&str) {
-
-    }
-*/
 
 const VAL_STACK_MAX:usize=2000;
 pub struct VM {
@@ -120,7 +113,13 @@ impl VM {
 
     // false: don't reset for run
     pub fn interpret_with_reset(&mut self, source:&str, reset:bool)->Result<Value>{
-        let chunk=compile(source)?; // turn source into bytecode, consts etc
+        let mut chunk=Chunk::new();
+        let mut parser=Parser::new(source);
+
+        parser.compile(&mut chunk)?;
+        println!("Compiled");
+
+        // let chunk=compile(source)?; // turn source into bytecode, consts etc
         self.run(chunk, reset)
     }
 

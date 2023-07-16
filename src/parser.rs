@@ -26,17 +26,24 @@ pub enum RuleType {
 
 pub use RuleType::*;
 
-type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
+// type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
+
+#[derive(Clone, Copy)]
+pub enum ParseFn {
+    ParseNumber
+}
+
+pub use ParseFn::*;
 
 #[derive(Clone, Copy)]
 pub struct ParseRule {
     rule_type:RuleType,
-    func:ParseFn<'static>,
+    func:ParseFn,
     prec:Precedence
 }
 
 impl ParseRule {
-    pub fn new(rule_type:RuleType, func:ParseFn<'static>, prec:Precedence)->ParseRule {
+    pub fn new(rule_type:RuleType, func:ParseFn, prec:Precedence)->ParseRule {
         ParseRule {
             rule_type,
             func,
@@ -111,6 +118,13 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    // call based on enum
+    fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn)->Result<()>{
+        match ty {
+            ParseNumber => self.number(chunk),
+        }
+    }
+
     // why do we expect expression for prefix rule
 
     fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
@@ -130,8 +144,8 @@ impl<'src> Parser<'src> {
 
         match rule.rule_type {
             RulePrefix => {
-                // use rule to do stuff
-                // (rule.func)(self, chunk);
+                // use rule to call function
+                self.call_parse_fn(chunk, rule.func)?;
                 Ok(())
             },
             _ => self.report_err("Expect expression")
@@ -284,20 +298,30 @@ impl<'src> Parser<'src> {
 
 #[test]
 fn test_parse() {
-    let mut p=Parser::new("2 3");
-    p.advance(); // p=None, c=2
-    p.advance(); // p=2, c=3
-    p.advance(); // p=3,c =3
-    p.advance(); // p=3,c =None
-    p.advance(); // p=3,c =None
+    // let mut p=Parser::new("2 3");
+    // p.advance(); // p=None, c=2
+    // p.advance(); // p=2, c=3
+    // p.advance(); // p=3,c =3
+    // p.advance(); // p=3,c =None
+    // p.advance(); // p=3,c =None
 
-    dbg!(&p);
-    dbg!(p.is_done());
+    // dbg!(&p);
+    // dbg!(p.is_done());
  
 
-    // just put 2
-    // let mut p=Parser::new("2");
+    // // just put 2
+    // // let mut p=Parser::new("2");
 
+}
+
+#[test]
+fn test_parse2() {
+    let mut p=Parser::new("2");
+    let mut chunk=Chunk::new();
+
+    let res=p.compile(&mut chunk);
+
+    dbg!(chunk);
 }
 
 

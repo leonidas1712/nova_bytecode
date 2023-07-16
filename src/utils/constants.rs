@@ -7,8 +7,6 @@ use crate::parser::*;
 
 use super::trie::Trie;
 
-
-
 // Single char tokens
 pub const OPEN_EXPR: char = '(';
 pub const CLOSE_EXPR: char = ')';
@@ -129,9 +127,10 @@ lazy_static! {
         trie
     };
 
+    // doesnt need to be a fn ptr: can be an enum and we call on that
     pub static ref PARSE_RULE_TABLE:HashMap<TokenType,ParseRule> = {
         let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
-        let p=ParseRule::new(RulePrefix, Parser::number, PrecNone);
+        let p=ParseRule::new(RulePrefix, ParseNumber, PrecNone);
         m.insert(TokenInteger, p);
         m
     };
