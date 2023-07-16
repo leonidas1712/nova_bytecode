@@ -134,6 +134,9 @@ lazy_static! {
             (TokenInteger, ParseRule::new(Some(ParseNumber), None, PrecNone)),
             (TokenMinus, ParseRule::new(Some(ParseUnary), Some(ParseBinary), PrecTerm)),
             (TokenPlus, ParseRule::new(None, Some(ParseBinary), PrecTerm)),
+            (TokenStar, ParseRule::new(None, Some(ParseBinary), PrecFactor)),
+            (TokenSlash, ParseRule::new(None, Some(ParseBinary), PrecFactor)),
+
         ];
 
         for rule in rules {

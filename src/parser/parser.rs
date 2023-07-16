@@ -49,7 +49,9 @@ impl<'src> Parser<'src> {
     // unary called based on rules table
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
         let prev=self.expect_prev()?;
-        self.expression(chunk)?; // next expression result goes onto stack
+        // next expression result goes onto stack
+        // PrecUnary higher than binary => -1+2 means - will bind 1 and prevent + from consuming
+        self.parse_precedence(chunk, PrecUnary)?; 
 
         match prev.token_type {
             TokenMinus => chunk.write_op(Inst::OpNegate, prev.line),
@@ -60,7 +62,7 @@ impl<'src> Parser<'src> {
 
     // binary called based on rules table
     pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
-        log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
+        // log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
         let rule=self.expect_rule(prev)?;
         
@@ -112,7 +114,7 @@ impl<'src> Parser<'src> {
         // we should first have a prefix (expect prefix)
         let prefix=rule.prefix;
         if prefix.is_none() {
-            let msg=format!("Expect expression but got: '{}'", prev.content);
+            let msg=format!("Expected expression but got: '{}'", prev.content);
             return self.report_msg(prev, msg);
         }
 

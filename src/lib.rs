@@ -15,8 +15,7 @@ use rustyline::{DefaultEditor, error::ReadlineError};
 use utils::constants::*;
 use utils::err::*;
 
-use log::{Level, LevelFilter};
-use env_logger::Env;
+use log::{LevelFilter};
 
 pub fn init_logger() {
     env_logger::Builder::from_default_env()
@@ -86,6 +85,7 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 pub mod tests {
     use crate::data::ops::*;
     use crate::vm::VM;
+    use log::*;
 
     #[test]
     fn test_stack_ops() {
@@ -163,7 +163,5 @@ pub mod tests {
 
         let mut vm=VM::new();
         let res=vm.run(chunk, true);
-
-        log::debug!("{:?}", res);
     }
 }
