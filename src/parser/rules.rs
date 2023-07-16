@@ -1,8 +1,11 @@
 use crate::utils::constants::*;
 use crate::scanner::tokens::*;
 
+// ParseRule, Precedence
+
 #[derive(Clone, Copy)]
 pub enum Precedence {
+    PrecEmpty,
     PrecNone,
     PrecAssign, // = (lowest valid)
     PrecOr,
@@ -20,6 +23,7 @@ impl Precedence {
     /// Get precedence value from precedence enum
     pub fn get_precedence_val(&self)->usize {
         match self {
+            PrecEmpty => 0,
             PrecNone => 1,
             PrecAssign => 2,
             PrecOr => 3,
@@ -37,7 +41,7 @@ impl Precedence {
     /// Given value, get corresponding precedence.
     pub fn get_preced_from_val(val:usize)->Precedence {
         match val {
-            val if val < 1 => PrecNone,
+            val if val < 1 => PrecEmpty,
             1 => PrecNone,
             2 => PrecAssign,
             3 => PrecOr,
@@ -109,6 +113,20 @@ impl ParseRule {
     }
 
     pub fn get_rule(ty:TokenType)->Option<ParseRule>{
-        PARSE_RULE_TABLE.get(&ty).copied()
+        let rule = match ty {
+            TokenInteger => ParseRule::new(Some(ParseNumber), None, PrecNone),
+            TokenMinus => ParseRule::new(Some(ParseUnary), Some(ParseBinary), PrecTerm),
+            TokenPlus => ParseRule::new(None, Some(ParseBinary), PrecTerm),
+            TokenStar => ParseRule::new(None, Some(ParseBinary), PrecFactor),
+            TokenSlash => ParseRule::new(None, Some(ParseBinary), PrecFactor),
+            _ => ParseRule::new(None, None, PrecEmpty)
+        };
+
+        match rule.prec {
+            PrecEmpty => None,
+            _ => Some(rule)
+        }
+
+        // PARSE_RULE_TABLE.get(&ty).copied()
     }
 }

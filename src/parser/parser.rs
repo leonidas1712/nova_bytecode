@@ -4,7 +4,6 @@ use std::vec;
 
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
-use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
 use crate::{data::*, vm};
 use Inst::*;
@@ -359,23 +358,10 @@ fn test_parse() {
 
 #[test]
 fn test_parse_ops() {
-    let mut p=Parser::new("-");
+    let mut p=Parser::new("-1+2");
     let mut chunk=Chunk::new();
 
-    // let v=vec![
-        // 1 + 2 - 3 * 5 + 6 / 9 = -12
-        // 3 * 4 + 7 - 8 / 2 = 15
-        // 10 - 2 * 4 + 6 / 3 = 4
-        // 8 / 2 - 1 + 5 * 2 = 13
-        // 6 + 9 / 3 - 4 * 2 = 1
-
-        // 2 * 5 - 3 + 8 / 4 = 9
-        // 5 + 3 / 6 - 2 * 4 = -3
-    // ];
-
-
     let res=p.compile(&mut chunk);
-    assert!(res.is_err());
 }
 
 

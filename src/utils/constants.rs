@@ -126,26 +126,6 @@ lazy_static! {
         let trie=setup_keywords();
         trie
     };
-
-    // type of token => rule to parse the token
-    pub static ref PARSE_RULE_TABLE:HashMap<TokenType,ParseRule> = {
-        let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
-        let rules=vec![
-            (TokenInteger, ParseRule::new(Some(ParseNumber), None, PrecNone)),
-            (TokenMinus, ParseRule::new(Some(ParseUnary), Some(ParseBinary), PrecTerm)),
-            (TokenPlus, ParseRule::new(None, Some(ParseBinary), PrecTerm)),
-            (TokenStar, ParseRule::new(None, Some(ParseBinary), PrecFactor)),
-            (TokenSlash, ParseRule::new(None, Some(ParseBinary), PrecFactor)),
-
-        ];
-
-        for rule in rules {
-            let (ty,rule)=rule;
-            m.insert(ty, rule);
-        }
-    
-        m
-    };
 }
 
 
