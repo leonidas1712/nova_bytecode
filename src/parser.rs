@@ -75,6 +75,11 @@ pub struct Parser<'src> {
     line:usize
 }
 
+/*
+    Adding a new parse rule:
+    1. 
+*/
+
 // Parser's job: go from Token stream to a Chunk with all Insts and Consts (compile)
 impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
@@ -93,9 +98,6 @@ impl<'src> Parser<'src> {
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
-    // add err handling
-
-    // get_prev()?; 
 
     // expect_token_type(ty)->Result<()>
     pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
@@ -112,16 +114,20 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    // unary called based on rules table
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
         let prev=self.get_prev()?;
+        self.expression(chunk)?; // next expression result goes onto stack
 
-        // match prev.token_type {
-        //     Token
-        // }
+        match prev.token_type {
+            TokenMinus => chunk.write_op(Inst::OpNegate, prev.line),
+            _ => ()
+        }
         Ok(())
     }
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
+        // assign is the lowest valid precedence: other ops can bind as much as possible
         self.parse_precedence(chunk, PrecAssign)?;
         Ok(())
     }
@@ -161,14 +167,8 @@ impl<'src> Parser<'src> {
         let prefix_fn=prefix.unwrap();
         self.call_parse_fn(chunk, prefix_fn)
 
-        // match rule.rule_type {
-        //     RulePrefix => {
-        //         // use rule to call function
-        //         self.call_parse_fn(chunk, rule.func)?;
-        //         Ok(())
-        //     },
-        //     _ => self.report_err("Expect expression")
-        // }
+        // infix down here
+
     }
 
     // Err, Err - report consecutive errors until non-err or end

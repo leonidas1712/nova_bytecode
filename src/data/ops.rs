@@ -166,6 +166,7 @@ impl Chunk {
     }
 
     /// Returns index where constant was added - for use in OP_CONSTANT
+    /// Adds to constants pool
     pub fn add_constant(&mut self, value:Value, line:usize)->usize {
         let constants=&mut self.constants;
         constants.push(value);

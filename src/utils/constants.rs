@@ -132,8 +132,7 @@ lazy_static! {
         let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
         let rules=vec![
             (TokenInteger, ParseRule::new(Some(ParseNumber), None, PrecNone)),
-            // (TokenInteger, ParseRule::new(RulePrefix, ParseNumber, PrecNone)),
-
+            (TokenMinus, ParseRule::new(Some(ParseUnary), None, PrecNone)),
         ];
 
         for rule in rules {

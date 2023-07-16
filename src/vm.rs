@@ -5,7 +5,7 @@ use crate::data::ops::Inst::*;
 
 const VAL_STACK_MAX:usize=2000;
 pub struct VM {
-    chunk:Chunk, // 'c: lifetime of Chunk
+    chunk:Chunk,
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value> // this should have same layout as Compiler.locals,
     // call_stack: VecStack<CallFrame<'function>>
