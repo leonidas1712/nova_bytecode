@@ -63,22 +63,27 @@ impl DelimiterScanner {
         DelimiterScanner { delims: delims, stack: vec![], err:None }
     }
 
+    /// Get top of stack if any
+    pub fn get_curr_opener(&self)->Option<Delimiter> {
+        self.stack.last().map(|x| x.clone())
+    }
+
     /// Get delimiter corresponding to ty as opener or None if DNE
-    pub fn get_opener(&self, ty:TokenType)->Option<&Delimiter> {
+    fn get_opener(&self, ty:TokenType)->Option<&Delimiter> {
         self.delims.iter()
         .filter(|d| d.opened_by(ty))
         .last()
     }
 
     /// Get delimiter corresponding to ty as closer or None if DNE
-    pub fn get_closer(&self, ty:TokenType)->Option<&Delimiter> {
+    fn get_closer(&self, ty:TokenType)->Option<&Delimiter> {
         self.delims.iter()
         .filter(|d| d.closed_by(ty))
         .last()
     }
 
     // return true if stack[-1] is ignore, else false (false for empty)
-    pub fn is_curr_ignore(&self)->bool {
+    fn is_curr_ignore(&self)->bool {
         match self.stack.last() {
             Some(val) => val.can_ignore,
             _ => false
@@ -87,7 +92,7 @@ impl DelimiterScanner {
 
     // 2)
     /// True if ty closes stack[-1] opener - return None if stack empty
-    pub fn closes_current(&self, ty:TokenType)->Option<bool> {
+    fn closes_current(&self, ty:TokenType)->Option<bool> {
         match self.stack.last() {
             Some(opener) => {
                 // stack should only have openers: panic if not true

@@ -274,6 +274,7 @@ fn test_comment() {
     assert_eq!(s.serialize(), "[TokenInteger('2'),TokenSlash('/'),TokenInteger('3'),TokenInteger('40'),TokenInteger('400'),TokenInteger('50')]");
 }
 
+// make this TokenSingleQuote, String, TokenSingleQuote
 #[test]
 fn test_string() {
     let inp="2\" some string lit \"3";
