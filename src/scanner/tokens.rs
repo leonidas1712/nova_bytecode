@@ -139,3 +139,27 @@ impl<'src> Iterator for LookaheadChars<'src> {
         nxt
     }
 }
+
+#[test]
+fn test_lookahead() {
+    let inp="23";
+    let mut s=LookaheadChars::new(inp);
+    assert_eq!(s.peek(), Some('2')); // 2
+    assert_eq!(s.peek_next(), Some('3')); // 3
+    s.next();
+ 
+    assert_eq!(s.peek(), Some('3')); // 3
+    assert_eq!(s.peek_next(), None); // None
+
+    s.next();
+
+    assert_eq!(s.peek(), None); // None
+    assert_eq!(s.peek_next(), None); // None
+
+
+    s.next();
+    s.next();
+
+    assert_eq!(s.peek(), None); // None
+    assert_eq!(s.peek_next(), None); // None
+}

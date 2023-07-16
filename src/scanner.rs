@@ -217,40 +217,17 @@ impl<'src> Iterator for Scanner<'src> {
         }
     }
 }
-#[test]
-fn test_lookahead() {
-    let inp="23";
-    let mut s=LookaheadChars::new(inp);
-    assert_eq!(s.peek(), Some('2')); // 2
-    assert_eq!(s.peek_next(), Some('3')); // 3
-    s.next();
- 
-    assert_eq!(s.peek(), Some('3')); // 3
-    assert_eq!(s.peek_next(), None); // None
-
-    s.next();
-
-    assert_eq!(s.peek(), None); // None
-    assert_eq!(s.peek_next(), None); // None
-
-
-    s.next();
-    s.next();
-
-    assert_eq!(s.peek(), None); // None
-    assert_eq!(s.peek_next(), None); // None
-}
 
 #[test]
 fn test_scanner() {
     let inp="(2345) 23";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('2345'),TokenRightParen(')'),TokenNumber('23')]");
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenInteger('2345'),TokenRightParen(')'),TokenInteger('23')]");
 
     
     let inp="  30   40 \n 50   \t 60 \r   700.30  ";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('30'),TokenNumber('40'),TokenNumber('50'),TokenNumber('60'),TokenFloat('700.30')]");
+    assert_eq!(s.serialize(), "[TokenInteger('30'),TokenInteger('40'),TokenInteger('50'),TokenInteger('60'),TokenFloat('700.30')]");
 
     let inp="xy\ny\nz\ntext";
     let mut s=Scanner::new(inp);
@@ -264,26 +241,26 @@ fn test_scanner() {
 fn test_scanner_two() {
     let inp="4 == 2 = 3 == 5";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('4'),TokenEqEq('=='),TokenNumber('2'),TokenEqual('='),TokenNumber('3'),TokenEqEq('=='),TokenNumber('5')]");
+    assert_eq!(s.serialize(), "[TokenInteger('4'),TokenEqEq('=='),TokenInteger('2'),TokenEqual('='),TokenInteger('3'),TokenEqEq('=='),TokenInteger('5')]");
 
     let inp="!4 != !0 != 5";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNot('!'),TokenNumber('4'),TokenNotEq('!='),TokenNot('!'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('5')]");
+    assert_eq!(s.serialize(), "[TokenNot('!'),TokenInteger('4'),TokenNotEq('!='),TokenNot('!'),TokenInteger('0'),TokenNotEq('!='),TokenInteger('5')]");
 
     let inp="4 < 5 <= 6 > 5 >= 10 < 9 >=2>8";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('4'),TokenLess('<'),TokenNumber('5'),TokenLessEq('<='),TokenNumber('6'),TokenGt('>'),TokenNumber('5'),TokenGtEq('>='),TokenNumber('10'),TokenLess('<'),TokenNumber('9'),TokenGtEq('>='),TokenNumber('2'),TokenGt('>'),TokenNumber('8')]");
+    assert_eq!(s.serialize(), "[TokenInteger('4'),TokenLess('<'),TokenInteger('5'),TokenLessEq('<='),TokenInteger('6'),TokenGt('>'),TokenInteger('5'),TokenGtEq('>='),TokenInteger('10'),TokenLess('<'),TokenInteger('9'),TokenGtEq('>='),TokenInteger('2'),TokenGt('>'),TokenInteger('8')]");
 }
 
 #[test]
 fn test_comment() {
     let inp="2/3";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('2'),TokenSlash('/'),TokenNumber('3')]");
+    assert_eq!(s.serialize(), "[TokenInteger('2'),TokenSlash('/'),TokenInteger('3')]");
 
     let inp="\n\t 2/3 // c1 \n 40 // c2\n  400 // \t another comment \n 50 ";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('2'),TokenSlash('/'),TokenNumber('3'),TokenNumber('40'),TokenNumber('400'),TokenNumber('50')]");
+    assert_eq!(s.serialize(), "[TokenInteger('2'),TokenSlash('/'),TokenInteger('3'),TokenInteger('40'),TokenInteger('400'),TokenInteger('50')]");
 }
 
 #[test]
@@ -291,18 +268,18 @@ fn test_string() {
     let inp="2\" some string lit \"3";
     // TokenString("some string..")
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(),  "[TokenNumber('2'),TokenString(' some string lit '),TokenNumber('3')]");
+    assert_eq!(s.serialize(),  "[TokenInteger('2'),TokenString(' some string lit '),TokenInteger('3')]");
 }
 
 #[test]
 fn test_scanner_trie() {
     let inp="\n(23) 1+2-3/4*5;\n c,z 2.0";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenNumber('23'),TokenRightParen(')'),TokenNumber('1'),TokenPlus('+'),TokenNumber('2'),TokenMinus('-'),TokenNumber('3'),TokenSlash('/'),TokenNumber('4'),TokenStar('*'),TokenNumber('5'),TokenSemiColon(';'),TokenIdent('c'),TokenComma(','),TokenIdent('z'),TokenFloat('2.0')]");
+    assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenInteger('23'),TokenRightParen(')'),TokenInteger('1'),TokenPlus('+'),TokenInteger('2'),TokenMinus('-'),TokenInteger('3'),TokenSlash('/'),TokenInteger('4'),TokenStar('*'),TokenInteger('5'),TokenSemiColon(';'),TokenIdent('c'),TokenComma(','),TokenIdent('z'),TokenFloat('2.0')]");
 
     let inp="\n1=2 3==4 0!=1 5<2 3<=4 3>4, 3>=4";
     let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(), "[TokenNumber('1'),TokenEqual('='),TokenNumber('2'),TokenNumber('3'),TokenEqEq('=='),TokenNumber('4'),TokenNumber('0'),TokenNotEq('!='),TokenNumber('1'),TokenNumber('5'),TokenLess('<'),TokenNumber('2'),TokenNumber('3'),TokenLessEq('<='),TokenNumber('4'),TokenNumber('3'),TokenGt('>'),TokenNumber('4'),TokenComma(','),TokenNumber('3'),TokenGtEq('>='),TokenNumber('4')]");
+    assert_eq!(s.serialize(), "[TokenInteger('1'),TokenEqual('='),TokenInteger('2'),TokenInteger('3'),TokenEqEq('=='),TokenInteger('4'),TokenInteger('0'),TokenNotEq('!='),TokenInteger('1'),TokenInteger('5'),TokenLess('<'),TokenInteger('2'),TokenInteger('3'),TokenLessEq('<='),TokenInteger('4'),TokenInteger('3'),TokenGt('>'),TokenInteger('4'),TokenComma(','),TokenInteger('3'),TokenGtEq('>='),TokenInteger('4')]");
 }
 // 1.first char no match with trie e.g xyz
 // 2. matches but doesnt complete e.g ifxy
@@ -341,7 +318,7 @@ pub fn test_many() {
 
     let code = "fun func_name(ab, cd, if_m, falser) {\n\tif (x < 2) { ab + cd / m }\n\telse { 90 + falser }\n}";
     let mut s=Scanner::new(code);
-    assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('ab'),TokenComma(','),TokenIdent('cd'),TokenComma(','),TokenIdent('if_m'),TokenComma(','),TokenIdent('falser'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIf('if'),TokenLeftParen('('),TokenIdent('x'),TokenLess('<'),TokenNumber('2'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIdent('ab'),TokenPlus('+'),TokenIdent('cd'),TokenSlash('/'),TokenIdent('m'),TokenRightBrace('}'),TokenElse('else'),TokenLeftBrace('{'),TokenNumber('90'),TokenPlus('+'),TokenIdent('falser'),TokenRightBrace('}'),TokenRightBrace('}')]");
+    assert_eq!(s.serialize(), "[TokenFunc('fun'),TokenIdent('func_name'),TokenLeftParen('('),TokenIdent('ab'),TokenComma(','),TokenIdent('cd'),TokenComma(','),TokenIdent('if_m'),TokenComma(','),TokenIdent('falser'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIf('if'),TokenLeftParen('('),TokenIdent('x'),TokenLess('<'),TokenInteger('2'),TokenRightParen(')'),TokenLeftBrace('{'),TokenIdent('ab'),TokenPlus('+'),TokenIdent('cd'),TokenSlash('/'),TokenIdent('m'),TokenRightBrace('}'),TokenElse('else'),TokenLeftBrace('{'),TokenInteger('90'),TokenPlus('+'),TokenIdent('falser'),TokenRightBrace('}'),TokenRightBrace('}')]");
 
     let code="(x $ y + map >> succ)";
     let mut s=Scanner::new(code);
