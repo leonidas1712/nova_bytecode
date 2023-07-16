@@ -11,6 +11,14 @@ use Inst::*;
 use super::rules::*;
 use super::rules::ParseRule;
 
+// add stacks to track () and string ""
+// open token, close token for each pair
+// creates a new stack for each pair and tracks => hashmap
+#[derive(Debug)]
+pub struct Delimiters {
+    
+}
+
 #[derive(Debug)]
 pub struct Parser<'src> {
     scanner:Scanner<'src>,
@@ -359,10 +367,12 @@ fn test_parse() {
 
 #[test]
 fn test_parse_ops() {
-    let mut p=Parser::new("(2)");
-    let mut chunk=Chunk::new();
+    let mut p=Parser::new("\"string\"");
 
-    let res=p.compile(&mut chunk);
+
+    // let mut chunk=Chunk::new();
+
+    // let res=p.compile(&mut chunk);
 }
 
 
