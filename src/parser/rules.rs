@@ -87,7 +87,8 @@ pub use RuleType::*;
 pub enum ParseFn {
     ParseNumber,
     ParseUnary,
-    ParseBinary
+    ParseBinary,
+    ParseGrouping
 }
 
 pub use ParseFn::*;
@@ -119,6 +120,7 @@ impl ParseRule {
             TokenPlus => ParseRule::new(None, Some(ParseBinary), PrecTerm),
             TokenStar => ParseRule::new(None, Some(ParseBinary), PrecFactor),
             TokenSlash => ParseRule::new(None, Some(ParseBinary), PrecFactor),
+            TokenLeftParen => ParseRule::new(Some(ParseGrouping), None, PrecNone),
             _ => ParseRule::new(None, None, PrecEmpty)
         };
 

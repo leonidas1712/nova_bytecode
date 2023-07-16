@@ -93,12 +93,18 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    fn grouping(&mut self, chunk:&mut Chunk)->Result<()> {
+        self.expression(chunk)?;
+        self.consume(TokenRightParen)
+    }
+
     // call based on enum
     fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn)->Result<()>{
         match ty {
             ParseNumber => self.number(chunk),
             ParseUnary => self.unary(chunk),
             ParseBinary => self.binary(chunk),
+            ParseGrouping => self.grouping(chunk)
         }
     }
 
@@ -132,6 +138,8 @@ impl<'src> Parser<'src> {
             if prec.get_precedence_val() > rule.prec.get_precedence_val() {
                 break;
             }
+
+            // break if curr_tok no infix?
 
              // so that curr = next token after infix in subseq call to parse preced
              // e.g 1+2 : now curr=+, advance => curr = 2, parse preced calls advance => prev=2, get prefix...
@@ -358,7 +366,7 @@ fn test_parse() {
 
 #[test]
 fn test_parse_ops() {
-    let mut p=Parser::new("-1+2");
+    let mut p=Parser::new("(2)");
     let mut chunk=Chunk::new();
 
     let res=p.compile(&mut chunk);
