@@ -17,7 +17,7 @@ pub enum Precedence {
 }
 
 impl Precedence {
-    // change to tup for associativity etc
+    /// Get precedence value from precedence enum
     pub fn get_precedence_val(&self)->usize {
         match self {
             PrecNone => 1,
@@ -34,7 +34,8 @@ impl Precedence {
         }
     }
 
-    pub fn get_preced_from_val(&self, val:usize)->Precedence {
+    /// Given value, get corresponding precedence.
+    pub fn get_preced_from_val(val:usize)->Precedence {
         match val {
             val if val < 1 => PrecNone,
             1 => PrecNone,
@@ -49,8 +50,18 @@ impl Precedence {
             10 => PrecCall,
             11 => PrecPrimary,
             val if val > 11 => PrecPrimary,
-            _ => panic!("Invalid precedence:{}", val)
+            _ => unreachable!()
         }
+    }
+
+    /// Get next precedence - use for left associativity
+    pub fn get_next_prec(&self)->Precedence {
+        Precedence::get_preced_from_val(self.get_precedence_val()+1)
+    }
+
+    /// Get prev precedence - use for right associativity
+    pub fn get_prev_prec(&self)->Precedence {
+        Precedence::get_preced_from_val(self.get_precedence_val()-1)
     }
 }
 

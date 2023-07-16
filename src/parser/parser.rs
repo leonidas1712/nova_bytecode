@@ -7,109 +7,9 @@ use crate::data::ops::*;
 use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
 use crate::{data::*, vm};
+use Inst::*;
 
 use super::rules::*;
-
-// #[derive(Clone, Copy)]
-// pub enum Precedence {
-//     PrecNone,
-//     PrecAssign, // = (lowest valid)
-//     PrecOr,
-//     PrecAnd,
-//     PrecEq, // ==, !=
-//     PrecComp, // lt,gt, lte, gte
-//     PrecTerm, // + -
-//     PrecFactor, // *, /
-//     PrecUnary, // !, - e.g -2, !false
-//     PrecCall, // () -> for calling a function
-//     PrecPrimary
-// }
-
-// impl Precedence {
-//     // change to tup for associativity etc
-//     pub fn get_precedence_val(&self)->usize {
-//         match self {
-//             PrecNone => 1,
-//             PrecAssign => 2,
-//             PrecOr => 3,
-//             PrecAnd => 4,
-//             PrecEq => 5,
-//             PrecComp => 6,
-//             PrecTerm => 7,
-//             PrecFactor => 8,
-//             PrecUnary => 9,
-//             PrecCall => 10,
-//             PrecPrimary => 11
-//         }
-//     }
-
-//     pub fn get_preced_from_val(&self, val:usize)->Precedence {
-//         match val {
-//             val if val < 1 => PrecNone,
-//             1 => PrecNone,
-//             2 => PrecAssign,
-//             3 => PrecOr,
-//             4 => PrecAnd,
-//             5 => PrecEq,
-//             6 => PrecComp,
-//             7 => PrecTerm,
-//             8 => PrecFactor,
-//             9 => PrecUnary,
-//             10 => PrecCall,
-//             11 => PrecPrimary,
-//             val if val > 11 => PrecPrimary,
-//             _ => panic!("Invalid precedence:{}", val)
-//         }
-//     }
-// }
-
-// pub use Precedence::*;
-
-// // TokenType -> ParseRule
-// #[derive(Clone, Copy)]
-// pub enum RuleType {
-//     RuleInfix,
-//     RulePrefix
-// }
-
-// pub use RuleType::*;
-
-// // type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
-
-// // matcher to call different functions: like function pointer
-// #[derive(Clone, Copy)]
-// pub enum ParseFn {
-//     ParseNumber,
-//     ParseUnary,
-//     ParseBinary
-// }
-
-// pub use ParseFn::*;
-
-// // parse rule: has Option prefix, Option infix (switch based on context)
-// // e.g minus is prefix sometimes, infix others
-
-// // prec: precedence used for infix op when recursing on the rest
-// #[derive(Clone, Copy)]
-// pub struct ParseRule {
-//     infix:Option<ParseFn>,
-//     prefix:Option<ParseFn>,
-//     prec:Precedence
-// }
-
-// impl ParseRule {
-//     pub fn new(prefix:Option<ParseFn>, infix:Option<ParseFn>, prec:Precedence)->ParseRule {
-//         ParseRule {
-//             infix,
-//             prefix,
-//             prec
-//         }
-//     }
-
-//     fn get_rule(ty:TokenType)->Option<ParseRule>{
-//         PARSE_RULE_TABLE.get(&ty).copied()
-//     }
-// }
 
 #[derive(Debug)]
 pub struct Parser<'src> {
@@ -131,60 +31,11 @@ impl<'src> Parser<'src> {
         Parser { scanner, prev_tok: None, curr_tok: None, line:1 }
     }
 
-    // helpers to use ?
-    fn get_prev(&self)->Result<Token<'src>> {
-        match self.prev_tok {
-            Some(tok) => {
-                Ok(tok)
-            },
-            // report always returns Err
-            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
-        }
-    }
-
-    fn get_current(&self)->Result<Token<'src>> {
-        match self.curr_tok {
-            Some(tok) => {
-                Ok(tok)
-            },
-            // report always returns Err
-            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
-        }
-    }
-
-    // why do we expect expression for prefix rule
-    fn expect_rule(&self, token:Token)->Result<ParseRule> {
-        let rule=ParseRule::get_rule(token.token_type);
-
-        if rule.is_none() {
-            let msg=format!("Unrecognised token: {}", token.content);
-            self.report_msg(token, msg)?; // returns out 
-        }
-
-        let rule=rule.unwrap();
-        Ok(rule) 
-    }
-
-    // expect_token_type(prev, "number")?;
-    fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
-        match token.token_type {
-            // err msgs
-            token_type if !token_type.eq(&ty) => {
-                let msg=format!("Expected a {} but got '{}'", type_string, token.content);
-                self.report_err(&msg)
-            },
-            _ => {
-                Ok(())
-            }
-        }
-    }
-    // End helpers
-
     // ParseFn: assume that the token to parse is set in self.prev
 
     // expect_token_type(ty)->Result<()>
     pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
-        let prev=self.get_prev()?;
+        let prev=self.expect_prev()?;
         self.expect_token_type(prev, TokenInteger, "integer")?; // only errs when bug in parser
 
         // convert to number
@@ -197,7 +48,7 @@ impl<'src> Parser<'src> {
 
     // unary called based on rules table
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
-        let prev=self.get_prev()?;
+        let prev=self.expect_prev()?;
         self.expression(chunk)?; // next expression result goes onto stack
 
         match prev.token_type {
@@ -209,12 +60,29 @@ impl<'src> Parser<'src> {
 
     // binary called based on rules table
     pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
-        println!("Called binary, curr_tok:{:?}, prev:{:?}", self.curr_tok, self.prev_tok);
-        let prev=self.get_prev()?; // operator
-        let rule=ParseRule::get_rule(prev.token_type);
-
-        // self.parse_precedence(chunk, )
+        dbg!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
+        let prev=self.expect_prev()?; // operator
+        let rule=self.expect_rule(prev)?;
         
+        // put right side onto stack - use next higher precedence for left associativity
+        self.parse_precedence(chunk, rule.prec.get_next_prec())?;
+
+        if rule.infix.is_none() {
+            let msg=format!("Expected operation but got {}", prev);
+            return self.report_msg(prev,msg);
+        }
+
+        // match on token type
+        let op:Inst = match prev.token_type {
+            TokenPlus => OpAdd,
+            TokenMinus => OpSub,
+            TokenStar => OpMul,
+            TokenSlash => OpDiv,
+            _ => return self.report_msg(prev, "Unrecognised operation")
+
+        };
+
+        chunk.write_op(op, prev.line);
         Ok(())
     }
 
@@ -236,7 +104,7 @@ impl<'src> Parser<'src> {
     fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
         self.advance()?;
         // get rule based on parser.prev.type
-        let prev=self.get_prev()?;
+        let prev=self.expect_prev()?;
 
         // no rule exists , then prefix or not
         let rule=self.expect_rule(prev)?;
@@ -257,7 +125,7 @@ impl<'src> Parser<'src> {
                 break;
             }
 
-            let curr_tok=self.get_current()?;
+            let curr_tok=self.expect_current()?;
             let rule=self.expect_rule(curr_tok)?;
             
             if prec.get_precedence_val() > rule.prec.get_precedence_val() {
@@ -350,9 +218,11 @@ impl<'src> Parser<'src> {
         self.curr_tok.is_none()
     }
 
+
+
     // Error Handling
 
-    // always returns err variant
+    /// Report error with a reference token to include in string. Always returns err variant
     fn report_msg<K>(&self, token:Token<'_>, msg:K)->Result<()> where K:ToString{
         let mut reported_msg=format!("[line {}] Error", token.line);
 
@@ -369,10 +239,61 @@ impl<'src> Parser<'src> {
         errc!(msg)
     }
 
-    // without token
+    /// Report error without a reference token. Always returns err variant
     fn report_err<K>(&self, msg:K)->Result<()> where K:ToString {
         self.report_msg(Token::err(self.line), msg)
     }
+
+
+     /// Expect that prev is not None
+     fn expect_prev(&self)->Result<Token<'src>> {
+        match self.prev_tok {
+            Some(tok) => {
+                Ok(tok)
+            },
+            // report always returns Err
+            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
+        }
+    }
+
+    /// Expect that current is not None
+    fn expect_current(&self)->Result<Token<'src>> {
+        match self.curr_tok {
+            Some(tok) => {
+                Ok(tok)
+            },
+            // report always returns Err
+            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
+        }
+    }
+
+    /// Expect that this token maps to a rule. Returns error "Unrecognised token" otherwise
+    fn expect_rule(&self, token:Token)->Result<ParseRule> {
+        let rule=ParseRule::get_rule(token.token_type);
+
+        if rule.is_none() {
+            let msg=format!("Unrecognised token: {}", token.content);
+            self.report_msg(token, msg)?; // returns out 
+        }
+
+        let rule=rule.unwrap();
+        Ok(rule) 
+    }
+
+    /// Expect that token type matches given type and returns error with expected type_string otherwise
+    fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
+        match token.token_type {
+            // err msgs
+            token_type if !token_type.eq(&ty) => {
+                let msg=format!("Expected a {} but got '{}'", type_string, token.content);
+                self.report_err(&msg)
+            },
+            _ => {
+                Ok(())
+            }
+        }
+    }
+    // End helpers
 }
 
 /**
