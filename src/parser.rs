@@ -90,7 +90,7 @@ impl<'src> Parser<'src> {
     // expect_token_type(ty)->Result<()>
     pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
         let prev=self.get_prev()?;
-        self.expect_token_type(prev, TokenNumber, "number")?; // only errs when bug in parser
+        self.expect_token_type(prev, TokenInteger, "integer")?; // only errs when bug in parser
 
         // convert to number
         let value:IntType = prev.content.parse().unwrap();
@@ -100,7 +100,6 @@ impl<'src> Parser<'src> {
         chunk.write_op(Inst::OpConstant(idx), prev.line);
 
         Ok(())
-       
     }
 
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
@@ -108,24 +107,44 @@ impl<'src> Parser<'src> {
     }
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
+        self.parse_precedence(chunk, PrecAssign)?;
         Ok(())
     }
 
-    fn parse_precedence(&mut self, chunk: &mut Chunk)->Result<()> {
-        self.advance();
+    // why do we expect expression for prefix rule
+
+    fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
+        self.advance()?;
         // get rule based on parser.prev.type
+        let prev=self.get_prev()?;
 
-        Ok(())
+        // no rule exists , then prefix or not
+        let rule=ParseRule::get_rule(prev.token_type);
 
+        if rule.is_none() {
+            let msg=format!("Unrecognised token: {}", prev.to_string());
+            return self.report_msg(prev, msg);
+        }
+
+        let rule=rule.unwrap();
+
+        match rule.rule_type {
+            RulePrefix => {
+                // use rule to do stuff
+                // (rule.func)(self, chunk);
+                Ok(())
+            },
+            _ => self.report_err("Expect expression")
+        }
     }
 
     // Err, Err - report consecutive errors until non-err or end
     // advance curr/prev ptrs - should do Result for err
-    pub fn advance(&mut self) {
+    pub fn advance(&mut self)->Result<()> {
         // is_done true after this
         if self.at_last() {
             self.curr_tok.take();
-            return;
+            return Ok(());
         }
 
         // parser.prev = parser.current
@@ -141,8 +160,10 @@ impl<'src> Parser<'src> {
                 break;
             }
             // report error using self.curr_tok
-            println!("Err");
+            return self.report_msg(tok, "Error")
         }
+
+        Ok(())
     }
 
     // EOF is implicit so consume means we expect some actual token type
@@ -188,7 +209,7 @@ impl<'src> Parser<'src> {
     // Error Handling
 
     // always returns err variant
-    fn report_msg(&self, token:Token<'_>, msg:&str)->Result<()> {
+    fn report_msg<K>(&self, token:Token<'_>, msg:K)->Result<()> where K:ToString{
         let mut reported_msg=format!("[line {}] Error", token.line);
         let token_part=if self.is_done() {
             "at end".to_string()
@@ -199,12 +220,12 @@ impl<'src> Parser<'src> {
             }
         };
 
-        let msg=format!("{} {}: {}", reported_msg, token_part, msg);
+        let msg=format!("{} {}: {}", reported_msg, token_part, msg.to_string());
         errc!(msg)
     }
 
     // without token
-    fn report_err(&self, msg:&str)->Result<()> {
+    fn report_err<K>(&self, msg:K)->Result<()> where K:ToString {
         self.report_msg(Token::err(self.line), msg)
     }
 

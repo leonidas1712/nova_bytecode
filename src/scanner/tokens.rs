@@ -31,7 +31,7 @@ pub enum TokenType {
     TokenLet,
 
     // Literals
-    TokenNumber,
+    TokenInteger,
     TokenFloat,
     TokenString,
     TokenIdent,

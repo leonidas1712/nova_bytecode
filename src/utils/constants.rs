@@ -132,7 +132,7 @@ lazy_static! {
     pub static ref PARSE_RULE_TABLE:HashMap<TokenType,ParseRule> = {
         let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
         let p=ParseRule::new(RulePrefix, Parser::number, PrecNone);
-        m.insert(TokenNumber, p);
+        m.insert(TokenInteger, p);
         m
     };
 }

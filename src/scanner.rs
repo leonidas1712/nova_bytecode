@@ -70,7 +70,7 @@ impl<'src> Scanner<'src> {
             }
         }
 
-        self.make_token(if float { TokenFloat } else { TokenNumber })
+        self.make_token(if float { TokenFloat } else { TokenInteger })
     }
 
     // when current char is open_string
