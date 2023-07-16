@@ -73,7 +73,7 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 #[cfg(test)]
 pub mod tests {
     use crate::data::ops::*;
-    use crate::vm;
+    use crate::vm::VM;
 
     #[test]
     fn test_stack_ops() {
@@ -100,7 +100,7 @@ pub mod tests {
     
         println!("{}", c2);
         
-        let mut vm=vm::VM::new();
+        let mut vm=VM::new();
         let res=vm.run(c2, true).unwrap();
     
         assert_eq!(res.to_string(), "-5");
@@ -127,7 +127,7 @@ pub mod tests {
         c2.write_op(Inst::OpConcat, 1);
         c2.write_op(Inst::OpReturn, 1);
         
-        let mut vm=vm::VM::new();
+        let mut vm=VM::new();
         let res=vm.run(c2, true).unwrap();
     
         assert_eq!(res.to_string(), "hihello");
@@ -139,5 +139,19 @@ pub mod tests {
 
         let res=vm.run(c3, true).unwrap(); // re-use possible
         assert_eq!(res.to_string(), "true");
+    }
+
+    #[test]
+    pub fn test() {
+        let mut chunk=Chunk::new();
+        chunk.write_constant(Value::Number(1), 1);
+        chunk.write_constant(Value::Number(2), 1);
+
+        chunk.write_op(Inst::OpReturn, 1);
+
+        let mut vm=VM::new();
+        let res=vm.run(chunk, true);
+
+        dbg!(res);
     }
 }

@@ -2,7 +2,6 @@ use crate::data::{ops::*, stack::*};
 use crate::parser::Parser;
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
-use crate::compiler::compile;
 
 const VAL_STACK_MAX:usize=2000;
 pub struct VM {

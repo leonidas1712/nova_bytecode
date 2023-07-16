@@ -6,7 +6,7 @@ use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
-use crate::data::*;
+use crate::{data::*, vm};
 
 
 #[derive(Clone, Copy)]
@@ -258,6 +258,15 @@ impl<'src> Parser<'src> {
     }
 }
 
+/**
+ 
+  At the beginning of parsePrecedence(), we look up a prefix parser for the current token.
+   The first token is always going to belong to some kind of prefix expression, by definition. 
+   It may turn out to be nested as an operand inside one or more infix expressions, but as you 
+   read the code from left to right, the first token you hit always belongs to a prefix expression.
+ */
+
+
 /*
     Parser::advance() => set previous to current, set current to next scan token
     advance returns Result<()> (InterpretErr for err msgs)
@@ -298,20 +307,14 @@ impl<'src> Parser<'src> {
 
 #[test]
 fn test_parse() {
-    // let mut p=Parser::new("2 3");
-    // p.advance(); // p=None, c=2
-    // p.advance(); // p=2, c=3
-    // p.advance(); // p=3,c =3
-    // p.advance(); // p=3,c =None
-    // p.advance(); // p=3,c =None
+    let code="123\n1.0\n2.0";
+    let mut p=Parser::new(code);
+    let mut chunk=Chunk::new();
 
-    // dbg!(&p);
-    // dbg!(p.is_done());
- 
+    let res=p.compile(&mut chunk);
+    dbg!(chunk);
 
-    // // just put 2
-    // // let mut p=Parser::new("2");
-
+    let mut chunk=Chunk::new();
 }
 
 #[test]
@@ -323,6 +326,8 @@ fn test_parse2() {
 
     dbg!(chunk);
 }
+
+
 
 
 /*

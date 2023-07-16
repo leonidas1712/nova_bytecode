@@ -165,13 +165,19 @@ impl Chunk {
         self.constants.get(idx).map(|v| v.to_owned())
     }
 
-    // Returns index where constant was added
+    /// Returns index where constant was added - for use in OP_CONSTANT
     pub fn add_constant(&mut self, value:Value, line:usize)->usize {
         let constants=&mut self.constants;
         constants.push(value);
 
         self.constant_lines.add_line(line);
         constants.len()-1
+    }
+
+    // add const + add OP_CONSTANT
+    pub fn write_constant(&mut self, value:Value, line:usize) {
+        let idx=self.add_constant(value, line);
+        self.write_op(Inst::OpConstant(idx), line);
     }
 }
 
