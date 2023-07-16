@@ -72,14 +72,14 @@ impl Value {
         match self {
             Self::Number(n) => Ok(*n),
             Self::Bool(b) => Ok(if *b { 1 } else { 0 }),
-            _ => errc!("Expected number but got:{}", self.to_string())
+            _ => errn!("Expected number but got:{}", self.to_string())
         }
     }
 
     pub fn expect_string(&self)->Result<&String> {
         match self {
             Self::ObjString(sref) => Ok(sref),
-            _ => errc!("Expected string but got:{}", self.to_string())
+            _ => errn!("Expected string but got:{}", self.to_string())
         }
     }
 }

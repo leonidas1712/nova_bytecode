@@ -192,7 +192,7 @@ fn test_delim() {
 #[test]
 fn test_delim_advance() {
     let d1=Delimiter::new(TokenLeftParen, TokenRightParen, false);
-    let d2=Delimiter::new(TokenSingleQuote, TokenSingleQuote, true);
+    let d2=Delimiter::new(TokenStringQuote, TokenStringQuote, true);
     let d3=Delimiter::new(TokenLeftBrace, TokenRightBrace, false);
     let v=vec![d1,d2,d3];
     let v2=v.clone();
@@ -203,19 +203,19 @@ fn test_delim_advance() {
     d.advance(TokenRightParen);
     assert!(d.end().is_ok()); // "()"
 
-    d.advance(TokenSingleQuote);
+    d.advance(TokenStringQuote);
     d.advance(TokenRightParen);
 
     assert!(d.end().is_err()); // ")
 
-    d.advance(TokenSingleQuote);
+    d.advance(TokenStringQuote);
     assert!(d.end().is_ok()); // ")"
 
     d.advance(TokenLeftParen);
-    d.advance(TokenSingleQuote);
+    d.advance(TokenStringQuote);
     assert!(d.end().is_err()); // ("
 
-    d.advance(TokenSingleQuote);
+    d.advance(TokenStringQuote);
     d.advance(TokenRightParen); // ("")
     assert!(d.end().is_ok());    
 

@@ -8,7 +8,7 @@ use super::trie::Trie;
 // Single char tokens
 pub const OPEN_EXPR: char = '(';
 pub const CLOSE_EXPR: char = ')';
-pub const SINGLE_QUOTE:char='"';
+pub const STRING_QUOTE:char='"';
 pub const NEWLINE: char = '\n';
 pub const TAB: char = '\t';
 pub const VAR_SEP: char = ',';
@@ -68,10 +68,10 @@ fn setup_keywords()->Trie<&'static str,TokenType>{
     let mut trie=Trie::new();
 
     trie.add_key(cstr(OPEN_EXPR), TokenLeftParen);
-
     trie.add_key(cstr(CLOSE_EXPR), TokenRightParen);
     trie.add_key(cstr(LEFT_BRACE), TokenLeftBrace);
     trie.add_key(cstr(RIGHT_BRACE), TokenRightBrace);
+    trie.add_key(cstr(STRING_QUOTE), TokenStringQuote);
 
     trie.add_key(cstr(STMT_END), TokenSemiColon);
     trie.add_key(cstr(COMMA), TokenComma);

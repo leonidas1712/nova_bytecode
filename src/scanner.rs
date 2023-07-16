@@ -12,6 +12,7 @@ pub struct Scanner<'src> {
     start:usize, // index in source for start of curr lexeme
     current:usize, // index of current char
     line:usize, // line_num,
+    is_string:bool
 }
 
 // valid char for ident: alphanumeric or '_'
@@ -22,7 +23,7 @@ fn is_valid_ident_char(char:char)->bool {
 impl<'src> Scanner<'src> {
     pub fn new<'source>(source:&'source str)->Scanner<'source>{
         let chars=LookaheadChars::new(source);
-        Scanner { source, chars, start: 0, current: 0, line: 1 }
+        Scanner { source, chars, start: 0, current: 0, line: 1, is_string:false }
     }
 
     pub fn peek(&mut self)->Option<char> {
@@ -77,13 +78,32 @@ impl<'src> Scanner<'src> {
     }
 
     // when current char is open_string
-    fn string(&mut self)->Token<'src> {
-        self.start=self.current; // idx already at first char
+    // is_string F: emit quote, set to true
+    // is string T: advance while, emit TokenString, end
+
+    // if char is not OPEN_STRING this method only called when string=true
+    fn string(&mut self, char:Option<char>)->Token<'src> {
+        let char=char.expect("Empty char passed to string");
+
+        if char==OPEN_STRING {
+            if self.is_string {
+                self.advance();
+            }
+
+            self.is_string=!self.is_string;
+            return self.make_token(TokenStringQuote);
+        }
+
+        // self.start=self.current; // idx already at first char of string
         self.advance_while(|ch| ch!=OPEN_STRING);
 
-        let tok=self.make_token(TokenString); // start=idx of first char, curr=idx of terminator
+        // let tok=self.make_token(TokenString); // start=idx of first char, curr=idx of terminator
 
-        self.advance(); // move past terminator
+        let content=&self.source[self.start..self.current];
+        self.start=self.current;
+        let tok=Token { token_type:TokenString, content, line:self.line };
+
+        // self.advance(); // move past terminator
         tok
     }
 
@@ -188,11 +208,6 @@ impl<'src> Scanner<'src> {
 }
 
 
-
-
-
-    
-
 // "( poljroj"
 
 impl<'src> Iterator for Scanner<'src> {
@@ -202,6 +217,13 @@ impl<'src> Iterator for Scanner<'src> {
 
     // scan_token
     fn next(&mut self) -> Option<Self::Item> {
+        let peek=self.peek();
+
+        if self.is_string {
+            return Some(self.string(peek));
+        }
+
+
         self.skip_whitespace();
 
         self.start=self.current;
@@ -211,14 +233,13 @@ impl<'src> Iterator for Scanner<'src> {
         }
 
         let nxt=self.advance();
-        
-        // let mut make=|tok_type| Some(self.make_token(tok_type));
 
-        // make_two_char(match_next:char, if_match:TokenType, else_match:TokenType)
+        
         match nxt {
             Some(char) => {
                 match char {
-                    OPEN_STRING => Some(self.string()), 
+                    // char if self.is_string => Some(self.string(char)),
+                    char if self.is_string || char==OPEN_STRING => Some(self.string(nxt)), 
                     char if char.is_ascii_digit() => Some(self.number()),
                     _ => Some(self.check_trie(char))
                 }
@@ -277,14 +298,28 @@ fn test_comment() {
 // make this TokenSingleQuote, String, TokenSingleQuote
 #[test]
 fn test_string() {
-    let inp="2\" some string lit \"3";
-    // TokenString("some string..")
-    let mut s=Scanner::new(inp);
-    assert_eq!(s.serialize(),  "[TokenInteger('2'),TokenString(' some string lit '),TokenInteger('3')]");
+    // let inp="245  \"  \n        some     \"   23";
+    // // TokenString("some string..")
+    // let mut s=Scanner::new(inp);
+    // dbg!(s.serialize());
+    // // assert_eq!(s.serialize(),  "[TokenInteger('2'),TokenString(' some string lit '),TokenInteger('3')]");
 
-    let inp="\"string 3irjij";
+    // let inp="\"string 3irjij";
+    // let mut s=Scanner::new(inp);
+    // dbg!(s.serialize());
+
+    let inp="234 \"    som   \" 454";
     let mut s=Scanner::new(inp);
-    dbg!(s.serialize());
+    assert_eq!(s.serialize(), "[TokenInteger('234'),TokenStringQuote('\"'),TokenString('    som   '),TokenStringQuote('\"'),TokenInteger('454')]");
+
+    let inp="(2+2) \"  (2+3+4)   \n\t   5+6 \"  234 + 56";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),  "[TokenLeftParen('('),TokenInteger('2'),TokenPlus('+'),TokenInteger('2'),TokenRightParen(')'),TokenStringQuote('\"'),TokenString('  (2+3+4)   \n\t   5+6 '),TokenStringQuote('\"'),TokenInteger('234'),TokenPlus('+'),TokenInteger('56')]");
+
+    let inp="\" \", 23, \" \"";
+    let mut s=Scanner::new(inp);
+    assert_eq!(s.serialize(),  "[TokenStringQuote('\"'),TokenString(' '),TokenStringQuote('\"'),TokenComma(','),TokenInteger('23'),TokenComma(','),TokenStringQuote('\"'),TokenString(' '),TokenStringQuote('\"')]");
+
 }
 
 #[test]

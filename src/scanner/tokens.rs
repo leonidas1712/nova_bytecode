@@ -10,7 +10,7 @@ pub enum TokenType {
     TokenRightParen, // delim
     TokenLeftBrace, // delim
     TokenRightBrace, // delim
-    TokenSingleQuote, // delim - "\""
+    TokenStringQuote, // delim - "\""
     TokenComma,
     TokenDot,
     TokenMinus,
@@ -73,7 +73,7 @@ impl TokenType {
                 TokenRightParen => CLOSE_EXPR,
                 TokenLeftBrace => LEFT_BRACE,
                 TokenRightBrace => RIGHT_BRACE,
-                TokenSingleQuote => SINGLE_QUOTE,
+                TokenStringQuote => STRING_QUOTE,
                 _ =>  {
                     log::debug!("Delims called on unsupported: {}", self);
                     't'

@@ -12,6 +12,8 @@ pub struct VM {
         // call frame refers to function potentially on value stack
 }
 
+// VM: runtime (compilation ends with the chunk)
+
 impl VM {
     pub fn new()->VM {
 
@@ -76,7 +78,7 @@ impl VM {
                     let ct=self.chunk.get_constant(i);
                     
                     let get:Result<Value>=ct
-                        .ok_or(errc_i!("Invalid index for constant:{}", i));
+                        .ok_or(errn_i!("Invalid index for constant:{}", i));
 
                     let get=get?;
                     self.value_stack.push(get)?;
