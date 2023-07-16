@@ -109,8 +109,19 @@ impl<'src> Parser<'src> {
         Parser { scanner, prev_tok: None, curr_tok: None, line:1 }
     }
 
+    // helpers to use ?
     fn get_prev(&self)->Result<Token<'src>> {
         match self.prev_tok {
+            Some(tok) => {
+                Ok(tok)
+            },
+            // report always returns Err
+            None =>  Err(self.report_msg(Token::err(self.line), "Expected a token").unwrap_err())
+        }
+    }
+
+    fn get_current(&self)->Result<Token<'src>> {
+        match self.curr_tok {
             Some(tok) => {
                 Ok(tok)
             },
@@ -192,13 +203,27 @@ impl<'src> Parser<'src> {
         }
 
         let prefix_fn=prefix.unwrap();
-        self.call_parse_fn(chunk, prefix_fn)
+        // self.call_parse_fn(chunk, prefix_fn)?;
 
-        // infix down here - pratt parsing
+        // // infix down here - pratt parsing
         // loop {
+        //     if self.is_done() {
+        //         break;
+        //     }
 
+        //     let curr_tok=self.get_current()?;
+        //     let rule=self.get_rule_res(curr_tok)?;
+            
+        //     if prec.get_precedence() > rule.prec.get_precedence() {
+        //         break;
+        //     }
+
+        //     self.advance()?;
 
         // }
+
+
+        self.call_parse_fn(chunk, prefix_fn) // REMOVE
     }
 
     // Err, Err - report consecutive errors until non-err or end
@@ -248,7 +273,7 @@ impl<'src> Parser<'src> {
     pub fn compile(&mut self, chunk: &mut Chunk)->Result<()> {
         // at first: only exprs
 
-        self.advance();
+        self.advance()?;
         self.expression(chunk)?;
         self.end_compile(chunk);
         // consume(EOF, expect end of expr)
@@ -368,12 +393,12 @@ fn test_parse() {
 
 #[test]
 fn test_parse2() {
-    let mut p=Parser::new("2");
+    let mut p=Parser::new("-");
     let mut chunk=Chunk::new();
+
 
     let res=p.compile(&mut chunk);
 
-    dbg!(chunk);
 }
 
 
