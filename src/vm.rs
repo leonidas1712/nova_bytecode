@@ -36,6 +36,15 @@ impl VM {
         self.globals.insert(name, value);
     }
 
+    /// Always returns err variant
+    fn err(&self, line:usize, msg:&str)->Result<()> {
+        // (RuntimeError) [line 1] Error at end - Expected a token
+        let line=format!("[line {}]", line);
+
+        let msg=format!("{} {}", line, msg.to_string());
+        errn!(msg)
+    }
+
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
@@ -121,6 +130,7 @@ impl VM {
 
                     log::debug!("Set:{:?}",self.globals);
                 },
+                // idx of identifier in constants
                 OpGetGlobal(idx) => {
                     log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, idx);
                     let name=chunk.get_constant(*idx).expect("Invalid index for OpGetGlobal");
@@ -133,8 +143,9 @@ impl VM {
                             self.value_stack.push(val.to_owned())?;
                         },
                         None => {
+                            let line=chunk.get_line_of_constant(*idx).expect("Invalid index for get line");
                             let msg=format!("Variable '{}' is not defined.", name);
-                            return errn!(msg)
+                            self.err(line, &msg)?;
                         }
                     }
     

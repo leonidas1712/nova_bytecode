@@ -190,6 +190,14 @@ impl Chunk {
         let idx=self.add_constant(value, line);
         self.write_op(Inst::OpConstant(idx), line);
     }
+
+    pub fn get_line_of_constant(&self, idx:usize) -> Option<usize>{
+        self.constant_lines.get_line(idx)
+    }
+
+    pub fn get_line_of_op(&self, idx:usize)->Option<usize> {
+        self.op_lines.get_line(idx)
+    }
 }
 
 impl<'val> Display for Chunk {
