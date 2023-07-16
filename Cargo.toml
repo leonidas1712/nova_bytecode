@@ -16,3 +16,6 @@ shellexpand = "3.1.0"
 [lib]
 name = "nova"
 path = "src/lib.rs"
+
+[scripts]
+x = "echo Hello from script X"
