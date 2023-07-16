@@ -117,7 +117,6 @@ impl VM {
         let mut parser=Parser::new(source);
 
         parser.compile(&mut chunk)?;
-        println!("Compiled");
 
         // let chunk=compile(source)?; // turn source into bytecode, consts etc
         self.run(chunk, reset)

@@ -136,7 +136,7 @@ impl<'src> Parser<'src> {
         let rule=ParseRule::get_rule(prev.token_type);
 
         if rule.is_none() {
-            let msg=format!("Unrecognised token: {}", prev.to_string());
+            let msg=format!("Unrecognised token: {}", prev.content);
             return self.report_msg(prev, msg);
         }
 
@@ -234,7 +234,7 @@ impl<'src> Parser<'src> {
             }
         };
 
-        let msg=format!("{} {}: {}", reported_msg, token_part, msg.to_string());
+        let msg=format!("{} {} - {}", reported_msg, token_part, msg.to_string());
         errc!(msg)
     }
 
