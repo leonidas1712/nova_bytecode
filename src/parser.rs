@@ -230,14 +230,23 @@ impl<'src> Parser<'src> {
     // advance curr/prev ptrs - should do Result for err
     pub fn advance(&mut self)->Result<()> {
         // is_done true after this
-        if self.at_last() {
-            self.curr_tok.take();
-            return Ok(());
-        }
+        // if self.at_last() {
+        //     self.curr_tok.take();
+        //     return Ok(());
+        // }
 
         // parser.prev = parser.current
         if let Some(t) = self.curr_tok.clone() {
             self.prev_tok.replace(t);
+        } else {
+            // curr_tok is None so set prev to None also
+            self.prev_tok.take();
+        }
+
+        if self.scanner.peek().is_none() {
+            // println!("Prev:{:?}", self.prev_tok);
+            // println!("Curr:{:?}", self.curr_tok);
+            self.curr_tok.take();
         }
 
         // set current tok to next
@@ -284,12 +293,6 @@ impl<'src> Parser<'src> {
         chunk.write_op(Inst::OpReturn, self.line);
     }
 
-    // when p=c=last token
-    fn at_last(&self)->bool {
-        let k=self.curr_tok.zip(self.prev_tok);
-        k.map(|t| t.0==t.1).unwrap_or(false)
-    }
-
     pub fn is_done(&self)->bool {
         self.curr_tok.is_none()
     }
@@ -299,6 +302,7 @@ impl<'src> Parser<'src> {
     // always returns err variant
     fn report_msg<K>(&self, token:Token<'_>, msg:K)->Result<()> where K:ToString{
         let mut reported_msg=format!("[line {}] Error", token.line);
+
         let token_part=if self.is_done() {
             "at end".to_string()
         } else {
@@ -398,7 +402,7 @@ fn test_parse2() {
 
 
     let res=p.compile(&mut chunk);
-
+    assert!(res.is_err());
 }
 
 
