@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::str::Chars;
 use std::iter::Peekable;
+use crate::utils::constants::*;
 
 #[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
 pub enum TokenType {
@@ -55,8 +56,14 @@ pub enum TokenType {
 
 
 impl TokenType {
-    pub fn is_single(&self)->bool {
-        true
+    //  actual repr e.g LeftParen -> '('
+     pub fn get_repr(&self)->String {
+        match self {
+            TokenLeftParen => OPEN_EXPR.to_string(),
+            TokenRightParen => CLOSE_EXPR.to_string(),
+            TokenEqEq => EQ_EQ.to_string(),
+            _ => "ok".to_string()
+        }
     }
 }
 
@@ -67,6 +74,8 @@ impl Display for TokenType {
 }
 
 pub use TokenType::*;
+
+use crate::utils::constants::{OPEN_EXPR, CLOSE_EXPR};
 
 // start:0, curr:1
 // prt

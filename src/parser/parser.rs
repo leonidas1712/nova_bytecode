@@ -9,6 +9,7 @@ use crate::{data::*, vm};
 use Inst::*;
 
 use super::rules::*;
+use super::rules::ParseRule;
 
 #[derive(Debug)]
 pub struct Parser<'src> {
@@ -63,7 +64,8 @@ impl<'src> Parser<'src> {
     pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
         // log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
-        let rule=self.expect_rule(prev)?;
+        // let rule=self.expect_rule(prev)?;
+        let rule=ParseRule::get_rule(prev.token_type);
         
         // put right side onto stack - use next higher precedence for left associativity
         self.parse_precedence(chunk, rule.prec.get_next_prec())?;
@@ -114,7 +116,8 @@ impl<'src> Parser<'src> {
         let prev=self.expect_prev()?;
 
         // no rule exists , then prefix or not
-        let rule=self.expect_rule(prev)?;
+        // let rule=self.expect_rule(prev)?;
+        let rule=ParseRule::get_rule(prev.token_type);
 
         // we should first have a prefix (expect prefix)
         let prefix=rule.prefix;
@@ -133,8 +136,10 @@ impl<'src> Parser<'src> {
             }
 
             let curr_tok=self.expect_current()?;
-            let rule=self.expect_rule(curr_tok)?;
+            // let rule=self.expect_rule(curr_tok)?;
+            let rule=ParseRule::get_rule(curr_tok.token_type);
             
+            // when rule.prec is PrecNone this will break - RightParen breaks before advance
             if prec.get_precedence_val() > rule.prec.get_precedence_val() {
                 break;
             }
@@ -197,7 +202,7 @@ impl<'src> Parser<'src> {
     fn consume(&mut self, ty:TokenType)->Result<()>{
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
-                self.advance();
+                self.advance()?;
                 Ok(())
             } else {
                 let msg=format!("Expected {} but got {}", ty, tok);
@@ -233,7 +238,7 @@ impl<'src> Parser<'src> {
 
     /// Report error with a reference token to include in string. Always returns err variant
     fn report_msg<K>(&self, token:Token<'_>, msg:K)->Result<()> where K:ToString{
-        let mut reported_msg=format!("[line {}] Error", token.line);
+        let reported_msg=format!("[line {}] Error", token.line);
 
         let token_part=if self.is_done() {
             "at end".to_string()
@@ -277,17 +282,17 @@ impl<'src> Parser<'src> {
     }
 
     /// Expect that this token maps to a rule. Returns error "Unrecognised token" otherwise
-    fn expect_rule(&self, token:Token)->Result<ParseRule> {
-        let rule=ParseRule::get_rule(token.token_type);
+    // fn expect_rule(&self, token:Token)->Result<ParseRule> {
+    //     let rule=ParseRule::get_rule(token.token_type);
 
-        if rule.is_none() {
-            let msg=format!("Unrecognised token: {}", token.content);
-            self.report_msg(token, msg)?; // returns out 
-        }
+    //     if rule.is_none() {
+    //         let msg=format!("Unrecognised token: {}", token.content);
+    //         self.report_msg(token, msg)?; // returns out 
+    //     }
 
-        let rule=rule.unwrap();
-        Ok(rule) 
-    }
+    //     let rule=rule.unwrap();
+    //     Ok(rule) 
+    // }
 
     /// Expect that token type matches given type and returns error with expected type_string otherwise
     fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
