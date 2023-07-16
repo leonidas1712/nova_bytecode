@@ -60,7 +60,7 @@ impl<'src> Parser<'src> {
 
     // binary called based on rules table
     pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
-        dbg!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
+        log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
         let rule=self.expect_rule(prev)?;
         

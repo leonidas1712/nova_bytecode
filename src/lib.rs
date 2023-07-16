@@ -15,6 +15,16 @@ use rustyline::{DefaultEditor, error::ReadlineError};
 use utils::constants::*;
 use utils::err::*;
 
+use log::{Level, LevelFilter};
+use env_logger::Env;
+
+pub fn init_logger() {
+    env_logger::Builder::from_default_env()
+        .filter_module("nova", LevelFilter::Debug)
+        .format_timestamp(None)
+        .init();
+}
+
 pub fn nova_repl(mut vm:VM)->Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
 
@@ -59,6 +69,8 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
                     }
                 }               
             }
+
+
 
             Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
                 println!("See you again!");
@@ -152,6 +164,6 @@ pub mod tests {
         let mut vm=VM::new();
         let res=vm.run(chunk, true);
 
-        dbg!(res);
+        log::debug!("{:?}", res);
     }
 }

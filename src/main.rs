@@ -4,7 +4,6 @@ use nova::vm::VM;
 use nova::utils::err::*;
 use nova::utils::file::run_file;
 
-
 use std::env::args;
 use std::process::ExitCode;
 
@@ -25,6 +24,9 @@ fn run_main()->Result<()> {
 }
 
 fn main()->ExitCode {
+    #[cfg(debug_assertions)]
+    nova::init_logger();
+
     match run_main() {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
