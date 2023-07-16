@@ -60,7 +60,8 @@ pub type IntType=isize;
 pub enum Value {
     Number(IntType),
     Bool(bool),
-    ObjString(String)
+    ObjString(String),
+    Unit // empty type
 }
 
 impl Value {
@@ -82,6 +83,13 @@ impl Value {
             _ => errn!("Expected string but got: {}", self.to_string())
         }
     }
+
+    pub fn is_unit(&self)->bool {
+        match self {
+            Self::Unit => true,
+            _ => false
+        }
+    }
 }
 
 impl Display for Value  {
@@ -89,7 +97,8 @@ impl Display for Value  {
         let repr=match &self {
             Self::Number(n) => n.to_string(),
             Self::Bool(b) => b.to_string(),
-            Self::ObjString(s) => format!("\"{}\"", s.to_string())
+            Self::ObjString(s) => format!("\"{}\"", s.to_string()),
+            Self::Unit => String::from("()")
         };
 
         write!(f, "{}", repr)

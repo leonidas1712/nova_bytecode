@@ -60,7 +60,9 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 
                 match vm.interpret(&inp) {
                     Ok(val) => {
-                        println!("{}", val.to_string());
+                        if !val.is_unit() {
+                            println!("{}", val.to_string());
+                        }
                     },
 
                     Err(err) => {

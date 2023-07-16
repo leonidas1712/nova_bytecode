@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
 use crate::utils::err::*;
@@ -8,7 +10,8 @@ const VAL_STACK_MAX:usize=2000;
 pub struct VM {
     chunk:Chunk,
     ip:usize, // index of next op to execute,
-    value_stack:VecStack<Value> // this should have same layout as Compiler.locals,
+    value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
+    globals:HashMap<String,Value>
     // call_stack: VecStack<CallFrame<'function>>
         // call frame refers to function potentially on value stack
 }
@@ -20,7 +23,8 @@ impl VM {
         VM {
             chunk:Chunk::new(),
             ip:0,
-            value_stack:VecStack::new(VAL_STACK_MAX)
+            value_stack:VecStack::new(VAL_STACK_MAX),
+            globals:HashMap::new()
         }
     }
 
@@ -34,6 +38,10 @@ impl VM {
         self.chunk=Chunk::new();
         self.ip=0;
         self.value_stack.clear();
+    }
+
+    fn add_global(&mut self, name:String, value:Value) {
+        self.globals.insert(name, value);
     }
 
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
@@ -60,7 +68,7 @@ impl VM {
         loop {
             let curr=self.get_curr_inst();
             if curr.is_none() {
-                break Ok(Value::Number(1)) // exit code 1
+                break Ok(Value::Unit) // exit code 1
             }  
 
             let curr=curr.unwrap();
@@ -114,6 +122,13 @@ impl VM {
                 OpSetGlobal => {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);
+                    
+                    let value=self.value_stack.pop()?;
+                    let name=self.value_stack.pop()?;
+                    let name=name.expect_string()?;
+                    self.add_global(name.clone(), value);
+
+                    log::debug!("Set:{:?}",self.globals);
                 }
             }
 

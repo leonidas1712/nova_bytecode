@@ -315,12 +315,15 @@ impl<'src> Parser<'src> {
     }
 
     // does (expression | statement)
-    fn declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+    /// Return true if expression was compiled, else false
+    fn declaration(&mut self, chunk: &mut Chunk)->Result<bool>  {
         // Put statement types here
         if self.match_token(TokenLet) {
-            self.let_declaration(chunk)
+            self.let_declaration(chunk)?;
+            Ok(false)
         } else {
-            self.expression(chunk)
+            self.expression(chunk)?;
+            Ok(true)
         }
     }
 
@@ -329,12 +332,18 @@ impl<'src> Parser<'src> {
 
         self.advance()?;
 
+        let mut last_was_expression:bool=false;
+
         while let Some(_) = self.curr_tok {
-            self.declaration(chunk)?;
+            let res=self.declaration(chunk)?;
+            last_was_expression=res;
         }
         // self.expression(chunk)?;
 
-        self.end_compile(chunk);
+        // return value for expr
+        if last_was_expression {
+            self.end_compile(chunk);
+        }
 
         match self.delim_scanner.end() {
             Err(delim_err) => self.report_err(delim_err),
