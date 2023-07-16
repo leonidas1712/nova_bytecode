@@ -7,8 +7,8 @@ use crate::data::ops::Inst::*;
 
 const VAL_STACK_MAX:usize=2000;
 
+// may not need to store chunk
 pub struct VM {
-    chunk:Chunk,
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
     globals:HashMap<String,Value>
@@ -21,21 +21,13 @@ pub struct VM {
 impl VM {
     pub fn new()->VM {
         VM {
-            chunk:Chunk::new(),
             ip:0,
             value_stack:VecStack::new(VAL_STACK_MAX),
             globals:HashMap::new()
         }
     }
 
-    // get current instruction and increase ip
-    pub fn get_curr_inst(&self)->Option<&Inst> {
-        let curr=self.chunk.get_op(self.ip);
-        curr
-    }
-
     fn reset(&mut self) {
-        self.chunk=Chunk::new();
         self.ip=0;
         self.value_stack.clear();
     }
@@ -52,8 +44,6 @@ impl VM {
             self.reset();
         }
 
-        self.chunk=chunk;
-
         macro_rules! bin_op {
             ($op:tt) => {
                 {
@@ -66,7 +56,8 @@ impl VM {
         }
 
         loop {
-            let curr=self.get_curr_inst();
+            // let curr=self.get_curr_inst(&chunk);
+            let curr=chunk.get_op(self.ip);
             if curr.is_none() {
                 break Ok(Value::Unit) // exit code 1
             }  
@@ -83,7 +74,7 @@ impl VM {
                 OpConstant(idx) => {
                     let i=*idx;
 
-                    let ct=self.chunk.get_constant(i);
+                    let ct=chunk.get_constant(i);
                     
                     let get:Result<Value>=ct
                         .ok_or(errn_i!("Invalid index for constant:{}", i));
@@ -119,12 +110,12 @@ impl VM {
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),   
-                OpSetGlobal => {
+                OpSetGlobal(idx) => {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);
                     
                     let value=self.value_stack.pop()?;
-                    let name=self.value_stack.pop()?;
+                    let name=chunk.get_constant(*idx).expect("Invalid index for OpSetGlobal");
                     let name=name.expect_string()?;
                     self.add_global(name.clone(), value);
 

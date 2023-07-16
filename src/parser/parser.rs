@@ -284,10 +284,10 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// add string to constants
-    fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>) {
+    /// add string to constants and return index in constants
+    fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>)->usize {
         let string=Value::ObjString(ident.content.to_string());
-        chunk.write_constant(string, ident.line);
+        chunk.add_constant(string, ident.line)
     }
 
     /// Consume identifier, equals and emit OP_SET_GLOBAL
@@ -295,10 +295,10 @@ impl<'src> Parser<'src> {
         let ident=self.consume(TokenIdent)?;
 
         self.consume(TokenEqual)?;
-        self.add_string(chunk, ident);
+        let idx=self.add_string(chunk, ident);
         self.expression(chunk)?;
 
-        chunk.write_op(OpSetGlobal, ident.line);
+        chunk.write_op(OpSetGlobal(idx), ident.line);
         // self.add_identifier() -> add constant for the string to Value stack
         // expression() -> get expression to assign onto stack (OpConst)
         // emit OpSetGlobal(idx of identifier)
@@ -306,6 +306,8 @@ impl<'src> Parser<'src> {
         Ok(())
 
     }
+
+    /// Grammar functions
     
     // let x=2;
     fn let_declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
@@ -338,7 +340,6 @@ impl<'src> Parser<'src> {
             let res=self.declaration(chunk)?;
             last_was_expression=res;
         }
-        // self.expression(chunk)?;
 
         // return value for expr
         if last_was_expression {

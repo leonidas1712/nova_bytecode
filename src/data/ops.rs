@@ -14,7 +14,7 @@ use crate::utils::{err::*};
 pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
-    OpSetGlobal, // idx of variable name
+    OpSetGlobal(usize), // idx of variable name
     OpNegate,
     OpAdd,
     OpSub,
@@ -184,7 +184,7 @@ impl Chunk {
         constants.len()-1
     }
 
-    // add const + add OP_CONSTANT
+    /// add const + add OP_CONSTANT
     pub fn write_constant(&mut self, value:Value, line:usize) {
         let idx=self.add_constant(value, line);
         self.write_op(Inst::OpConstant(idx), line);
