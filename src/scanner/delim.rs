@@ -146,13 +146,13 @@ impl DelimiterScanner {
                     self.stack.pop();
                     Ok(())
                 } else if !val.can_ignore {
-                    Err(format!("closing token {} does not match opening token {}", ty.get_repr().unwrap(), val.opener))
+                    Err(format!("closing token {} does not match opening token {}", ty.get_repr(), val.opener))
                 } else {
                     Ok(())
                 }
 
             },
-            None => Err(format!("unmatched closing token: {}", ty.get_repr().unwrap()))
+            None => Err(format!("unmatched closing token: {}", ty.get_repr()))
         }
     }
 
@@ -160,7 +160,7 @@ impl DelimiterScanner {
     fn end(&self)->Result<(),String> {
         match self.stack.last() {
             Some(delim) => {
-                Err(format!("unterminated opening token: {}", delim.opener.get_repr().unwrap()))
+                Err(format!("unterminated opening token: {}", delim.opener.get_repr()))
             },
             None => Ok(())
         }
@@ -184,11 +184,13 @@ fn test_delim() {
     assert!(d.closes_current(TokenLeftParen).is_none());
 }
 
+#[test]
 fn test_delim_advance() {
     let d1=Delimiter::new(TokenLeftParen, TokenRightParen, false);
-    let d2=Delimiter::new(TokenString, TokenString, true);
+    let d2=Delimiter::new(TokenSingleQuote, TokenSingleQuote, true);
     let d3=Delimiter::new(TokenLeftBrace, TokenRightBrace, false);
     let v=vec![d1,d2,d3];
+    let v2=v.clone();
 
     let mut d=DelimiterScanner::new(v);
 
@@ -196,27 +198,27 @@ fn test_delim_advance() {
     d.advance(TokenRightParen);
     assert!(d.end().is_ok()); // "()"
 
-    d.advance(TokenString);
+    d.advance(TokenSingleQuote);
     d.advance(TokenRightParen);
 
     assert!(d.end().is_err()); // ")
-    dbg!(d.end());
-    d.advance(TokenString);
+
+    d.advance(TokenSingleQuote);
     assert!(d.end().is_ok()); // ")"
 
     d.advance(TokenLeftParen);
-    d.advance(TokenString);
+    d.advance(TokenSingleQuote);
     assert!(d.end().is_err()); // ("
 
-    d.advance(TokenString);
+    d.advance(TokenSingleQuote);
     d.advance(TokenRightParen); // ("")
     assert!(d.end().is_ok());    
+
+    d.advance(TokenLeftParen);
+    let res=d.advance(TokenRightBrace);
+    assert!(res.unwrap_err().contains("does not match"));
     
+    let mut d2=DelimiterScanner::new(v2);
+    let res=d2.advance(TokenRightParen);
+    assert!(res.unwrap_err().contains("unmatched"))
 }
-
-#[test]
-fn test() {
-    let r=TokenString.get_repr();
-    dbg!(r);
-}
-

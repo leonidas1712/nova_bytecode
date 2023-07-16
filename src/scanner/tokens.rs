@@ -35,7 +35,7 @@ pub enum TokenType {
     // Literals
     TokenInteger,
     TokenFloat,
-    TokenString, // delim
+    TokenString,
     TokenIdent,
 
     // Comp
@@ -59,16 +59,30 @@ pub enum TokenType {
 
 impl TokenType {
     //  actual repr e.g LeftParen -> '('
-     pub fn get_repr(&self)->Option<String> {
+     pub fn get_repr(&self)->String{
         let trie=KEYWORDS_TRIE.get_key_from_value(*self).map(|x| x.to_string());
 
-        // let delims=|| {
-        //     match self {
-        //         TokenString => ""
-        //     }
-        // }
+        // TokenLeftParen, // delim
+        // TokenRightParen, // delim
+        // TokenLeftBrace, // delim
+        // TokenRightBrace, // delim
+        // TokenSingleQuote, // delim - "\""
+
+        let delims=|| {
+            match self {
+                TokenLeftParen => OPEN_EXPR,
+                TokenRightParen => CLOSE_EXPR,
+                TokenLeftBrace => LEFT_BRACE,
+                TokenRightBrace => RIGHT_BRACE,
+                TokenSingleQuote => SINGLE_QUOTE,
+                _ =>  {
+                    log::debug!("Delims called on unsupported: {}", self);
+                    't'
+                }
+            }
+        };
         
-        trie
+        trie.unwrap_or_else(|| delims().to_string())
     }
 }
 

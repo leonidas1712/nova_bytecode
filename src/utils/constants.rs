@@ -8,6 +8,7 @@ use super::trie::Trie;
 // Single char tokens
 pub const OPEN_EXPR: char = '(';
 pub const CLOSE_EXPR: char = ')';
+pub const SINGLE_QUOTE:char='"';
 pub const NEWLINE: char = '\n';
 pub const TAB: char = '\t';
 pub const VAR_SEP: char = ',';

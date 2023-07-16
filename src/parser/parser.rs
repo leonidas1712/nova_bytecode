@@ -208,7 +208,7 @@ impl<'src> Parser<'src> {
 
     // EOF is implicit so consume means we expect some actual token type
     fn consume(&mut self, ty:TokenType)->Result<()>{
-        let type_string=ty.get_repr().unwrap();
+        let type_string=ty.get_repr();
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
