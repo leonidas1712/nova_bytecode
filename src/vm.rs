@@ -120,6 +120,24 @@ impl VM {
                     self.add_global(name.clone(), value);
 
                     log::debug!("Set:{:?}",self.globals);
+                },
+                OpGetGlobal(idx) => {
+                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, idx);
+                    let name=chunk.get_constant(*idx).expect("Invalid index for OpGetGlobal");
+                    let name=name.expect_string()?;
+
+                    let value=self.globals.get(name); // could add line num to value
+
+                    match value {
+                        Some(val) => {
+                            self.value_stack.push(val.to_owned())?;
+                        },
+                        None => {
+                            let msg=format!("Variable '{}' is not defined.", name);
+                            return errn!(msg)
+                        }
+                    }
+    
                 }
             }
 

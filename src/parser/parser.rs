@@ -136,7 +136,8 @@ impl<'src> Parser<'src> {
             ParseUnary => self.unary(chunk),
             ParseBinary => self.binary(chunk),
             ParseGrouping => self.grouping(chunk),
-            ParseString => self.string(chunk)
+            ParseString => self.string(chunk),
+            ParseIdent => self.parse_ident(chunk),
         }
     }
 
@@ -291,7 +292,7 @@ impl<'src> Parser<'src> {
     }
 
     /// Consume identifier, equals and emit OP_SET_GLOBAL
-    fn parse_variable(&mut self, chunk: &mut Chunk)->Result<()> {
+    fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {
         let ident=self.consume(TokenIdent)?;
 
         self.consume(TokenEqual)?;
@@ -299,19 +300,27 @@ impl<'src> Parser<'src> {
         self.expression(chunk)?;
 
         chunk.write_op(OpSetGlobal(idx), ident.line);
-        // self.add_identifier() -> add constant for the string to Value stack
-        // expression() -> get expression to assign onto stack (OpConst)
-        // emit OpSetGlobal(idx of identifier)
 
         Ok(())
+    }
 
+    /// Parse get for an identifier
+    fn parse_ident(&mut self, chunk: &mut Chunk)->Result<()> {
+        log::debug!("Parse ident {:?}",self);
+        let ident=self.expect_prev()?;
+        self.expect_token_type(ident, TokenIdent, "identifier")?;
+        let idx=self.add_string(chunk, ident);
+
+        chunk.write_op(OpGetGlobal(idx), ident.line);
+
+        Ok(())
     }
 
     /// Grammar functions
     
     // let x=2;
     fn let_declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
-        self.parse_variable(chunk)?;
+        self.parse_variable_assignment(chunk)?;
         self.consume(TokenSemiColon)?;
         Ok(())
     }

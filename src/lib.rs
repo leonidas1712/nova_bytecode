@@ -71,8 +71,6 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
                 }               
             }
 
-
-
             Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
                 println!("See you again!");
                 break;

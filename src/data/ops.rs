@@ -14,6 +14,7 @@ use crate::utils::{err::*};
 pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
+    OpGetGlobal(usize),
     OpSetGlobal(usize), // idx of variable name
     OpNegate,
     OpAdd,
