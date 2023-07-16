@@ -2,6 +2,7 @@
 use std::collections::{HashMap,HashSet};
 use std::hash::Hash;
 use std::vec;
+use std::fmt::Display;
 
 use crate::scanner::tokens::{TokenType};
 use crate::utils::constants::*;
@@ -9,13 +10,13 @@ use crate::utils::constants::*;
 use TokenType::*;
 
 #[derive(Debug)]
-pub struct TrieNode {
+pub struct TrieNode<V> where V:Hash {
     pub char:char,
-    pub children:HashMap<char,TrieNode>,
-    pub value:Option<TokenType> // mark node as terminal with value
+    pub children:HashMap<char,TrieNode<V>>,
+    pub value:Option<V> // mark node as terminal with value
 }
-impl TrieNode {
-    pub fn new(char:char)->TrieNode {
+impl<V> TrieNode<V> where V:Hash + Clone {
+    pub fn new(char:char)->TrieNode<V> {
         TrieNode {
             char,
             children:HashMap::new(),
@@ -35,22 +36,22 @@ impl TrieNode {
         }
     }  
 
-    pub fn get_child(&self, char:char)->Option<&TrieNode> {
+    pub fn get_child(&self, char:char)->Option<&TrieNode<V>> {
         self.children.get(&char)
     }
-    pub fn get_child_mut(&mut self, char:char)->Option<&mut TrieNode> {
+    pub fn get_child_mut(&mut self, char:char)->Option<&mut TrieNode<V>> {
         self.children.get_mut(&char)
     }
 
-    pub fn get_value(&self)->Option<TokenType> {
+    pub fn get_value(&self)->Option<V> {
         self.value.clone()
     }
 
-    pub fn set_value(&mut self, ty:TokenType) {
+    pub fn set_value(&mut self, ty:V) {
         self.value.replace(ty);
     }
 
-    pub fn empty()->TrieNode {
+    pub fn empty()->TrieNode<V> {
         TrieNode::new(SPACE)
     }
 
@@ -60,18 +61,18 @@ impl TrieNode {
 }
 
 // new, add_key(key:&str, ty:TokenType), get_type(key:&str)->Option<TokenType>
-pub struct Trie<K,V> {
-    pub root:TrieNode,
-    pub reverse_map:HashMap<V,K>
+pub struct Trie<K,V> where V:Hash + Display{
+    pub root:TrieNode<V>,
+    pub reverse_map:HashMap<V,K> // TokenType -> &str
 }
 
-impl<K,V> Trie<K,V> where K:ToString, V:Hash {
+// K=&str, V=TokenType 
+impl<K,V> Trie<K,V> where K:ToString + Hash, V:Hash + Display + Clone + Eq {
     pub fn new()->Trie<K,V> {
         Trie { root: TrieNode::empty(), reverse_map:HashMap::new() }
     }
 
-    pub fn add_key(&mut self, key:K, ty:TokenType) 
-    where K:ToString {
+    pub fn add_key(&mut self, key:K, ty:V) {
         let to_string=key.to_string();
         let mut chars=to_string.chars().peekable();
         let mut node=&mut self.root;
@@ -83,10 +84,11 @@ impl<K,V> Trie<K,V> where K:ToString, V:Hash {
             node=node.get_child_mut(char).unwrap();
         }
 
+        self.reverse_map.insert(ty.clone(), key);
         node.set_value(ty);
     }
 
-    pub fn get_type(&self, key:K)->Option<TokenType> where K:ToString{
+    pub fn get_type(&self, key:K)->Option<V> where K:ToString{
         let key=key.to_string();
         let mut chars=key.chars().peekable();
         let mut node=&self.root;
@@ -103,7 +105,7 @@ impl<K,V> Trie<K,V> where K:ToString, V:Hash {
     }
 
     // only for debugging: ok to do String
-    pub fn get_all_from_node(node:&TrieNode, stack:&mut Vec<char>)->Vec<String>{
+    pub fn get_all_from_node(node:&TrieNode<V>, stack:&mut Vec<char>)->Vec<String>{
         let mut strings:Vec<String>=vec![];
         // terminal
         if let Some(ty) = node.get_value() {
@@ -125,6 +127,12 @@ impl<K,V> Trie<K,V> where K:ToString, V:Hash {
     pub fn get_all(&self)->Vec<String>{
         let mut st:Vec<char>=vec![];
         Self::get_all_from_node(&self.root, &mut st)
+    }
+
+    /// (TokenType -> &str)
+    /// Given value, return key associated with the value (reverse mapping)
+    pub fn get_key_from_value(&self, value:V)->Option<&K> {
+        self.reverse_map.get(&value)
     }
 }
 
