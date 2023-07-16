@@ -162,7 +162,7 @@ impl DelimiterScanner {
     }
 
     // error if stack not empty 
-    fn end(&self)->Result<(),String> {
+    pub fn end(&self)->Result<(),String> {
         match self.stack.last() {
             Some(delim) => {
                 Err(format!("unterminated opening token: {}", delim.opener.get_repr()))

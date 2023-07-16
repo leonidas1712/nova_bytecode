@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::format;
 use std::vec;
 
-use crate::scanner::delim::{Delimiter, DelimiterScanner};
+use crate::scanner::delim::{Delimiter, DelimiterScanner, self};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::err::*;
@@ -239,9 +239,14 @@ impl<'src> Parser<'src> {
         self.advance()?;
         self.expression(chunk)?;
         self.end_compile(chunk);
-        // self.scanner.end()
+
+        match self.delim_scanner.end() {
+            Err(delim_err) => self.report_err(delim_err),
+            _ => Ok(())
+        }
+
         // consume(EOF, expect end of expr)
-        Ok(())
+        // Ok(())
     }
 
     pub fn end_compile(&mut self, chunk:&mut Chunk) {
