@@ -31,6 +31,8 @@ digit       -> '0' | '1' | ... | '9'
 
 + => one or more, * => zero or more, ?=> 0 or 1
 
+To diff between expr and exprStmt
+=> parse expression first, check at the end for semicolon. no semicolon => treat as expr, else stmt so pop from stack
 
 
 expression->assignment->...->unary -> call -> primary -> "(" expression ")"

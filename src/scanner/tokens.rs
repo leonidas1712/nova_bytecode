@@ -84,6 +84,7 @@ impl TokenType {
 
             let try_others=match self {
                 TokenString => "string",
+                TokenIdent => "identifier",
                 _ => "token"
             };
 

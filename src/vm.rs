@@ -4,6 +4,7 @@ use crate::utils::err::*;
 use crate::data::ops::Inst::*;
 
 const VAL_STACK_MAX:usize=2000;
+
 pub struct VM {
     chunk:Chunk,
     ip:usize, // index of next op to execute,
@@ -16,7 +17,6 @@ pub struct VM {
 
 impl VM {
     pub fn new()->VM {
-
         VM {
             chunk:Chunk::new(),
             ip:0,
@@ -111,6 +111,10 @@ impl VM {
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),   
+                OpSetGlobal => {
+                    log::debug!("OpSet");
+                    log::debug!("{:?}", self.value_stack);
+                }
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)

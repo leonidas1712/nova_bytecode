@@ -10,7 +10,13 @@ fn test_binary_ops() {
         ("6 + 9 / 3 - 4 * 2", "1"),
         ("2 * 5 - 3 + 8 / 4", "9"),
         ("5 + 3 / 6 - 2 * 4", "-3"),
+        ("\"abc\" + \"def\"", "\"abcdef\"")
     ];
 
     test_input_many(&v);
+}
+
+#[test]
+fn vm_test() {
+    test_input("2", "2");
 }

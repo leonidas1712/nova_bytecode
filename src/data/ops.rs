@@ -8,12 +8,13 @@ use crate::utils::{err::*};
 // type UnaryOp=fn(&mut Value);
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 // Instruction
 // binaryop: takes two args from stack, applies op, pushes onto stack
 pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
+    OpSetGlobal, // idx of variable name
     OpNegate,
     OpAdd,
     OpSub,

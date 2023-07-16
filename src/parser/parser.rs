@@ -284,11 +284,56 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// add string to constants
+    fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>) {
+        let string=Value::ObjString(ident.content.to_string());
+        chunk.write_constant(string, ident.line);
+    }
+
+    /// Consume identifier, equals and emit OP_SET_GLOBAL
+    fn parse_variable(&mut self, chunk: &mut Chunk)->Result<()> {
+        let ident=self.consume(TokenIdent)?;
+
+        self.consume(TokenEqual)?;
+        self.add_string(chunk, ident);
+        self.expression(chunk)?;
+
+        chunk.write_op(OpSetGlobal, ident.line);
+        // self.add_identifier() -> add constant for the string to Value stack
+        // expression() -> get expression to assign onto stack (OpConst)
+        // emit OpSetGlobal(idx of identifier)
+
+        Ok(())
+
+    }
+    
+    // let x=2;
+    fn let_declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+        self.parse_variable(chunk)?;
+        self.consume(TokenSemiColon)?;
+        Ok(())
+    }
+
+    // does (expression | statement)
+    fn declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+        // Put statement types here
+        if self.match_token(TokenLet) {
+            self.let_declaration(chunk)
+        } else {
+            self.expression(chunk)
+        }
+    }
+
     pub fn compile(&mut self, chunk: &mut Chunk)->Result<()> {
         // at first: only exprs
 
         self.advance()?;
-        self.expression(chunk)?;
+
+        while let Some(_) = self.curr_tok {
+            self.declaration(chunk)?;
+        }
+        // self.expression(chunk)?;
+
         self.end_compile(chunk);
 
         match self.delim_scanner.end() {
@@ -425,13 +470,12 @@ fn test_parse() {
 }
 
 #[test]
-fn test_parse_ops() {
-    let mut p=Parser::new("\"string\"");
+fn test_debug() {
+    let mut p=Parser::new("2");
+    let mut chunk=Chunk::new();
 
-
-    // let mut chunk=Chunk::new();
-
-    // let res=p.compile(&mut chunk);
+    let res=p.compile(&mut chunk);
+    dbg!(chunk);
 }
 
 

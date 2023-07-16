@@ -94,6 +94,7 @@ impl<T:Copy> Stack<T> for FixedStack <T> {
 }
 
 // indirection to enforce capacity
+#[derive(Debug)]
 pub struct VecStack<T> {
     stack:Vec<T>,
     cap:usize
