@@ -229,6 +229,7 @@ impl<'src> Parser<'src> {
         self.advance()?;
         self.expression(chunk)?;
         self.end_compile(chunk);
+        // self.scanner.end()
         // consume(EOF, expect end of expr)
         Ok(())
     }

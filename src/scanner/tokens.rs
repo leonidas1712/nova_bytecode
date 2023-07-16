@@ -6,10 +6,11 @@ use crate::utils::constants::*;
 #[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
 pub enum TokenType {
     // Single char
-    TokenLeftParen,
-    TokenRightParen,
-    TokenLeftBrace,
-    TokenRightBrace,
+    TokenLeftParen, // delim
+    TokenRightParen, // delim
+    TokenLeftBrace, // delim
+    TokenRightBrace, // delim
+    TokenSingleQuote, // delim - "\""
     TokenComma,
     TokenDot,
     TokenMinus,
@@ -34,7 +35,7 @@ pub enum TokenType {
     // Literals
     TokenInteger,
     TokenFloat,
-    TokenString,
+    TokenString, // delim
     TokenIdent,
 
     // Comp
@@ -52,13 +53,22 @@ pub enum TokenType {
     TokenError,
     TokenLambda,
     TokenInfix,
+    
 }
 
 
 impl TokenType {
     //  actual repr e.g LeftParen -> '('
      pub fn get_repr(&self)->Option<String> {
-        KEYWORDS_TRIE.get_key_from_value(*self).map(|x| x.to_string())
+        let trie=KEYWORDS_TRIE.get_key_from_value(*self).map(|x| x.to_string());
+
+        // let delims=|| {
+        //     match self {
+        //         TokenString => ""
+        //     }
+        // }
+        
+        trie
     }
 }
 

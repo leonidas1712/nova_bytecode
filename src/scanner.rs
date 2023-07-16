@@ -1,5 +1,8 @@
 use crate::utils::constants::*;
+
 pub mod tokens;
+pub mod delim;
+
 use tokens::*;
 
 #[derive(Debug)]
@@ -185,30 +188,8 @@ impl<'src> Scanner<'src> {
 }
 
 
-// DelimErr -> pair of expected token and got (got can be None for unterm)
-// 2) -> unmatched ')'
-// (2 => unmatched '('
 
-// Delim: pair(opentype, closetype) + ignore:bool
-    // ignore means when this opener is at front of stack, dont push any other openers onto stack
-    // e.g "([" -> when " on stack, we dnt push ([
-    // but closer always pops from stack
 
-// Err report: just return TokenDelimErr(string) => use string to report
-
-// DelimScanner::new(Vec<Delim<) => initialise
-    // Delim: TokenType open, TokenType close, ignore:bool
-    // init Stack<TokenType> + openers:Vec<(TokenType, bool:ignore)>, closers:Vec<TokenType> => corresponding opener/closer at same idx in arrays
-
-// advance(ty:TokenType)->Result<(),String> => Err(string) if err, else ok
-   // if ty is an opener and stack[-1] is not ignore:
-        // else: stack.push(ty)
-
-    // else ty is a closer:
-        // if ty closes stack[-1]: stack.pop() -> err if empty stack (unmatched {closer})
-        // else ty doesn't close stack[-1] and stack[-1] is not ignore: -> err if empty 
-            // err: ty closer doesn't match stack[-1] opener
-    // if ty not in open/close => ok
 
     
 
