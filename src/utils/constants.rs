@@ -127,11 +127,20 @@ lazy_static! {
         trie
     };
 
-    // doesnt need to be a fn ptr: can be an enum and we call on that
+    // type of token => rule to parse the token
     pub static ref PARSE_RULE_TABLE:HashMap<TokenType,ParseRule> = {
         let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
-        let p=ParseRule::new(RulePrefix, ParseNumber, PrecNone);
-        m.insert(TokenInteger, p);
+        let rules=vec![
+            (TokenInteger, ParseRule::new(Some(ParseNumber), None, PrecNone)),
+            // (TokenInteger, ParseRule::new(RulePrefix, ParseNumber, PrecNone)),
+
+        ];
+
+        for rule in rules {
+            let (ty,rule)=rule;
+            m.insert(ty, rule);
+        }
+    
         m
     };
 }

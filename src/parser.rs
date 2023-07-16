@@ -30,23 +30,26 @@ pub use RuleType::*;
 
 #[derive(Clone, Copy)]
 pub enum ParseFn {
-    ParseNumber
+    ParseNumber,
+    ParseUnary
 }
 
 pub use ParseFn::*;
 
+// parse rule: has Option prefix, Option infix (switch based on context)
+// e.g minus is prefix sometimes, infix others
 #[derive(Clone, Copy)]
 pub struct ParseRule {
-    rule_type:RuleType,
-    func:ParseFn,
+    infix:Option<ParseFn>,
+    prefix:Option<ParseFn>,
     prec:Precedence
 }
 
 impl ParseRule {
-    pub fn new(rule_type:RuleType, func:ParseFn, prec:Precedence)->ParseRule {
+    pub fn new(prefix:Option<ParseFn>, infix:Option<ParseFn>, prec:Precedence)->ParseRule {
         ParseRule {
-            rule_type,
-            func,
+            infix,
+            prefix,
             prec
         }
     }
@@ -110,6 +113,11 @@ impl<'src> Parser<'src> {
     }
 
     pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
+        let prev=self.get_prev()?;
+
+        // match prev.token_type {
+        //     Token
+        // }
         Ok(())
     }
 
@@ -122,6 +130,7 @@ impl<'src> Parser<'src> {
     fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn)->Result<()>{
         match ty {
             ParseNumber => self.number(chunk),
+            ParseUnary => self.unary(chunk)
         }
     }
 
@@ -142,14 +151,24 @@ impl<'src> Parser<'src> {
 
         let rule=rule.unwrap();
 
-        match rule.rule_type {
-            RulePrefix => {
-                // use rule to call function
-                self.call_parse_fn(chunk, rule.func)?;
-                Ok(())
-            },
-            _ => self.report_err("Expect expression")
+        // we should first have a prefix (expect prefix)
+        let prefix=rule.prefix;
+        if prefix.is_none() {
+            let msg=format!("Expect expression but got: '{}'", prev.content);
+            return self.report_msg(prev, msg);
         }
+
+        let prefix_fn=prefix.unwrap();
+        self.call_parse_fn(chunk, prefix_fn)
+
+        // match rule.rule_type {
+        //     RulePrefix => {
+        //         // use rule to call function
+        //         self.call_parse_fn(chunk, rule.func)?;
+        //         Ok(())
+        //     },
+        //     _ => self.report_err("Expect expression")
+        // }
     }
 
     // Err, Err - report consecutive errors until non-err or end
