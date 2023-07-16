@@ -12,7 +12,35 @@ use crate::{data::*, vm};
 #[derive(Clone, Copy)]
 pub enum Precedence {
     PrecNone,
-    PrecAssign,
+    PrecAssign, // = (lowest valid)
+    PrecOr,
+    PrecAnd,
+    PrecEq, // ==, !=
+    PrecComp, // lt,gt, lte, gte
+    PrecTerm, // + -
+    PrecFactor, // *, /
+    PrecUnary, // !, - e.g -2, !false
+    PrecCall, // () -> for calling a function
+    PrecPrimary
+}
+
+impl Precedence {
+    // change to tup for associativity etc
+    pub fn get_precedence(&self)->usize {
+        match self {
+            PrecNone => 1,
+            PrecAssign => 2,
+            PrecOr => 3,
+            PrecAnd => 4,
+            PrecEq => 5,
+            PrecComp => 6,
+            PrecTerm => 7,
+            PrecFactor => 8,
+            PrecUnary => 9,
+            PrecCall => 10,
+            PrecPrimary => 11
+        }
+    }
 }
 
 pub use Precedence::*;
@@ -38,6 +66,8 @@ pub use ParseFn::*;
 
 // parse rule: has Option prefix, Option infix (switch based on context)
 // e.g minus is prefix sometimes, infix others
+
+// prec: precedence used for infix op when recursing on the rest
 #[derive(Clone, Copy)]
 pub struct ParseRule {
     infix:Option<ParseFn>,
@@ -51,14 +81,6 @@ impl ParseRule {
             infix,
             prefix,
             prec
-        }
-    }
-
-    // change to tup for associativity etc
-    pub fn get_precedence(&self)->usize {
-        match self.prec {
-            PrecNone => 1,
-            PrecAssign => 2
         }
     }
 
@@ -141,6 +163,18 @@ impl<'src> Parser<'src> {
     }
 
     // why do we expect expression for prefix rule
+    fn get_rule_res(&self, token:Token)->Result<ParseRule> {
+        let rule=ParseRule::get_rule(token.token_type);
+
+        if rule.is_none() {
+            let msg=format!("Unrecognised token: {}", token.content);
+            self.report_msg(token, msg)?; // returns out 
+        }
+
+        let rule=rule.unwrap();
+        Ok(rule)
+        
+    }
 
     fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
         self.advance()?;
@@ -148,14 +182,7 @@ impl<'src> Parser<'src> {
         let prev=self.get_prev()?;
 
         // no rule exists , then prefix or not
-        let rule=ParseRule::get_rule(prev.token_type);
-
-        if rule.is_none() {
-            let msg=format!("Unrecognised token: {}", prev.content);
-            return self.report_msg(prev, msg);
-        }
-
-        let rule=rule.unwrap();
+        let rule=self.get_rule_res(prev)?;
 
         // we should first have a prefix (expect prefix)
         let prefix=rule.prefix;
@@ -167,8 +194,11 @@ impl<'src> Parser<'src> {
         let prefix_fn=prefix.unwrap();
         self.call_parse_fn(chunk, prefix_fn)
 
-        // infix down here
+        // infix down here - pratt parsing
+        // loop {
 
+
+        // }
     }
 
     // Err, Err - report consecutive errors until non-err or end
