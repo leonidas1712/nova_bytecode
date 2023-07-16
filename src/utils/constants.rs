@@ -3,7 +3,7 @@ extern crate lazy_static;
 use std::collections::HashMap;
 
 use crate::scanner::tokens::*;
-use crate::parser::*;
+use crate::parser::rules::*;
 
 use super::trie::Trie;
 
@@ -132,7 +132,8 @@ lazy_static! {
         let mut m:HashMap<TokenType,ParseRule>=HashMap::new();
         let rules=vec![
             (TokenInteger, ParseRule::new(Some(ParseNumber), None, PrecNone)),
-            (TokenMinus, ParseRule::new(Some(ParseUnary), None, PrecTerm)),
+            (TokenMinus, ParseRule::new(Some(ParseUnary), Some(ParseBinary), PrecTerm)),
+            (TokenPlus, ParseRule::new(None, Some(ParseBinary), PrecTerm)),
         ];
 
         for rule in rules {

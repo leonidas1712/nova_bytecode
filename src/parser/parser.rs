@@ -8,86 +8,108 @@ use crate::utils::constants::PARSE_RULE_TABLE;
 use crate::utils::err::*;
 use crate::{data::*, vm};
 
+use super::rules::*;
 
-#[derive(Clone, Copy)]
-pub enum Precedence {
-    PrecNone,
-    PrecAssign, // = (lowest valid)
-    PrecOr,
-    PrecAnd,
-    PrecEq, // ==, !=
-    PrecComp, // lt,gt, lte, gte
-    PrecTerm, // + -
-    PrecFactor, // *, /
-    PrecUnary, // !, - e.g -2, !false
-    PrecCall, // () -> for calling a function
-    PrecPrimary
-}
+// #[derive(Clone, Copy)]
+// pub enum Precedence {
+//     PrecNone,
+//     PrecAssign, // = (lowest valid)
+//     PrecOr,
+//     PrecAnd,
+//     PrecEq, // ==, !=
+//     PrecComp, // lt,gt, lte, gte
+//     PrecTerm, // + -
+//     PrecFactor, // *, /
+//     PrecUnary, // !, - e.g -2, !false
+//     PrecCall, // () -> for calling a function
+//     PrecPrimary
+// }
 
-impl Precedence {
-    // change to tup for associativity etc
-    pub fn get_precedence(&self)->usize {
-        match self {
-            PrecNone => 1,
-            PrecAssign => 2,
-            PrecOr => 3,
-            PrecAnd => 4,
-            PrecEq => 5,
-            PrecComp => 6,
-            PrecTerm => 7,
-            PrecFactor => 8,
-            PrecUnary => 9,
-            PrecCall => 10,
-            PrecPrimary => 11
-        }
-    }
-}
+// impl Precedence {
+//     // change to tup for associativity etc
+//     pub fn get_precedence_val(&self)->usize {
+//         match self {
+//             PrecNone => 1,
+//             PrecAssign => 2,
+//             PrecOr => 3,
+//             PrecAnd => 4,
+//             PrecEq => 5,
+//             PrecComp => 6,
+//             PrecTerm => 7,
+//             PrecFactor => 8,
+//             PrecUnary => 9,
+//             PrecCall => 10,
+//             PrecPrimary => 11
+//         }
+//     }
 
-pub use Precedence::*;
+//     pub fn get_preced_from_val(&self, val:usize)->Precedence {
+//         match val {
+//             val if val < 1 => PrecNone,
+//             1 => PrecNone,
+//             2 => PrecAssign,
+//             3 => PrecOr,
+//             4 => PrecAnd,
+//             5 => PrecEq,
+//             6 => PrecComp,
+//             7 => PrecTerm,
+//             8 => PrecFactor,
+//             9 => PrecUnary,
+//             10 => PrecCall,
+//             11 => PrecPrimary,
+//             val if val > 11 => PrecPrimary,
+//             _ => panic!("Invalid precedence:{}", val)
+//         }
+//     }
+// }
 
-// TokenType -> ParseRule
-#[derive(Clone, Copy)]
-pub enum RuleType {
-    RuleInfix,
-    RulePrefix
-}
+// pub use Precedence::*;
 
-pub use RuleType::*;
+// // TokenType -> ParseRule
+// #[derive(Clone, Copy)]
+// pub enum RuleType {
+//     RuleInfix,
+//     RulePrefix
+// }
 
-// type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
+// pub use RuleType::*;
 
-#[derive(Clone, Copy)]
-pub enum ParseFn {
-    ParseNumber,
-    ParseUnary
-}
+// // type ParseFn<'src> = fn(&mut Parser<'src>, &mut Chunk)->Result<()>;
 
-pub use ParseFn::*;
+// // matcher to call different functions: like function pointer
+// #[derive(Clone, Copy)]
+// pub enum ParseFn {
+//     ParseNumber,
+//     ParseUnary,
+//     ParseBinary
+// }
 
-// parse rule: has Option prefix, Option infix (switch based on context)
-// e.g minus is prefix sometimes, infix others
+// pub use ParseFn::*;
 
-// prec: precedence used for infix op when recursing on the rest
-#[derive(Clone, Copy)]
-pub struct ParseRule {
-    infix:Option<ParseFn>,
-    prefix:Option<ParseFn>,
-    prec:Precedence
-}
+// // parse rule: has Option prefix, Option infix (switch based on context)
+// // e.g minus is prefix sometimes, infix others
 
-impl ParseRule {
-    pub fn new(prefix:Option<ParseFn>, infix:Option<ParseFn>, prec:Precedence)->ParseRule {
-        ParseRule {
-            infix,
-            prefix,
-            prec
-        }
-    }
+// // prec: precedence used for infix op when recursing on the rest
+// #[derive(Clone, Copy)]
+// pub struct ParseRule {
+//     infix:Option<ParseFn>,
+//     prefix:Option<ParseFn>,
+//     prec:Precedence
+// }
 
-    fn get_rule(ty:TokenType)->Option<ParseRule>{
-        PARSE_RULE_TABLE.get(&ty).copied()
-    }
-}
+// impl ParseRule {
+//     pub fn new(prefix:Option<ParseFn>, infix:Option<ParseFn>, prec:Precedence)->ParseRule {
+//         ParseRule {
+//             infix,
+//             prefix,
+//             prec
+//         }
+//     }
+
+//     fn get_rule(ty:TokenType)->Option<ParseRule>{
+//         PARSE_RULE_TABLE.get(&ty).copied()
+//     }
+// }
 
 #[derive(Debug)]
 pub struct Parser<'src> {
@@ -130,6 +152,34 @@ impl<'src> Parser<'src> {
         }
     }
 
+    // why do we expect expression for prefix rule
+    fn expect_rule(&self, token:Token)->Result<ParseRule> {
+        let rule=ParseRule::get_rule(token.token_type);
+
+        if rule.is_none() {
+            let msg=format!("Unrecognised token: {}", token.content);
+            self.report_msg(token, msg)?; // returns out 
+        }
+
+        let rule=rule.unwrap();
+        Ok(rule) 
+    }
+
+    // expect_token_type(prev, "number")?;
+    fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
+        match token.token_type {
+            // err msgs
+            token_type if !token_type.eq(&ty) => {
+                let msg=format!("Expected a {} but got '{}'", type_string, token.content);
+                self.report_err(&msg)
+            },
+            _ => {
+                Ok(())
+            }
+        }
+    }
+    // End helpers
+
     // ParseFn: assume that the token to parse is set in self.prev
 
     // expect_token_type(ty)->Result<()>
@@ -141,9 +191,7 @@ impl<'src> Parser<'src> {
         let value:IntType = prev.content.parse().unwrap();
         let value=Value::Number(value);
 
-        let idx=chunk.add_constant(value, prev.line);
-        chunk.write_op(Inst::OpConstant(idx), prev.line);
-
+        chunk.write_constant(value, prev.line);
         Ok(())
     }
 
@@ -159,6 +207,17 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    // binary called based on rules table
+    pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
+        println!("Called binary, curr_tok:{:?}, prev:{:?}", self.curr_tok, self.prev_tok);
+        let prev=self.get_prev()?; // operator
+        let rule=ParseRule::get_rule(prev.token_type);
+
+        // self.parse_precedence(chunk, )
+        
+        Ok(())
+    }
+
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
         self.parse_precedence(chunk, PrecAssign)?;
@@ -169,22 +228,9 @@ impl<'src> Parser<'src> {
     fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn)->Result<()>{
         match ty {
             ParseNumber => self.number(chunk),
-            ParseUnary => self.unary(chunk)
+            ParseUnary => self.unary(chunk),
+            ParseBinary => self.binary(chunk),
         }
-    }
-
-    // why do we expect expression for prefix rule
-    fn get_rule_res(&self, token:Token)->Result<ParseRule> {
-        let rule=ParseRule::get_rule(token.token_type);
-
-        if rule.is_none() {
-            let msg=format!("Unrecognised token: {}", token.content);
-            self.report_msg(token, msg)?; // returns out 
-        }
-
-        let rule=rule.unwrap();
-        Ok(rule)
-        
     }
 
     fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
@@ -193,7 +239,7 @@ impl<'src> Parser<'src> {
         let prev=self.get_prev()?;
 
         // no rule exists , then prefix or not
-        let rule=self.get_rule_res(prev)?;
+        let rule=self.expect_rule(prev)?;
 
         // we should first have a prefix (expect prefix)
         let prefix=rule.prefix;
@@ -203,38 +249,44 @@ impl<'src> Parser<'src> {
         }
 
         let prefix_fn=prefix.unwrap();
-        // self.call_parse_fn(chunk, prefix_fn)?;
+        self.call_parse_fn(chunk, prefix_fn)?;
 
         // // infix down here - pratt parsing
-        // loop {
-        //     if self.is_done() {
-        //         break;
-        //     }
+        loop {
+            if self.is_done() {
+                break;
+            }
 
-        //     let curr_tok=self.get_current()?;
-        //     let rule=self.get_rule_res(curr_tok)?;
+            let curr_tok=self.get_current()?;
+            let rule=self.expect_rule(curr_tok)?;
             
-        //     if prec.get_precedence() > rule.prec.get_precedence() {
-        //         break;
-        //     }
+            if prec.get_precedence_val() > rule.prec.get_precedence_val() {
+                break;
+            }
 
-        //     self.advance()?;
+             // so that curr = next token after infix in subseq call to parse preced
+             // e.g 1+2 : now curr=+, advance => curr = 2, parse preced calls advance => prev=2, get prefix...
+            self.advance()?;
 
-        // }
+            // get infix fn from prev
+            let infix=rule.infix;
+            if infix.is_none() {
+                let msg=format!("Expected operation but got '{}'", curr_tok.content);
+                return self.report_msg(curr_tok, msg);
+            }
+
+            let infix=infix.unwrap();
+            self.call_parse_fn(chunk, infix)?;
+        }
 
 
-        self.call_parse_fn(chunk, prefix_fn) // REMOVE
+        Ok(())
+        // self.call_parse_fn(chunk, prefix_fn) // REMOVE
     }
 
     // Err, Err - report consecutive errors until non-err or end
     // advance curr/prev ptrs - should do Result for err
     pub fn advance(&mut self)->Result<()> {
-        // is_done true after this
-        // if self.at_last() {
-        //     self.curr_tok.take();
-        //     return Ok(());
-        // }
-
         // parser.prev = parser.current
         if let Some(t) = self.curr_tok.clone() {
             self.prev_tok.replace(t);
@@ -243,6 +295,7 @@ impl<'src> Parser<'src> {
             self.prev_tok.take();
         }
 
+        // set curr to none if scanner is finished
         if self.scanner.peek().is_none() {
             // println!("Prev:{:?}", self.prev_tok);
             // println!("Curr:{:?}", self.curr_tok);
@@ -319,20 +372,6 @@ impl<'src> Parser<'src> {
     // without token
     fn report_err<K>(&self, msg:K)->Result<()> where K:ToString {
         self.report_msg(Token::err(self.line), msg)
-    }
-
-    // expect_token_type(prev, "number")?;
-    fn expect_token_type(&self, token:Token<'src>, ty:TokenType, type_string:&str)->Result<()> {
-        match token.token_type {
-            // err msgs
-            token_type if !token_type.eq(&ty) => {
-                let msg=format!("Expected a {} but got '{}'", type_string, token.content);
-                self.report_err(&msg)
-            },
-            _ => {
-                Ok(())
-            }
-        }
     }
 }
 
