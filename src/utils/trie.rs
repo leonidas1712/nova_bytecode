@@ -1,5 +1,6 @@
 // trie to store TokenType indexed by &str (char)
 use std::collections::{HashMap,HashSet};
+use std::hash::Hash;
 use std::vec;
 
 use crate::scanner::tokens::{TokenType};
@@ -59,16 +60,17 @@ impl TrieNode {
 }
 
 // new, add_key(key:&str, ty:TokenType), get_type(key:&str)->Option<TokenType>
-pub struct Trie {
-    pub root:TrieNode
+pub struct Trie<K,V> {
+    pub root:TrieNode,
+    pub reverse_map:HashMap<V,K>
 }
 
-impl Trie {
-    pub fn new()->Trie {
-        Trie { root: TrieNode::empty() }
+impl<K,V> Trie<K,V> where K:ToString, V:Hash {
+    pub fn new()->Trie<K,V> {
+        Trie { root: TrieNode::empty(), reverse_map:HashMap::new() }
     }
 
-    pub fn add_key<K>(&mut self, key:K, ty:TokenType) 
+    pub fn add_key(&mut self, key:K, ty:TokenType) 
     where K:ToString {
         let to_string=key.to_string();
         let mut chars=to_string.chars().peekable();
@@ -84,7 +86,7 @@ impl Trie {
         node.set_value(ty);
     }
 
-    pub fn get_type<K>(&self, key:K)->Option<TokenType> where K:ToString{
+    pub fn get_type(&self, key:K)->Option<TokenType> where K:ToString{
         let key=key.to_string();
         let mut chars=key.chars().peekable();
         let mut node=&self.root;
@@ -133,7 +135,7 @@ impl Trie {
 
 #[test]
 fn trie_test() {
-    let mut t=Trie::new();
+    let mut t:Trie<&'static str, TokenType>=Trie::new();
     assert_eq!(t.get_type(""),None);
 
     t.add_key("if", TokenIf);
@@ -154,7 +156,8 @@ fn trie_test() {
 
 #[test]
 fn trie_test_overlap() {
-    let mut t=Trie::new();
+
+    let mut t:Trie<&'static str, TokenType>=Trie::new();
     
     t.add_key(">", TokenGt);
     t.add_key(">>", TokenPipe);

@@ -1,4 +1,6 @@
 extern crate lazy_static;
+use std::f32::MIN;
+
 use crate::scanner::tokens::*;
 
 use super::trie::Trie;
@@ -55,29 +57,36 @@ pub const TOKEN_LAMBDA:&str="->";
 pub const TOKEN_FUNC: &str = "fun";
 pub const TOKEN_LET: &str = "let";
 
+// we know for sure the char is static -> this is ok
+fn cstr(char:char)->&'static str {
+    Box::leak(char.to_string().into_boxed_str())
+}
 
 // keywords trie
-fn setup_keywords()->Trie{
+fn setup_keywords()->Trie<&'static str,TokenType>{
     let mut trie=Trie::new();
 
-    trie.add_key(OPEN_EXPR, TokenLeftParen);
-    trie.add_key(CLOSE_EXPR, TokenRightParen);
-    trie.add_key(LEFT_BRACE, TokenLeftBrace);
-    trie.add_key(RIGHT_BRACE, TokenRightBrace);
+    trie.add_key(cstr(OPEN_EXPR), TokenLeftParen);
 
-    trie.add_key(STMT_END, TokenSemiColon);
-    trie.add_key(COMMA, TokenComma);
-    trie.add_key(DOT, TokenDot);
-    trie.add_key(PLUS, TokenPlus);
-    trie.add_key(MINUS, TokenMinus);
-    trie.add_key(SLASH, TokenSlash);
-    trie.add_key(STAR, TokenStar);
+    trie.add_key(cstr(CLOSE_EXPR), TokenRightParen);
+    trie.add_key(cstr(LEFT_BRACE), TokenLeftBrace);
+    trie.add_key(cstr(RIGHT_BRACE), TokenRightBrace);
+
+    trie.add_key(cstr(STMT_END), TokenSemiColon);
+    trie.add_key(cstr(COMMA), TokenComma);
+    trie.add_key(cstr(DOT), TokenDot);
+    trie.add_key(cstr(PLUS), TokenPlus);
+    trie.add_key(cstr(MINUS), TokenMinus);
+    trie.add_key(cstr(SLASH), TokenSlash);
+    trie.add_key(cstr(STAR), TokenStar);
 
     // comp
-    trie.add_key(EQ, TokenEqual);
-    trie.add_key(LESS_THAN, TokenLess);
-    trie.add_key(GT_THAN, TokenGt);
-    trie.add_key(BANG, TokenNot);
+    trie.add_key(cstr(EQ), TokenEqual);
+    trie.add_key(cstr(LESS_THAN), TokenLess);
+    trie.add_key(cstr(GT_THAN), TokenGt);
+    trie.add_key(cstr(BANG), TokenNot);
+    trie.add_key(cstr(INFIX), TokenInfix);
+
 
 
     // two char
@@ -99,14 +108,12 @@ fn setup_keywords()->Trie{
     trie.add_key(TOKEN_LAMBDA, TokenLambda);
     trie.add_key(TOKEN_FUNC, TokenFunc);
     trie.add_key(TOKEN_LET, TokenLet);
-    trie.add_key(INFIX, TokenInfix);
-
 
     trie
 }
 
 lazy_static! {
-    pub static ref KEYWORDS_TRIE:Trie = {
+    pub static ref KEYWORDS_TRIE:Trie<&'static str,TokenType> = {
         let trie=setup_keywords();
         trie
     };
