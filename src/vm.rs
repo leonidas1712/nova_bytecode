@@ -88,23 +88,29 @@ impl VM {
                     let top=stack.pop()?.expect_int()?;
                     stack.push(Value::num(top*-1))?;
                 },
-                OpAdd => bin_op!(+),
+                OpAdd =>  {
+                    let stack=&mut self.value_stack;
+                    let right=stack.pop()?;
+                    let left=stack.pop()?;
+
+                    if left.expect_int().is_ok() {
+                        let left=left.expect_int()?;
+                        let right=right.expect_int()?;
+                        stack.push(Value::num(left + right))?;
+                    } else if left.expect_string().is_ok() {
+                        let left=left.expect_string()?;
+                        let right=right.expect_string()?;
+                        let left=left.to_owned();
+                        let res=left+right;
+                        stack.push(Value::ObjString(res))?;
+                    } else {
+                        let msg=format!("Expected number or string but got: {}", left.to_string());
+                        return errn!(msg);
+                    }
+                },
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
-                OpDiv => bin_op!(/),    
-                // concat last two
-                OpConcat => {
-                    let stack=&mut self.value_stack;
-
-                    let right=stack.pop()?;
-                    let right=right.expect_string()?;
-                    
-                    let left=stack.pop()?;
-                    let left=left.expect_string()?.clone();
-
-                    let new_val=Value::ObjString(left+right);
-                    stack.push(new_val)?;
-                }     
+                OpDiv => bin_op!(/),   
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)

@@ -163,13 +163,13 @@ pub mod tests {
         c2.write_op(Inst::OpConstant(idx), 1);
         c2.write_op(Inst::OpConstant(idx2), 1);
         
-        c2.write_op(Inst::OpConcat, 1);
+        c2.write_op(Inst::OpAdd, 1);
         c2.write_op(Inst::OpReturn, 1);
         
         let mut vm=VM::new();
         let res=vm.run(c2, true).unwrap();
     
-        assert_eq!(res.to_string(), "hihello");
+        assert_eq!(res.to_string(), "\"hihello\"");
 
         let mut c3=Chunk::new();
         let idx=c3.add_constant(Value::Bool(true), 1);
