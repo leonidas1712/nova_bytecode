@@ -19,4 +19,5 @@ fn test_binary_ops() {
 
 #[test]
 fn vm_test() {
+    // test_input("x=5", "2");
 }

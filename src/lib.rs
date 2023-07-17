@@ -86,10 +86,6 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 use crate::data::ops::Chunk;
 use crate::parser::parser::Parser;
 pub fn test_input(inp:&str, exp:&str) {
-    let mut chunk=Chunk::new();
-    let mut p=Parser::new(inp);
-    let res=p.compile(&mut chunk);
-
     let mut vm=VM::new();
     let res=vm.interpret(inp);
 

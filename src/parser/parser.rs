@@ -22,7 +22,8 @@ pub struct Parser<'src> {
     prev_tok:Option<Token<'src>>,
     curr_tok:Option<Token<'src>>,
     line:usize,
-    delim_scanner:DelimiterScanner
+    delim_scanner:DelimiterScanner,
+    is_stmt:bool // set to true when semicolon consumed
 }
 
 /*
@@ -41,7 +42,7 @@ impl<'src> Parser<'src> {
 
         let delim_scanner=DelimiterScanner::new(delimiters);
 
-        Parser { scanner, prev_tok: None, curr_tok: None, line:1, delim_scanner }
+        Parser { scanner, prev_tok: None, curr_tok: None, line:1, delim_scanner, is_stmt:false }
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
@@ -130,14 +131,14 @@ impl<'src> Parser<'src> {
     }
 
     // call based on enum
-    fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn)->Result<()>{
+    fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn, can_assign:bool)->Result<()>{
         match ty {
             ParseNumber => self.number(chunk),
             ParseUnary => self.unary(chunk),
             ParseBinary => self.binary(chunk),
             ParseGrouping => self.grouping(chunk),
             ParseString => self.string(chunk),
-            ParseIdent => self.parse_ident(chunk),
+            ParseIdent => self.parse_ident(chunk, can_assign),
         }
     }
 
@@ -158,9 +159,12 @@ impl<'src> Parser<'src> {
         }
 
         let prefix_fn=prefix.unwrap();
-        self.call_parse_fn(chunk, prefix_fn)?;
 
-        // // infix down here - pratt parsing
+        let can_assign=prec.get_precedence_val() <= PrecAssign.get_precedence_val();
+
+        self.call_parse_fn(chunk, prefix_fn, can_assign)?;
+
+        // infix down here - pratt parsing
         loop {
             if self.is_done() {
                 break;
@@ -189,7 +193,7 @@ impl<'src> Parser<'src> {
             }
 
             let infix=infix.unwrap();
-            self.call_parse_fn(chunk, infix)?;
+            self.call_parse_fn(chunk, infix, can_assign)?;
         }
 
 
@@ -256,6 +260,11 @@ impl<'src> Parser<'src> {
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
+                
+                if ty.eq(&TokenSemiColon) {
+                    self.is_stmt=true;
+                }
+
                 Ok(tok)
             } else {
                 let msg=format!("Expected {} but got {}", type_string, tok.content);
@@ -304,15 +313,33 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-    /// Parse get for an identifier
-    fn parse_ident(&mut self, chunk: &mut Chunk)->Result<()> {
-        log::debug!("Parse ident {:?}",self);
+    /// Parse get for an identifier - prefix func for TokenIdent
+    fn parse_ident(&mut self, chunk: &mut Chunk, can_assign:bool)->Result<()> {
+        // get identifier
         let ident=self.expect_prev()?;
         self.expect_token_type(ident, TokenIdent, "identifier")?;
+
+        // add identifier as constant to pool
         let idx=self.add_string(chunk, ident);
 
-        chunk.write_op(OpGetGlobal(idx), ident.line);
 
+        // log::debug!("match equals:{}", self.match_token(TokenEqual));
+
+        // write op here
+        if self.match_token(TokenEqual) {
+            println!("here");
+            if !can_assign {
+                let msg=format!("Can't assign to {}", ident.content);
+                self.report_msg(ident, msg)?;
+            }
+
+            self.expression(chunk)?;
+            chunk.write_op(OpSetGlobal(idx), ident.line);
+            self.consume(TokenSemiColon)?;
+        } else {    
+            chunk.write_op(OpGetGlobal(idx), ident.line);
+
+        }
         Ok(())
     }
 
@@ -343,15 +370,14 @@ impl<'src> Parser<'src> {
 
         self.advance()?;
 
-        let mut last_was_expression:bool=false;
-
         while let Some(_) = self.curr_tok {
             let res=self.declaration(chunk)?;
-            last_was_expression=res;
         }
 
+        log::debug!("After finishing: is_stmt {}", self.is_stmt);
+
         // return value for expr
-        if last_was_expression {
+        if !self.is_stmt {
             self.end_compile(chunk);
         }
 
@@ -490,7 +516,7 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("2");
+    let mut p=Parser::new("x+y=3;");
     let mut chunk=Chunk::new();
 
     let res=p.compile(&mut chunk);
