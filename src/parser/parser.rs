@@ -131,6 +131,12 @@ impl<'src> Parser<'src> {
         let value=Value::ObjString(content); // copies out  
         chunk.write_constant(value, string.line);
 
+        // chunk.add_string(content.to_string());
+            // add string to strings pool
+            // return hash of string
+            // OpLoadString(hash)
+        // vm:OpLoadString -> if hash doesnt exist in strings, add loaded str from chunk to strings. else, load from interned
+
         if string.token_type!=TokenStringQuote {
             self.consume(TokenStringQuote)?;
         }
