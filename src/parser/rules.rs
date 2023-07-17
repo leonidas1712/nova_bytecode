@@ -125,6 +125,7 @@ impl ParseRule {
             TokenIdent => ParseRule::new(Some(ParseIdent), None, PrecNone),
             TokenTrue => ParseRule::new(Some(ParseLiteral), None, PrecNone),
             TokenFalse => ParseRule::new(Some(ParseLiteral), None, PrecNone),
+            TokenNot => ParseRule::new(Some(ParseUnary), None, PrecNone),
             _ => ParseRule::new(None, None, PrecNone)
         }
     }

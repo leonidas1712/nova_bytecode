@@ -30,7 +30,8 @@ pub enum Inst {
     OpPop,
     OpEndScope(usize,bool), // num to pop, is_expr,
     OpTrue,
-    OpFalse
+    OpFalse,
+    OpNot
 }
 
 impl Display for Inst {

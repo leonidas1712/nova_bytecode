@@ -188,15 +188,6 @@ impl VM {
 
                     let obj_str=Value::ObjString(hash);
                     self.value_stack.push(obj_str)?;
-
-                    // match get_interned {
-                    //     Some(val) => {
-
-                    //     },
-                    //     None => {
-
-                    //     }
-                    // }
                 },
                 OpNegate => {
                     let stack=&mut self.value_stack;
@@ -288,7 +279,12 @@ impl VM {
                     
                 },
                 OpTrue => self.value_stack.push(Value::Bool(true))?,
-                OpFalse => self.value_stack.push(Value::Bool(false))?
+                OpFalse => self.value_stack.push(Value::Bool(false))?,
+                OpNot => {
+                    let val=self.value_stack.pop()?;
+                    let val=val.expect_bool()?;
+                    self.value_stack.push(Value::Bool(!val))?;
+                }
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)

@@ -71,6 +71,7 @@ impl<'src> Parser<'src> {
 
         match prev.token_type {
             TokenMinus => chunk.write_op(Inst::OpNegate, prev.line),
+            TokenNot => chunk.write_op(Inst::OpNot, prev.line),
             _ => ()
         }
         Ok(())
