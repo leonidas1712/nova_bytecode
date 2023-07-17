@@ -178,7 +178,7 @@ impl<'src> Parser<'src> {
         }
 
         let prefix_fn=prefix.unwrap();
-        
+
         let can_assign=prec.get_precedence_val() <= PrecAssign.get_precedence_val();
 
         self.call_parse_fn(chunk, prefix_fn, can_assign)?;
@@ -320,19 +320,6 @@ impl<'src> Parser<'src> {
         }
     }  
 
-    /// Consume identifier, equals and return ident + line --emit OP_SET_GLOBAL--
-    /// parseVariable
-    fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {
-        let ident=self.consume(TokenIdent)?;
-
-        self.consume(TokenEqual)?;
-        self.expression(chunk)?;
-
-        chunk.write_op(OpSetGlobal(ident.content.to_string()), ident.line);
-
-        Ok(())
-    }
-
     /// Parse identifier - prefix func for TokenIdent
     /// Either get the variable or set it
     /// can_assign when previous precedence is not too high e.g !false=2; => err but x=2; ok
@@ -355,8 +342,14 @@ impl<'src> Parser<'src> {
             }
 
             self.expression(chunk)?;
-            chunk.write_op(OpSetGlobal(ident_content), ident.line);
             self.consume(TokenSemiColon)?;
+
+            // set var
+            if self.compiler.is_local() {
+                return Ok(());
+            }
+            chunk.write_op(OpSetGlobal(ident_content), ident.line);
+
 
         } else {    
             chunk.write_op(OpGetGlobal(ident_content), ident.line);
