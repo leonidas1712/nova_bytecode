@@ -377,6 +377,13 @@ pub fn test_many() {
     assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenIdent('x'),TokenInfix('$'),TokenIdent('y'),TokenPlus('+'),TokenIdent('map'),TokenPipe('>>'),TokenIdent('succ'),TokenRightParen(')')]");
 }
 
+#[test]
+fn test_debug() {
+    let code="x=2; //x";
+    let mut s=Scanner::new(code);
+    dbg!(s.serialize());
+}
+
 
 
 

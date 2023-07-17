@@ -4,6 +4,7 @@ use std::hash::Hash;
 use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
+use crate::utils::constants::SPACE;
 use crate::utils::err::*;
 use crate::utils::misc::calc_hash;
 
@@ -224,8 +225,13 @@ impl<'src> Parser<'src> {
             self.prev_tok.take();
         }
 
+        let peek=self.scanner.peek();
+        // if c.is_some() {
+        //     let c=c.unwrap();
+        //     println!("{}", c==SPACE);
+        // }
         // set curr to none if scanner is finished
-        if self.scanner.peek().is_none() {
+        if peek.is_none() || peek.unwrap().is_ascii_whitespace() {
             // println!("Prev:{:?}", self.prev_tok);
             // println!("Curr:{:?}", self.curr_tok);
             self.curr_tok.take();
@@ -304,13 +310,7 @@ impl<'src> Parser<'src> {
             let msg=format!("Expected one of {} but got end of input.", type_string);
             Err(self.report_err(&msg).unwrap_err())
         }
-    }
-
-    /// add string to constants and return index in constants
-    // fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>)->usize {
-    //     let string=Value::ObjString(ident.content.to_string());
-    //     chunk.add_constant(string, ident.line)
-    // }
+    }  
 
     /// Consume identifier, equals and emit OP_SET_GLOBAL
     fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {
@@ -529,11 +529,12 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("x+y=3;");
+    let mut p=Parser::new("x=2; // x");
     let mut chunk=Chunk::new();
 
     let res=p.compile(&mut chunk);
     dbg!(chunk);
+    dbg!(res);
 }
 
 

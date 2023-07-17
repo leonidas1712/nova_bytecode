@@ -1,5 +1,7 @@
 use nova::{get_output, test_input, test_input_many, 
-    vm::VM, parser::parser::Parser, data::ops::Chunk};
+    vm::VM, parser::parser::Parser, data::ops::Chunk,
+    utils::file::run_file
+};
 
 #[test]
 fn test_binary_ops() {
@@ -62,4 +64,11 @@ fn test_concat() {
     test_input("\"\" + \"\"", "\"\"");
     test_input("\"hi\" + \"\"", "\"hi\"");
     test_input("\"\" + \"hi\"", "\"hi\"");
+}
+
+#[test]
+fn test_file() {
+    let res=run_file("test.txt").unwrap();
+    assert_eq!(res.get_global_value("m").unwrap().to_string(), "5");
+    assert_eq!(res.get_global_value("x").unwrap().to_string(), "8");
 }

@@ -1,6 +1,13 @@
-let x = 2;
-let x=5;
-let x=10;
+x=2; // x
+// more
+// comments
 
-// different occurence: different line, but should use same constant
-// let y=x+2;
+let x=3; // x again
+
+// comment
+let m=5; // m
+
+// comment here
+let x=x+m;
+
+// final
