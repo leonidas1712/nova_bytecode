@@ -7,13 +7,8 @@ use nova::utils::err::*;
 use nova::utils::file::run_file;
 
 use std::env::args;
-use std::ops::Index;
 use std::process::ExitCode;
-use std::vec;
 
-fn get_idx()->usize {
-    200
-}
 
 fn run_main()->Result<()> {
     let mut stack:[Option<u32>; 10]=[None;10];

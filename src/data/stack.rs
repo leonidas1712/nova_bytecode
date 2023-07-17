@@ -1,6 +1,6 @@
 
 use crate::utils::err::*;
-use std::fmt::{Display, Debug};
+use std::fmt::{Display, Debug, format};
 use std::vec;
 
 pub trait Stack<T> {
@@ -36,10 +36,22 @@ impl<T:Display + Copy + Debug> Display for FixedStack<T> {
 
 pub const STACK_SIZE:usize=2000;
 
-#[derive(Debug)]
 pub struct FixedStack<T:Copy + Debug> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot
+}
+
+impl<T:Copy + Debug> Debug for FixedStack<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut v:Vec<String>=vec![];
+        for i in 0..self.stack_top {
+            let fmt=format!("{:?}", self.stack[i]);
+            v.push(fmt);
+        }
+
+        let str=v.join(",");
+        write!(f, "FixedStack: [{}]", str)
+    }
 }
 
 impl<T:Copy + Debug> FixedStack <T> {
