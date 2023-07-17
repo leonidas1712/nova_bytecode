@@ -6,14 +6,14 @@ let z=30;
 
     {
         let z=40+y; 
-        print(z); // 100
+        print(z); // 110
         print(x); // 40
         
         {
             let m=60;
-            print(m+z); // 160
+            print(m+z); // 170
         }
 
-        print(y+z); // 170
+        print(y+z); // 180
     }
 }

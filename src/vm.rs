@@ -137,9 +137,20 @@ impl VM {
                 OpPop => {
                     self.value_stack.pop()?;
                 },
-                OpPopN(n) => {
+                OpEndScope(n, is_expr) => {
+                    let mut ret_expr:Option<Value>=None;
+
+                    // pop and save return value
+                    if *is_expr {
+                        ret_expr.replace(self.value_stack.pop()?);
+                    }
+
                     for _ in 0..*n {
                         self.value_stack.pop()?;
+                    }
+
+                    if let Some(val) = ret_expr {
+                        self.value_stack.push(val)?;
                     }
                 },  
                 // get constant at idx in chunk, push onto stack
@@ -246,6 +257,7 @@ impl VM {
                     self.value_stack.push(val)?;
 
                 },
+                // leave value there
                 OpSetLocal(idx) => {
                     let val=self.value_stack.peek();
                     if let Some(v) = val {

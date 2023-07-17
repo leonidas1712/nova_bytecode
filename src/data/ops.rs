@@ -27,7 +27,7 @@ pub enum Inst {
     OpMul,
     OpDiv,
     OpPop,
-    OpPopN(usize)
+    OpEndScope(usize,bool) // num to pop, is_expr
 }
 
 impl Display for Inst {

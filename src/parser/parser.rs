@@ -424,8 +424,12 @@ impl<'src> Parser<'src> {
         debug!("End scope after: {:?}", self.compiler);
 
         debug!("Popped: {count}");
+
+        debug!("Parser:{:?}", self);
+
+        let is_expr=!self.is_stmt;
     
-        chunk.write_op(OpPopN(count), self.line);
+        chunk.write_op(OpEndScope(count, is_expr), self.line);
         Ok(())
     }
 
@@ -435,10 +439,12 @@ impl<'src> Parser<'src> {
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
 
+        // Block
         } else if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;
             self.block(chunk)?;
             self.end_scope(chunk)?;
+
         } else if self.match_token(TokenPrint) {
             self.expression(chunk)?;
             chunk.write_op(OpPrint, self.line);
