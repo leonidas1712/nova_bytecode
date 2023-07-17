@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::process::id;
 
 use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
-use crate::utils::misc::calc_hash;
+use crate::utils::misc::{calc_hash, StringIntern};
 
 const VAL_STACK_MAX:usize=2000;
 
@@ -36,7 +37,7 @@ pub struct VM {
     globals:HashMap<u64,Value>, // store u64 hash -> value instead
     // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
-    strings:HashMap<u64,String> // string interning
+    strings:StringIntern 
 }
 
 // VM: runtime (compilation ends with the chunk)
@@ -47,7 +48,7 @@ impl VM {
             ip:0,
             value_stack:VecStack::new(VAL_STACK_MAX),
             globals:HashMap::new(),
-            strings:HashMap::new()
+            strings:StringIntern::new()
         }
     }
 
@@ -58,27 +59,13 @@ impl VM {
 
     /// Add global variable given identifier
     fn add_global(&mut self, identifier:String, value:Value) {
-        let hash=self.add_string(identifier);
+        let hash=self.strings.add_string(identifier);
         self.globals.insert(hash, value);
     }
 
     fn get_global(&self, identifier:&String)->Option<&Value> {
         let hash=calc_hash(identifier);
         self.globals.get(&hash)
-    }
-
-    /// Add string and return hash of the string. Doesn't add if string already exists
-    fn add_string(&mut self, string:String)->u64 {
-        let hash=calc_hash(&string);
-        if !self.strings.contains_key(&hash) {
-            self.strings.insert(hash, string);
-        } 
-        hash
-    }
-
-    /// Get string given its hash if it is interned
-    fn get_string(&mut self, hash:u64)->Option<&String> {
-        self.strings.get(&hash)
     }
 
     /// Get global value given string name
@@ -195,7 +182,7 @@ impl VM {
 
                             // use string interning in chunk to store hash->string for strings
                             let line=chunk.get_line_of_op(self.ip).expect("Invalid index for op line");
-                            let msg=format!("Variable is not defined.");
+                            let msg=format!("Variable '{}' is not defined.", ident);
                             self.err(line, &msg)?;
                         }
                     }

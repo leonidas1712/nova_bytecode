@@ -1,6 +1,6 @@
 use std::{fmt::{Display}, vec, collections::{HashMap, hash_map::DefaultHasher}, hash::Hasher};
 use std::hash::Hash;
-use crate::utils::{err::*};
+use crate::utils::{err::*, misc::StringIntern};
 
 // Inst, Chunk, Value
 
@@ -165,12 +165,14 @@ pub struct Chunk  {
     constants_map:HashMap<u64,usize>, // val.hash->idx stored in constants
     op_lines:Lines, // line numbers
     constant_lines:Lines, // two arrs because index goes along with the enum (less confusing),
+    strings:StringIntern
 }
 
 impl Chunk {
     pub fn new()->Self {
         Chunk {
-            ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new(), constants_map:HashMap::new()
+            ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new(), constants_map:HashMap::new(),
+            strings:StringIntern::new()
         }
     }
 
@@ -225,6 +227,8 @@ impl Chunk {
         let idx=self.add_constant(value, line);
         self.write_op(Inst::OpConstant(idx), line);
     }
+
+    // pub fn add_string()
 
     pub fn get_line_of_constant(&self, idx:usize) -> Option<usize>{
         self.constant_lines.get_line(idx)
