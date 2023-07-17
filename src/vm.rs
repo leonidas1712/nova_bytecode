@@ -83,6 +83,20 @@ impl VM {
         errn!(msg)
     }
 
+    /// returns string interned in hash
+    fn expect_string(&self, hash:u64)->Result<&String> {
+        match self.strings.get_string(hash) {
+            Some(sref) => {
+                return Ok(sref)
+            },
+            None => {
+                let msg=format!("Invalid hash for string (not interned)");
+                self.err(self.ip, &msg)?;
+                unreachable!()
+            }
+        }
+    }
+
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
@@ -138,7 +152,7 @@ impl VM {
                     let has_interned=self.strings.has_string(hash);
 
                     if !has_interned {
-                        let load=chunk.get_string(hash).expect("Invalid string hash from chunk");
+                        let load=chunk.strings.get_string(hash).expect("Invalid string hash from chunk");
                         self.strings.add_string(load.to_string());
                         log::debug!("Loaded str:{}", load);
                     }
@@ -170,11 +184,16 @@ impl VM {
                         let right=right.expect_int()?;
                         stack.push(Value::num(left + right))?;
                     } else if left.expect_string().is_ok() {
-                        let left=left.expect_string()?;
-                        let right=right.expect_string()?;
+                        let left_hash=left.expect_string()?;
+                        let right_hash=right.expect_string()?;
+
+                        let left=self.strings.get_string(left_hash).unwrap();
+                        let right=self.strings.get_string(right_hash).unwrap();
                         let left=left.to_owned();
                         let res=left+right;
-                        // stack.push(Value::ObjString(res))?;
+
+                        let hash=self.strings.add_string(res);
+                        stack.push(Value::ObjString(hash))?;
                     } else {
                         let msg=format!("Expected number or string but got: {}", left.to_string());
                         return errn!(msg);
@@ -232,5 +251,17 @@ impl VM {
 
     pub fn interpret(&mut self, source:&str)->Result<Value>{
         self.interpret_with_reset(source, true)
+    }
+
+    /// Get string representation of value 
+    pub fn print_value(&mut self, value:Value)->String {
+        match value {
+            Value::ObjString(hash) => {
+                let load=self.strings.get_string(hash);
+                let load=load.expect("Invalid string printed: not found in VM intern");
+                format!("\"{}\"",load.to_string())
+            },
+            _ => value.to_string()
+        }
     }
 }

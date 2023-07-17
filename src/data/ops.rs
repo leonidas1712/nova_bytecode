@@ -78,6 +78,7 @@ impl Value {
         match self {
             Self::Number(n) => Ok(*n),
             Self::Bool(b) => Ok(if *b { 1 } else { 0 }),
+            Self::ObjString(_) => errn!("Expected number but got a string"),
             _ => errn!("Expected number but got: {}", self.to_string())
         }
     }
@@ -166,7 +167,7 @@ pub struct Chunk  {
     constants_map:HashMap<u64,usize>, // val.hash->idx stored in constants
     op_lines:Lines, // line numbers
     constant_lines:Lines, // two arrs because index goes along with the enum (less confusing),
-    strings:StringIntern
+    pub strings:StringIntern
 }
 
 impl Chunk {
@@ -229,19 +230,11 @@ impl Chunk {
         self.write_op(Inst::OpConstant(idx), line);
     }
 
-    pub fn add_string(&mut self, string:String)->u64 {
-        self.strings.add_string(string)
-    }
-
     /// Adds string and emits OpLoadString with hash
     pub fn load_string(&mut self, string:String, line:usize) {
-        let hash=self.add_string(string);
+        let hash=self.strings.add_string(string);
         let op=Inst::OpLoadString(hash);
         self.write_op(op, line);
-    }
-
-    pub fn get_string(&self, hash:u64)->Option<&String>{
-        self.strings.get_string(hash)
     }
 
     pub fn get_line_of_constant(&self, idx:usize) -> Option<usize>{

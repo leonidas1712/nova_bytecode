@@ -49,3 +49,17 @@ fn test_assignment() {
     ];
     test_input_many(&examples);
 }
+
+
+#[test]
+fn test_concat() {
+    let mut c2=Chunk::new();
+
+    // Value::ValObj(Object::new("hi"))
+    // Value::ValObj(Object::new(Function{...}))
+
+    test_input("\"hi\" + \"hello\"", "\"hihello\"");
+    test_input("\"\" + \"\"", "\"\"");
+    test_input("\"hi\" + \"\"", "\"hi\"");
+    test_input("\"\" + \"hi\"", "\"hi\"");
+}
