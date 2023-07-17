@@ -13,6 +13,9 @@ use crate::data::stack::STACK_SIZE;
 
 // chunk being written to (tied to Function) + locals which have tokens<'src>
 
+
+    
+
 #[derive(Debug)]
 pub struct Compiler<'src> {
     locals:Vec<Local<'src>>,
@@ -62,17 +65,25 @@ impl<'src> Compiler<'src> {
     }
 
     /// If local found, return corresponding index in value stack to resolve
-    pub fn resolve_local(&self, token:Token<'src>) {
+    pub fn resolve_local(&self, token:Token<'src>)->Option<usize> {
+        let n=self.locals.len();
+        for (idx,loc) in self.locals.iter().rev().enumerate() {
+            if loc.token.is_equal_by_content(&token) {
+                return Some(n-1-idx)
+            }
+        }
+        None
     }
 
-    /// Only add local if curr scope is local
-    pub fn add_local(&mut self, token:Token<'src>)->Result<()> {
+    /// Only add local if curr scope is local. Return idx of local if it was added.
+    pub fn add_local(&mut self, token:Token<'src>)->Option<usize>{
         if self.is_local() {
             let local=Local::new(token, self.curr_depth);
             self.locals.push(local);
+            Some(self.locals.len()-1)
+        } else {
+            None
         }
-
-        Ok(())
     }
 }
 

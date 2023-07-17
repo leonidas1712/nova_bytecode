@@ -334,9 +334,18 @@ impl<'src> Parser<'src> {
         // use hash to get value instead of full string (less work at runtime)
         let ident_content=ident.content.to_string();
 
-        // using ident token: try to resolve local => use local if possible
 
-        // debug!("match equals:{}", self.match_token(TokenEqual));
+        // set get_op here
+        let mut get_op:Inst;
+
+        let try_local=self.compiler.resolve_local(ident);
+        debug!("TRY LOC FOR {:?}: {:?}", ident, try_local);
+
+        if let Some(idx) = try_local {
+            get_op=OpGetLocal(idx);
+        } else {
+            get_op=OpGetGlobal(ident_content.clone());
+        }
 
         // Set var here
         if self.match_token(TokenEqual) {
@@ -349,25 +358,25 @@ impl<'src> Parser<'src> {
             self.consume(TokenSemiColon)?;
 
             // declareVariable() here - if global do nothing. else, add local with ident
-            self.compiler.add_local(ident)?;
+            let local_added=self.compiler.add_local(ident);
 
             debug!("var_name:{}, compiler aft: {:?}", ident.content, self.compiler);
             debug!("CHUNK:{}", chunk);
 
-            // dont emit set if local
-            // defineVariable - 
-            if self.compiler.is_local() {
-                return Ok(());
+
+            // local_added: idx where loc was added      
+            let mut set_op:Inst;
+            if let Some(idx) = local_added {
+                set_op=OpSetLocal(idx);
+            } else {
+                set_op=OpSetGlobal(ident_content);
             }
 
-            // set var
-            // let 
-            chunk.write_op(OpSetGlobal(ident_content), ident.line);
-
+            chunk.write_op(set_op, ident.line);
 
         // Get var here
         } else {    
-            chunk.write_op(OpGetGlobal(ident_content), ident.line);
+            chunk.write_op(get_op, ident.line);
 
         }
         Ok(())
@@ -602,12 +611,7 @@ fn test_debug() {
     // let mut chunk=Chunk::new();
 
     // let res=p.compile(&mut chunk);
-    // dbg!(chunk);
-    // dbg!(res);
 
-    let s = vec![2,3,4];
-    let res=s.partition_point(|x| x==&1);
-    dbg!(res);
 }
 
 

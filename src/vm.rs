@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::process::id;
 
+use log::debug;
+
 use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
 use crate::utils::err::*;
@@ -237,6 +239,12 @@ impl VM {
                         }
                     }
     
+                },
+                OpGetLocal(idx) => {
+                    debug!("Get loc:{}", idx);
+                },
+                OpSetLocal(idx) => {
+                    debug!("Set loc:{}", idx);
                 }
             }
 

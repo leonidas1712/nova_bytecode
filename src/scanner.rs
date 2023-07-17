@@ -379,7 +379,7 @@ pub fn test_many() {
 
 #[test]
 fn test_debug() {
-    let code="x=2; //x";
+    let code="print(2)";
     let mut s=Scanner::new(code);
     dbg!(s.serialize());
 }

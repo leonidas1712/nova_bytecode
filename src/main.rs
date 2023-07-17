@@ -9,6 +9,8 @@ use std::process::ExitCode;
 use std::vec;
 
 fn run_main()->Result<()> {
+    let r=vec!["hi","hello"];
+    r.iter().rev().enumerate().for_each(|x| println!("{} {}", x.0, x.1));
     let cmd_args:Vec<String>=args().collect();
     let argc=cmd_args.len();
 

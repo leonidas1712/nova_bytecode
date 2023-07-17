@@ -17,6 +17,8 @@ pub enum Inst {
     OpConstant(usize), // idx in const pool, -> load idx onto stack
     OpGetGlobal(String), 
     OpSetGlobal(String),
+    OpGetLocal(usize),
+    OpSetLocal(usize), // idx into value stack
     OpLoadString(u64),
     OpNegate,
     OpAdd,

@@ -114,7 +114,7 @@ use crate::utils::constants::{OPEN_EXPR, CLOSE_EXPR};
 #[derive(Debug,Clone, Copy, PartialEq, Eq)]
 pub struct Token<'src> {
     pub token_type:TokenType,
-    pub content:&'src str,
+    pub content:&'src str, // check equality by content
     pub line:usize
 }
 
@@ -147,6 +147,11 @@ impl<'src>  Token<'src> {
     /// Hash of the contents of the token (string)
     pub fn hash_content(&self)->u64 {
         calc_hash(&self.content.to_string())
+    }
+
+    /// Compare contents
+    pub fn is_equal_by_content(&self, other:&Token<'src>)->bool {
+        self.content.eq(other.content)
     }
 }
 
