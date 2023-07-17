@@ -283,7 +283,12 @@ impl VM {
                     if let Some(value) = pop {
                         println!("{}", self.print_value(*value));
                     }
-                }
+                },
+                OpIfJump => {
+                    
+                },
+                OpTrue => self.value_stack.push(Value::Bool(true))?,
+                OpFalse => self.value_stack.push(Value::Bool(false))?
             }
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)

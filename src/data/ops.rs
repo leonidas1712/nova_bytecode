@@ -20,6 +20,7 @@ pub enum Inst {
     OpGetLocal(usize),
     OpSetLocal(usize), // idx into value stack
     OpLoadString(u64),
+    OpIfJump,
     OpPrint,
     OpNegate,
     OpAdd,
@@ -27,7 +28,9 @@ pub enum Inst {
     OpMul,
     OpDiv,
     OpPop,
-    OpEndScope(usize,bool) // num to pop, is_expr
+    OpEndScope(usize,bool), // num to pop, is_expr,
+    OpTrue,
+    OpFalse
 }
 
 impl Display for Inst {
@@ -92,6 +95,14 @@ impl Value {
         match self {
             Self::ObjString(hash) => Ok(*hash),
             _ => err_other!("Expected string but got: '{}'", self.to_string())
+        }
+    }
+
+    pub fn expect_bool(&self)->Result<bool> {
+        match self {
+            Self::Bool(b) => Ok(*b),
+            Self::ObjString(_) => err_other!("Expected bool but got a string"),
+            _ => err_other!("Expected bool but got: {}", self.to_string())
         }
     }
 
@@ -180,6 +191,15 @@ impl Chunk {
         Chunk {
             ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new(), constants_map:HashMap::new(),
             strings:StringIntern::new()
+        }
+    }
+
+    /// len-1 of ops if not empty
+    pub fn get_ip(&self)->Option<usize> {
+        if self.ops.is_empty() {
+            None
+        } else {
+            Some(self.ops.len()-1)
         }
     }
 

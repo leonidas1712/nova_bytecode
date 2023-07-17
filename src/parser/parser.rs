@@ -105,16 +105,39 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    // should return result from branch selected
+    fn if_expression(&mut self, chunk:&mut Chunk)->Result<()> {
+        debug!("if");
+        self.expression(chunk)?; // conditional
+        // debug!("istmt after if cons: {}", self.is_stmt);
+
+        // save current ip
+        
+        self.is_stmt=true;
+        chunk.write_op(Inst::OpIfJump, self.line);
+
+        self.expression(chunk)?; // if true
+
+        debug!("chunk if : {}", chunk);
+
+        Ok(())
+    }
+
+
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
         debug!("Expr, chunk:{}", chunk);
         debug!("Is Statement: {}", self.is_stmt);
 
+        // Block expression
         if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;
             self.block_expression(chunk)?;
             self.end_scope(chunk)?;
-            return Ok(());
+            return Ok(())
+        } else if self.match_token(TokenIf) {
+            self.if_expression(chunk)?;
+            return Ok(())
         }
 
         if !self.is_stmt {
@@ -158,6 +181,19 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
+    fn literal(&mut self, chunk: &mut Chunk)->Result<()> {
+        let prev=self.expect_prev()?;
+
+        let op = match prev.token_type {
+            TokenTrue => OpTrue,
+            TokenFalse => OpFalse,
+            _ => unreachable!()
+        };
+
+        chunk.write_op(op, self.line);
+        Ok(())
+    }
+
     // call based on enum
     fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn, can_assign:bool)->Result<()>{
         match ty {
@@ -167,6 +203,7 @@ impl<'src> Parser<'src> {
             ParseGrouping => self.grouping(chunk),
             ParseString => self.string(chunk),
             ParseIdent => self.parse_ident(chunk, can_assign),
+            ParseLiteral => self.literal(chunk)
         }
     }
 
@@ -446,16 +483,7 @@ impl<'src> Parser<'src> {
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
 
-        // Block
-        } 
-        // else if self.match_token(TokenLeftBrace) {
-        //     self.begin_scope(chunk)?;
-        //     self.block_expression(chunk)?;
-        //     self.end_scope(chunk)?;
-
-        // } 
-        
-        else if self.match_token(TokenPrint) {
+        } else if self.match_token(TokenPrint) {
             self.expression(chunk)?;
             chunk.write_op(OpPrint, self.line);
             self.consume(TokenSemiColon)?;
@@ -626,10 +654,11 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    // let mut p=Parser::new("x=2; // x");
-    // let mut chunk=Chunk::new();
+    let mut p=Parser::new("if 2 3 4");
+    let mut chunk=Chunk::new();
 
-    // let res=p.compile(&mut chunk);
+    let res=p.compile(&mut chunk);
+
 
 }
 
