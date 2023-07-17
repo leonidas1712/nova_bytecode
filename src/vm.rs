@@ -241,10 +241,21 @@ impl VM {
     
                 },
                 OpGetLocal(idx) => {
-                    debug!("Get loc:{}", idx);
+                    let val=self.value_stack.get(*idx).expect(format!("Bad idx for GetLocal: {}", idx).as_str());
+                    debug!("Get loc:{}, item:{:?}", idx, val);
+                    self.value_stack.push(val)?;
+
                 },
                 OpSetLocal(idx) => {
-                    debug!("Set loc:{}", idx);
+                    let val=self.value_stack.peek();
+                    if let Some(v) = val {
+                        debug!("Set loc:{}, val:{:?}", idx, v);
+                        self.value_stack.set(*idx, *v);
+                    } else {
+                        self.err("No value to set local variable")?;
+                    }
+                    
+
                 },
                 OpPrint =>  {
                     let pop=self.value_stack.peek();

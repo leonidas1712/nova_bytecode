@@ -64,7 +64,7 @@ impl<T:Copy + Debug> FixedStack <T> {
     }
 
     /// None if value at the index is none or idx is out of bounds
-    fn get(&self, idx:usize)->Option<T> {
+    pub fn get(&self, idx:usize)->Option<T> {
         if idx < STACK_SIZE {
             self.stack[idx]
         } else {
@@ -73,7 +73,7 @@ impl<T:Copy + Debug> FixedStack <T> {
     }
 
     /// Panics if idx is invalid
-    fn set(&mut self, idx:usize, item:T) {
+    pub fn set(&mut self, idx:usize, item:T) {
         self.stack[idx]=Some(item);
     }
 }

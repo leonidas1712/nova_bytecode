@@ -1,6 +1,19 @@
 let z=30;
 {
-    let x=z+1;
-    let y=40;
-    print(x); // prints last value on stack
+    let x=40;
+    let y=x+z;
+    print(y);
+
+    {
+        let z=40+y;
+        print(z);
+        print(x);
+        
+        {
+            let m=60;
+            print(m+z);
+        }
+
+        print(y+z);
+    }
 }
