@@ -36,4 +36,8 @@ impl StringIntern {
     pub fn has_string(&self, hash:u64)->bool {
         self.strings.contains_key(&hash)
     }
+
+    pub fn clear(&mut self) {
+        self.strings.clear();
+    }
 }

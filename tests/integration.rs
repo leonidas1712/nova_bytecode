@@ -25,18 +25,18 @@ fn test_assignment() {
     // test_input("x=5", "2");
     let inp="x=5;";
     let mut vm=VM::new();
-    let res=vm.interpret(inp);
+    let res=vm.interpret_with_reset(inp, false);
     assert_eq!(res.unwrap().to_string(), "()");
 
     assert_eq!(vm.get_global_value("x").unwrap().to_string(), "5");
 
 
-    let res=vm.interpret("let x = 10;");
+    let res=vm.interpret_with_reset("let x = 10;", false);
     assert_eq!(res.unwrap().to_string(), "()"); // no return
 
     assert_eq!(vm.get_global_value("x").unwrap().to_string(), "10");
 
-    let res=vm.interpret("x=20; y=30; x+y");
+    let res=vm.interpret_with_reset("x=20; y=30; x+y", false);
     assert_eq!(res.unwrap().to_string(), "50");
 
     let code="let x = (10+20)*30;  let y=30+50; x+(y*2+3)";

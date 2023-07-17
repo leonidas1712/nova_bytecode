@@ -53,8 +53,10 @@ impl VM {
     }
 
     fn reset(&mut self) {
-        self.ip=0;
-        self.value_stack.clear();
+        // self.ip=0;
+        // self.value_stack.clear();
+        self.globals.clear();
+        self.strings.clear();
     }
 
     /// Add global variable given identifier
@@ -91,7 +93,12 @@ impl VM {
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
+
+    // Always clear val stack and ip before run. reset: clear variables and strings
     pub fn run(&mut self, chunk:&mut Chunk, reset:bool)->Result<Value> {
+        self.value_stack.clear();
+        self.ip = 0;
+
         if reset {
             self.reset();
         }
@@ -197,6 +204,7 @@ impl VM {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);        
 
+                    // get value to set
                     let value=self.value_stack.pop()?;
 
                     self.add_global(identifier.to_string(), value);
@@ -249,6 +257,7 @@ impl VM {
         }
     }
 
+    /// Resets vm before running
     pub fn interpret(&mut self, source:&str)->Result<Value>{
         self.interpret_with_reset(source, true)
     }

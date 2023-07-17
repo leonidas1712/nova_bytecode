@@ -344,10 +344,11 @@ impl<'src> Parser<'src> {
             self.expression(chunk)?;
             self.consume(TokenSemiColon)?;
 
-            // set var
             if self.compiler.is_local() {
                 return Ok(());
             }
+
+            // set var
             chunk.write_op(OpSetGlobal(ident_content), ident.line);
 
 
