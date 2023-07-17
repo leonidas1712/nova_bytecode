@@ -1,6 +1,11 @@
 let m=5;
 let y=300;
-m+y
+// m+y -> left on stack -> may need to clear
 "hi"
 
 let p="hi";
+
+{
+    let x=2;
+    let y=3;
+}

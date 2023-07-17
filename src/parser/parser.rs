@@ -334,7 +334,7 @@ impl<'src> Parser<'src> {
 
         // log::debug!("match equals:{}", self.match_token(TokenEqual));
 
-        // write op here
+        // Set var here
         if self.match_token(TokenEqual) {
             if !can_assign {
                 let msg=format!("Can't assign to {}", ident.content);
@@ -344,6 +344,13 @@ impl<'src> Parser<'src> {
             self.expression(chunk)?;
             self.consume(TokenSemiColon)?;
 
+            // declareVariable() here - if global do nothing. else, add local with ident
+            self.compiler.add_local(ident)?;
+
+            log::debug!("Var name:{}, compiler aft: {:?}", ident.content, self.compiler);
+
+            // dont emit set if local
+            // defineVariable - 
             if self.compiler.is_local() {
                 return Ok(());
             }
@@ -352,6 +359,7 @@ impl<'src> Parser<'src> {
             chunk.write_op(OpSetGlobal(ident_content), ident.line);
 
 
+        // Get var here
         } else {    
             chunk.write_op(OpGetGlobal(ident_content), ident.line);
 

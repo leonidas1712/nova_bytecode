@@ -35,17 +35,27 @@ impl<'src> Compiler<'src> {
     pub fn is_local(&self)->bool {
         self.curr_depth > 0
     }
+
+    /// Only add local if curr scope is local
+    pub fn add_local(&mut self, token:Token<'src>)->Result<()> {
+        if self.is_local() {
+            let local=Local::new(token, self.curr_depth);
+            self.locals.push(local)?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
 pub struct Local<'src> {
-    name:Token<'src>,
+    token:Token<'src>,
     depth:usize
 }
 
 impl<'src> Local <'src>  {
     pub fn new(token:Token<'src>, depth:usize)->Local<'src> {
-        Local { name: token, depth }
+        Local { token, depth }
     }
 }
 
