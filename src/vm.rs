@@ -138,6 +138,12 @@ impl VM {
                     self.value_stack.pop()?;
                 },
                 OpEndScope(n, is_expr) => {
+                    // empty block
+                    if *n==0 && !is_expr {
+                        self.value_stack.push(Value::Unit)?;
+                        // debug!("What");
+                    }
+
                     let mut ret_expr:Option<Value>=None;
 
                     // pop and save return value

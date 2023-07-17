@@ -110,6 +110,13 @@ impl<'src> Parser<'src> {
         debug!("Expr, chunk:{}", chunk);
         debug!("Is Statement: {}", self.is_stmt);
 
+        if self.match_token(TokenLeftBrace) {
+            self.begin_scope(chunk)?;
+            self.block_expression(chunk)?;
+            self.end_scope(chunk)?;
+            return Ok(());
+        }
+
         if !self.is_stmt {
             return self.report_err("Expressions not allowed immediately after another expression.")
         }
@@ -399,7 +406,7 @@ impl<'src> Parser<'src> {
     }
 
     // Block
-    fn block(&mut self, chunk: &mut Chunk)->Result<()> {
+    fn block_expression(&mut self, chunk: &mut Chunk)->Result<()> {
         debug!("blk");
         
         loop {
@@ -440,18 +447,23 @@ impl<'src> Parser<'src> {
             self.let_declaration(chunk)?;
 
         // Block
-        } else if self.match_token(TokenLeftBrace) {
-            self.begin_scope(chunk)?;
-            self.block(chunk)?;
-            self.end_scope(chunk)?;
+        } 
+        // else if self.match_token(TokenLeftBrace) {
+        //     self.begin_scope(chunk)?;
+        //     self.block_expression(chunk)?;
+        //     self.end_scope(chunk)?;
 
-        } else if self.match_token(TokenPrint) {
+        // } 
+        
+        else if self.match_token(TokenPrint) {
             self.expression(chunk)?;
             chunk.write_op(OpPrint, self.line);
             self.consume(TokenSemiColon)?;
         } else {
             self.expression(chunk)?;
         }
+
+        // put expression and block together
 
         Ok(())
     }
@@ -463,7 +475,7 @@ impl<'src> Parser<'src> {
         self.advance()?;
 
         while let Some(_) = self.curr_tok {
-            let res=self.declaration(chunk)?;
+            self.declaration(chunk)?;
         }
 
         debug!("After finishing: is_stmt {}", self.is_stmt);
