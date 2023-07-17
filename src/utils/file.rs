@@ -23,9 +23,9 @@ fn read_file(filename: &str) -> Result<String> {
     }
 }
 
-pub fn run_file(filename:&str)->Result<VM> {
+pub fn run_file(filename:&str, vm:&mut VM)->Result<()> {
     let source=read_file(filename)?;
-    let mut vm=VM::new();
+    // dont reset vm
     vm.interpret_with_reset(&source, false)?;
-    Ok(vm)
+    Ok(())
 }

@@ -68,7 +68,8 @@ fn test_concat() {
 
 #[test]
 fn test_file() {
-    let res=run_file("test.txt").unwrap();
-    assert_eq!(res.get_global_value("m").unwrap().to_string(), "5");
-    assert_eq!(res.get_global_value("x").unwrap().to_string(), "8");
+    let mut vm=&mut VM::new();
+    run_file("test.txt", vm).unwrap();
+    assert_eq!(vm.get_global_value("m").unwrap().to_string(), "5");
+    assert_eq!(vm.get_global_value("x").unwrap().to_string(), "8");
 }

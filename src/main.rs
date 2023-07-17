@@ -11,12 +11,14 @@ fn run_main()->Result<()> {
     let cmd_args:Vec<String>=args().collect();
     let argc=cmd_args.len();
 
+    let mut vm=VM::new();
     if argc == 1 {
-        nova_repl(VM::new())
+        nova_repl(vm)
     } else if argc == 2 {
         let file_name=cmd_args.get(1).unwrap();
         println!("Importing:{file_name}\n");
-        let vm=run_file(&file_name)?;
+
+        run_file(&file_name, &mut vm)?;
         nova_repl(vm)
     } else {
         err_other!("Usage: nova [path]")
