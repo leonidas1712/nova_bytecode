@@ -1,11 +1,19 @@
 {
-    let x=1+2;
+    let x=1+20;
     let y=4;
 
     {
         let inner=200;
         let another=10;
+        let third=30;
+
+        {
+            let most=1;
+        }
     }
+
+    200
+    8
 }
 
 let glob=20;

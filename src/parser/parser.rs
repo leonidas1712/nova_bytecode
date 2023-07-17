@@ -407,8 +407,14 @@ impl<'src> Parser<'src> {
 
     // End compiler scope
     fn end_scope(&mut self, chunk: &mut Chunk)->Result<()> {
-        self.compiler.end_scope();
+        let count=self.compiler.end_scope();
         debug!("End scope after: {:?}", self.compiler);
+
+        debug!("Popped: {count}");
+        // count number of locals popped and emit that many pop insts
+        for _ in 0..count {
+            chunk.write_op(OpPop, self.line);
+        }
         Ok(())
     }
 

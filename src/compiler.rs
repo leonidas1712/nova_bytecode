@@ -28,14 +28,16 @@ impl<'src> Compiler<'src> {
         self.curr_depth+=1;
     }
 
-    pub fn end_scope(&mut self) {
+    pub fn end_scope(&mut self)->usize {
         if !self.is_local() {
-            return;
+            assert!(self.locals.is_empty());
+            return 0;
         }
         
         self.curr_depth-=1;
 
         let curr=self.curr_depth;
+        let mut count:usize=0;
         // pop vars from curr scope
         loop {
             match self.locals.peek() {
@@ -44,6 +46,7 @@ impl<'src> Compiler<'src> {
                         break;
                     }
                     self.locals.pop();
+                    count += 1;
                 },
                 None => {
                     break;
@@ -51,6 +54,7 @@ impl<'src> Compiler<'src> {
             }
         }
 
+        count
     }
 
     pub fn is_local(&self)->bool {

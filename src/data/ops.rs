@@ -23,6 +23,7 @@ pub enum Inst {
     OpSub,
     OpMul,
     OpDiv,
+    OpPop
 }
 
 impl Display for Inst {

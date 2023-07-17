@@ -42,16 +42,13 @@ pub fn process_cmd(cmd:&str, vm:&mut VM) {
             println!("Process vm");
             println!("{:?}", vm);
         },
-        "import" => {
+        "import" | "run"=> {
             let arg=cmd.next();
             if arg.is_none() {
                 println!("No file specified.");
                 return;
             }
-            let mut arg=arg.unwrap().to_string();
-            if !arg.ends_with(".txt") {
-                arg.push_str(".txt");
-            }
+            let arg=arg.unwrap();
 
             let res=run_file(&arg, vm);
             if res.is_err() {

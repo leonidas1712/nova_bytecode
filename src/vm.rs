@@ -131,6 +131,9 @@ impl VM {
                     let res=self.value_stack.pop()?;
                     break Ok(res);
                 },
+                OpPop => {
+                    self.value_stack.pop()?;
+                },
                 // get constant at idx in chunk, push onto stack
                 OpConstant(idx) => {
                     let i=*idx;
