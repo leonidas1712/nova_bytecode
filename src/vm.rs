@@ -190,6 +190,7 @@ impl VM {
 
                             // use string interning in chunk to store hash->string for strings
                             let line=chunk.get_line_of_op(self.ip).expect("Invalid index for op line");
+                            // let name=self.get_string(hash).expect(msg)
                             let msg=format!("Variable is not defined.");
                             self.err(line, &msg)?;
                         }
