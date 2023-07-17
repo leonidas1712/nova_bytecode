@@ -101,7 +101,21 @@ fn output_from_file(name:&str) -> String {
 
     let output=Command::new("sh").arg("-c").arg(arg).output().unwrap();
 
-    out_to_string(output.stdout)
+    let std=out_to_string(output.stdout);
+    let err=out_to_string(output.stderr);
+
+    // std + &err
+    std
+}
+
+fn err_out(name:&str) -> String {
+    let full=format!("./tests/{}", name);
+    let arg=format!("cargo nova {} -o", full);
+
+    let output=Command::new("sh").arg("-c").arg(arg).output().unwrap();
+
+    let err=out_to_string(output.stderr);
+    err
 }
 
 fn output_has(name:&str, pat:&str)->bool{
@@ -114,7 +128,11 @@ use std::process::Command;
 #[test]
 fn test_process() {
     // let r=output_from_file("test1.txt").contains("hello");
-    assert!(output_has("scope.txt", "30\n10\n20\n30\n10"));
+    assert!(output_has("scope.txt", "\n30\n10\n20\n30\n10\n"));
     assert!(output_has("locals", "70\n110\n40\n170\n180\n"));
     assert!(output_has("locals2", "177"));
+    
+    let t="652\n20\n200\n";
+    assert!(err_out("src3").contains("'m' is not defined."));
+    assert!(output_has("src3", t));
 }

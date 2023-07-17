@@ -1,0 +1,16 @@
+let z=200;
+let y =20;
+
+let x = {
+    let y = 20*30+2;
+    let z=50;
+
+    let m=z+y;
+
+    m
+};
+
+print(x);
+print(y);
+print(z);
+print(m);
