@@ -52,6 +52,9 @@ pub type IntType=isize;
         }
     */
 
+// chunk: write_string -> write string to chunk constants and return hash
+  // only add entry if DNE
+// get_string(hash) -> use hash to get string
 
 // Observation: Rc may only be needed for Function (?)
     // Function is referred to in callframe as well but other values may only be on val stack?

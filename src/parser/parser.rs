@@ -122,6 +122,7 @@ impl<'src> Parser<'src> {
 
     // curr should be TokenString
     // advance so that curr is right past ending quote
+    // string literal
     fn string(&mut self, chunk: &mut Chunk)->Result<()> {
         let string=self.consume_one_of(vec![TokenString,TokenStringQuote])?;
         let content=if string.token_type!=TokenStringQuote { string.content.to_string() } else { String::from("") };

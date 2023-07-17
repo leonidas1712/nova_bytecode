@@ -13,7 +13,18 @@ const VAL_STACK_MAX:usize=2000;
 // variables: stores hash of string name -> Value
 // get: use hash of string name to get value
 // set: set hash -> value
-// get name using hash:?
+// get name using hash:? string intern
+
+// string hash -> string
+// Value: ObjString(hash of string)
+// comparing strings: just compare hash
+// add string (ident or not) => add hash to the map
+
+// need to store ident mapping as well to support printing all vars
+
+// for every string: we want a unique copy of the string, and string cmp should be just cmp hash or ptrs
+// 1. given hash, get string
+// 2. every string is deduped: same seq of chars -> only one copy
 
 #[derive(Debug)]
 pub struct VM {
