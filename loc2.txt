@@ -1,19 +1,19 @@
 let z=30;
 {
     let x=40;
-    let y=x+z;
+    let y=x+z; // 70
     print(y);
 
     {
-        let z=40+y;
-        print(z);
-        print(x);
+        let z=40+y; 
+        print(z); // 100
+        print(x); // 40
         
         {
             let m=60;
-            print(m+z);
+            print(m+z); // 160
         }
 
-        print(y+z);
+        print(y+z); // 170
     }
 }

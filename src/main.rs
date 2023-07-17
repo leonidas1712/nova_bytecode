@@ -11,6 +11,26 @@ use std::process::ExitCode;
 
 
 fn run_main()->Result<()> {
+    let z=30;
+{
+    let x=40;
+    let y=x+z; // 70
+    println!("{}",y);
+
+    {
+        let z=40+y; 
+        println!("{}",z); // 110
+        println!("{}",x); // 40
+        
+        {
+            let m=60;
+            println!("{}",m+z); // 170 
+        }
+
+        println!("{}",y+z); // 180
+    }
+}
+
     let mut stack:[Option<u32>; 10]=[None;10];
     // stack[x]=Some(100);
     // dbg!(stack[4]);
