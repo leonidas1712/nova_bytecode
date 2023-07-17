@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::hash::Hash;
 
 use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
@@ -26,13 +27,16 @@ const VAL_STACK_MAX:usize=2000;
 // 1. given hash, get string
 // 2. every string is deduped: same seq of chars -> only one copy
 
+// x="abc"; y="abc"; z="abc"; => should only have one copy and x,y,z refer to same
+
 #[derive(Debug)]
 pub struct VM {
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
-    globals:HashMap<u64,Value> // store u64 hash -> value instead
+    globals:HashMap<u64,Value>, // store u64 hash -> value instead
     // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
+    strings:HashMap<u64,String> // string interning
 }
 
 // VM: runtime (compilation ends with the chunk)
@@ -42,7 +46,8 @@ impl VM {
         VM {
             ip:0,
             value_stack:VecStack::new(VAL_STACK_MAX),
-            globals:HashMap::new()
+            globals:HashMap::new(),
+            strings:HashMap::new()
         }
     }
 
@@ -55,9 +60,23 @@ impl VM {
         self.globals.insert(hash, value);
     }
 
+    /// Add string and return hash of the string. Doesn't add if string already exists
+    fn add_string(&mut self, string:String)->u64 {
+        let hash=calc_hash(&string);
+        if !self.strings.contains_key(&hash) {
+            self.strings.insert(hash, string);
+        } 
+        hash
+    }
+
+    /// Get string given its hash if it is interned
+    fn get_string(&mut self, hash:u64)->Option<&String> {
+        self.strings.get(&hash)
+    }
+
     /// Get global value given string name
     pub fn get_global_value<K>(&self, name:K)->Option<&Value> where K:ToString{
-        let hash=calc_hash(name.to_string());
+        let hash=calc_hash(&name.to_string());
         self.globals.get(&hash)
     }
 

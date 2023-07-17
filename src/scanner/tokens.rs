@@ -146,7 +146,7 @@ impl<'src>  Token<'src> {
 
     /// Hash of the contents of the token (string)
     pub fn hash_content(&self)->u64 {
-        calc_hash(self.content.to_string())
+        calc_hash(&self.content.to_string())
     }
 }
 
