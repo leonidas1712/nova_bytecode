@@ -29,7 +29,11 @@ impl StringIntern {
     }
 
     /// Get string given its hash if it is interned
-    pub fn get_string(&mut self, hash:u64)->Option<&String> {
+    pub fn get_string(&self, hash:u64)->Option<&String> {
         self.strings.get(&hash)
+    }
+
+    pub fn has_string(&self, hash:u64)->bool {
+        self.strings.contains_key(&hash)
     }
 }

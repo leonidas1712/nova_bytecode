@@ -17,6 +17,7 @@ pub enum Inst {
     OpConstant(usize), // idx in const pool, -> load idx onto stack
     OpGetGlobal(String), 
     OpSetGlobal(String),
+    OpLoadString(u64),
     OpNegate,
     OpAdd,
     OpSub,
@@ -64,7 +65,7 @@ pub type IntType=isize;
 pub enum Value {
     Number(IntType),
     Bool(bool),
-    ObjString(String), // change to use u64 -> Copy
+    ObjString(u64), // change to use u64 -> Copy (hash of string in VM)
     Unit // empty type
 }
 
@@ -81,9 +82,9 @@ impl Value {
         }
     }
 
-    pub fn expect_string(&self)->Result<&String> {
+    pub fn expect_string(&self)->Result<u64> {
         match self {
-            Self::ObjString(sref) => Ok(sref),
+            Self::ObjString(hash) => Ok(*hash),
             _ => errn!("Expected string but got: {}", self.to_string())
         }
     }
@@ -228,7 +229,20 @@ impl Chunk {
         self.write_op(Inst::OpConstant(idx), line);
     }
 
-    // pub fn add_string()
+    pub fn add_string(&mut self, string:String)->u64 {
+        self.strings.add_string(string)
+    }
+
+    /// Adds string and emits OpLoadString with hash
+    pub fn load_string(&mut self, string:String, line:usize) {
+        let hash=self.add_string(string);
+        let op=Inst::OpLoadString(hash);
+        self.write_op(op, line);
+    }
+
+    pub fn get_string(&self, hash:u64)->Option<&String>{
+        self.strings.get_string(hash)
+    }
 
     pub fn get_line_of_constant(&self, idx:usize) -> Option<usize>{
         self.constant_lines.get_line(idx)

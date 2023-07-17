@@ -131,6 +131,30 @@ impl VM {
                     let get=get?;
                     self.value_stack.push(get)?;
                 },
+                // if hash doesnt exist in strings, add loaded str from chunk to strings. else, loadfrom interned
+                OpLoadString(hash) => {
+                    log::debug!("Load str:{}", hash);
+                    let hash=*hash;
+                    let has_interned=self.strings.has_string(hash);
+
+                    if !has_interned {
+                        let load=chunk.get_string(hash).expect("Invalid string hash from chunk");
+                        self.strings.add_string(load.to_string());
+                        log::debug!("Loaded str:{}", load);
+                    }
+
+                    let obj_str=Value::ObjString(hash);
+                    self.value_stack.push(obj_str)?;
+
+                    // match get_interned {
+                    //     Some(val) => {
+
+                    //     },
+                    //     None => {
+
+                    //     }
+                    // }
+                },
                 OpNegate => {
                     let stack=&mut self.value_stack;
                     let top=stack.pop()?.expect_int()?;
@@ -150,7 +174,7 @@ impl VM {
                         let right=right.expect_string()?;
                         let left=left.to_owned();
                         let res=left+right;
-                        stack.push(Value::ObjString(res))?;
+                        // stack.push(Value::ObjString(res))?;
                     } else {
                         let msg=format!("Expected number or string but got: {}", left.to_string());
                         return errn!(msg);

@@ -128,14 +128,13 @@ impl<'src> Parser<'src> {
         let string=self.consume_one_of(vec![TokenString,TokenStringQuote])?;
         let content=if string.token_type!=TokenStringQuote { string.content.to_string() } else { String::from("") };
 
-        let value=Value::ObjString(content); // copies out  
-        chunk.write_constant(value, string.line);
+        // let value=Value::ObjString(content); // copies out  
+        chunk.load_string(content, string.line);
 
         // chunk.add_string(content.to_string());
             // add string to strings pool
             // return hash of string
             // OpLoadString(hash)
-        // vm:OpLoadString -> if hash doesnt exist in strings, add loaded str from chunk to strings. else, load from interned
 
         if string.token_type!=TokenStringQuote {
             self.consume(TokenStringQuote)?;
@@ -308,10 +307,10 @@ impl<'src> Parser<'src> {
     }
 
     /// add string to constants and return index in constants
-    fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>)->usize {
-        let string=Value::ObjString(ident.content.to_string());
-        chunk.add_constant(string, ident.line)
-    }
+    // fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>)->usize {
+    //     let string=Value::ObjString(ident.content.to_string());
+    //     chunk.add_constant(string, ident.line)
+    // }
 
     /// Consume identifier, equals and emit OP_SET_GLOBAL
     fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {

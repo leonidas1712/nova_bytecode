@@ -170,8 +170,8 @@ pub mod tests {
         let string1="hi".to_string(); 
         let string2="hello".to_string();
     
-        let idx=c2.add_constant(Value::ObjString(string1), 1);
-        let idx2=c2.add_constant(Value::ObjString(string2), 1);
+        let idx=c2.add_constant(Value::ObjString(20), 1);
+        let idx2=c2.add_constant(Value::ObjString(30), 1);
     
         c2.write_op(Inst::OpConstant(idx), 1);
         c2.write_op(Inst::OpConstant(idx2), 1);
