@@ -11,26 +11,6 @@ use std::process::ExitCode;
 
 
 fn run_main()->Result<()> {
-    let z=30;
-{
-    let x=40;
-    let y=x+z; // 70
-    println!("{}",y);
-
-    {
-        let z=40+y; 
-        println!("{}",z); // 110
-        println!("{}",x); // 40
-        
-        {
-            let m=60;
-            println!("{}",m+z); // 170 
-        }
-
-        println!("{}",y+z); // 180
-    }
-}
-
     let mut stack:[Option<u32>; 10]=[None;10];
     // stack[x]=Some(100);
     // dbg!(stack[4]);
@@ -42,12 +22,21 @@ fn run_main()->Result<()> {
     let mut vm=VM::new();
     if argc == 1 {
         nova_repl(vm)
-    } else if argc == 2 {
+    } else if argc >= 2 {
         let file_name=cmd_args.get(1).unwrap();
         println!("Importing:{file_name}\n");
 
+        let no_shell=cmd_args.get(2);
+
         run_file(&file_name, &mut vm)?;
-        nova_repl(vm)
+
+        if let Some(tok) = no_shell {
+            if !tok.eq("-o") {
+                nova_repl(vm)?;
+            }
+        }
+
+        Ok(())
     } else {
         err_other!("Usage: nova [path]")
     }

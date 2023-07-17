@@ -18,6 +18,12 @@ use utils::err::*;
 
 use log::{LevelFilter};
 
+
+use std::io::Write;
+fn prt(stdout:&mut dyn Write, s:&str) {
+    writeln!(stdout, "{}", s).unwrap();
+}
+
 pub fn init_logger() {
     env_logger::Builder::from_default_env()
         .filter_module("nova", LevelFilter::Debug)

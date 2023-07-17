@@ -1,0 +1,15 @@
+let x = 20;
+
+let x = {
+    let x = 5;
+
+    let y = {
+        let x = x+20;
+        let y = x+10;
+        y
+    };
+
+    x*y+2
+};
+
+print(x);
