@@ -406,6 +406,7 @@ impl<'src> Parser<'src> {
     // End compiler scope
     fn end_scope(&mut self, chunk: &mut Chunk)->Result<()> {
         log::debug!("End scope");
+        self.compiler.end_scope();
         Ok(())
     }
 

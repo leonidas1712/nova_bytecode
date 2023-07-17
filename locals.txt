@@ -2,3 +2,5 @@
     let x=1+2;
     let y=4;
 }
+
+let glob=20;

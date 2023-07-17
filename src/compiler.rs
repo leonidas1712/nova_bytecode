@@ -29,7 +29,28 @@ impl<'src> Compiler<'src> {
     }
 
     pub fn end_scope(&mut self) {
-        self.curr_depth+=1;
+        self.curr_depth-=1;
+
+        if !self.is_local() {
+            return;
+        }
+        
+        let curr=self.curr_depth;
+        // pop vars from curr scope
+        loop {
+            match self.locals.peek() {
+                Some(loc) => {
+                    if loc.depth==curr {
+                        break;
+                    }
+                    self.locals.pop();
+                },
+                None => {
+                    break;
+                }
+            }
+        }
+
     }
 
     pub fn is_local(&self)->bool {
