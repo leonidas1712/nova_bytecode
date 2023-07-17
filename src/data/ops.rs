@@ -1,6 +1,6 @@
 use std::{fmt::{Display}, vec, collections::{HashMap, hash_map::DefaultHasher}, hash::Hasher};
 use std::hash::Hash;
-use crate::utils::{err::*, misc::StringIntern};
+use crate::{utils::{err::*, misc::StringIntern}, vm::{self, VM}};
 
 // Inst, Chunk, Value
 
@@ -78,15 +78,15 @@ impl Value {
         match self {
             Self::Number(n) => Ok(*n),
             Self::Bool(b) => Ok(if *b { 1 } else { 0 }),
-            Self::ObjString(_) => errn!("Expected number but got a string"),
-            _ => errn!("Expected number but got: {}", self.to_string())
+            Self::ObjString(_) => err_other!("Expected number but got a string"),
+            _ => err_other!("Expected number but got: '{}'", self.to_string())
         }
     }
 
     pub fn expect_string(&self)->Result<u64> {
         match self {
             Self::ObjString(hash) => Ok(*hash),
-            _ => errn!("Expected string but got: {}", self.to_string())
+            _ => err_other!("Expected string but got: '{}'", self.to_string())
         }
     }
 

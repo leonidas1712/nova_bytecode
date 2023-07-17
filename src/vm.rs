@@ -74,15 +74,6 @@ impl VM {
         self.globals.get(&hash)
     }
 
-    /// Always returns err variant
-    fn err(&self, line:usize, msg:&str)->Result<()> {
-        // (RuntimeError) [line 1] Error at end - Expected a token
-        let line=format!("[line {}]", line);
-
-        let msg=format!("{} {}", line, msg.to_string());
-        errn!(msg)
-    }
-
     /// returns string interned in hash
     fn expect_string(&self, hash:u64)->Result<&String> {
         match self.strings.get_string(hash) {
@@ -246,7 +237,13 @@ impl VM {
         parser.compile(&mut chunk)?;
 
         // let chunk=compile(source)?; // turn source into bytecode, consts etc
-        self.run(chunk, reset)
+        match self.run(chunk, reset) {
+            Ok(val) => Ok(val),
+            Err(msg) => {
+                let msg=format!("[line {}] {}", self.ip, msg);
+                errn!(msg)
+            },
+        }
     }
 
     pub fn interpret(&mut self, source:&str)->Result<Value>{
@@ -263,5 +260,14 @@ impl VM {
             },
             _ => value.to_string()
         }
+    }
+
+     /// Always returns err variant
+     fn err(&self, line:usize, msg:&str)->Result<()> {
+        // (RuntimeError) [line 1] Error at end - Expected a token
+        let line=format!("[line {}]", line);
+
+        let msg=format!("{} {}", line, msg.to_string());
+        err_other!(msg)
     }
 }
