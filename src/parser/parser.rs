@@ -111,7 +111,7 @@ impl<'src> Parser<'src> {
         debug!("Is Statement: {}", self.is_stmt);
 
         if !self.is_stmt {
-            return self.report_err("Subsequent expressions not allowed.")
+            return self.report_err("Expressions not allowed immediately after another expression.")
         }
 
         self.parse_precedence(chunk, PrecAssign)?;
@@ -412,9 +412,10 @@ impl<'src> Parser<'src> {
 
         debug!("Popped: {count}");
         // count number of locals popped and emit that many pop insts
-        for _ in 0..count {
-            chunk.write_op(OpPop, self.line);
-        }
+        // for _ in 0..count {
+        //     chunk.write_op(OpPop, self.line);
+        // }
+        chunk.write_op(OpPopN(count), self.line);
         Ok(())
     }
 

@@ -56,6 +56,7 @@ pub fn process_cmd(cmd:&str, vm:&mut VM) {
                 println!("Error when importing file '{}': {}", arg, res);
             } else {
                 let res=res.unwrap();
+                println!("HERE");
                 println!("{}", vm.print_value(res));
             }
         },

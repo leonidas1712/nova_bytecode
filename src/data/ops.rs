@@ -23,7 +23,8 @@ pub enum Inst {
     OpSub,
     OpMul,
     OpDiv,
-    OpPop
+    OpPop,
+    OpPopN(usize)
 }
 
 impl Display for Inst {

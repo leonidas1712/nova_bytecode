@@ -129,11 +129,17 @@ impl VM {
                 // print top of stack and break   
                 OpReturn => {
                     let res=self.value_stack.pop()?;
+                    log::debug!("Return:{}", res);
                     break Ok(res);
                 },
                 OpPop => {
                     self.value_stack.pop()?;
                 },
+                OpPopN(n) => {
+                    for _ in 0..*n {
+                        self.value_stack.pop()?;
+                    }
+                },  
                 // get constant at idx in chunk, push onto stack
                 OpConstant(idx) => {
                     let i=*idx;
