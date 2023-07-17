@@ -1,0 +1,9 @@
+let m=10;
+
+{
+    let m = 20;
+    let m = m+10;
+    print(m);
+}
+
+m

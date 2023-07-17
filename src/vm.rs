@@ -137,6 +137,9 @@ impl VM {
                 OpPop => {
                     self.value_stack.pop()?;
                 },
+                // n = num to pop
+                // if nothing to pop => no statements
+                // not is_expr: nothing at the end to return => return Unit
                 OpEndScope(n, is_expr) => {
                     // empty block
                     if *n==0 && !is_expr {

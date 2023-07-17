@@ -72,4 +72,7 @@ fn test_file() {
     run_file("test.txt", vm).unwrap();
     assert_eq!(vm.get_global_value("m").unwrap().to_string(), "5");
     assert_eq!(vm.get_global_value("x").unwrap().to_string(), "8");
+
+    run_file("scope.txt", vm);
+    dbg!(vm.get_global_value("m").unwrap().to_string(), "10");
 }
