@@ -53,7 +53,10 @@ pub fn process_cmd(cmd:&str, vm:&mut VM) {
             let res=run_file(arg, vm);
             if res.is_err() {
                 let res=res.unwrap_err().to_string();
-                println!("Error from file '{}': {}", arg, res);
+                println!("Error when importing file '{}': {}", arg, res);
+            } else {
+                let res=res.unwrap();
+                println!("{}", vm.print_value(res));
             }
         },
         _ => {

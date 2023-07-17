@@ -1,7 +1,6 @@
 let m=5;
-
 let y=300;
+m+y
+"hi"
 
-{
-    let z=100;
-}
+let p="hi";
