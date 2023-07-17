@@ -56,7 +56,9 @@ impl VM {
         self.value_stack.clear();
     }
 
-    fn add_global(&mut self, hash:u64, value:Value) {
+    /// Add global variable given identifier
+    fn add_global(&mut self, identifier:String, value:Value) {
+        let hash=self.add_string(identifier);
         self.globals.insert(hash, value);
     }
 
@@ -165,12 +167,13 @@ impl VM {
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),   
-                OpSetGlobal(hash) => {
+                OpSetGlobal(identifier) => {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);        
 
                     let value=self.value_stack.pop()?;
-                    self.add_global(*hash, value);
+
+                    self.add_global(identifier.to_string(), value);
 
                     log::debug!("Set:{:?}",self.globals);
                 },

@@ -5,6 +5,7 @@ use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
 use crate::utils::err::*;
+use crate::utils::misc::calc_hash;
 
 use Inst::*;
 
@@ -314,9 +315,9 @@ impl<'src> Parser<'src> {
         self.expression(chunk)?;
 
         // hash the contents not the ptr
-        let mut ident_hash=ident.hash_content();
+        // let mut ident_hash=ident.hash_content();
 
-        chunk.write_op(OpSetGlobal(ident_hash), ident.line);
+        chunk.write_op(OpSetGlobal(ident.content.to_string()), ident.line);
 
         Ok(())
     }
@@ -328,7 +329,7 @@ impl<'src> Parser<'src> {
         self.expect_token_type(ident, TokenIdent, "identifier")?;
 
         // use hash to get value instead of full string (less work at runtime)
-        let ident_hash=ident.hash_content();
+        let ident_content=ident.content.to_string();
 
         // log::debug!("match equals:{}", self.match_token(TokenEqual));
 
@@ -340,11 +341,12 @@ impl<'src> Parser<'src> {
             }
 
             self.expression(chunk)?;
-            chunk.write_op(OpSetGlobal(ident_hash), ident.line);
+            chunk.write_op(OpSetGlobal(ident_content), ident.line);
             self.consume(TokenSemiColon)?;
 
         } else {    
-            chunk.write_op(OpGetGlobal(ident_hash), ident.line);
+            let hash=calc_hash(&ident_content);
+            chunk.write_op(OpGetGlobal(hash), ident.line);
 
         }
         Ok(())

@@ -15,7 +15,7 @@ pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
     OpGetGlobal(u64), // hash of variable name
-    OpSetGlobal(u64), // hash of variable name
+    OpSetGlobal(String), // hash of variable name
     OpNegate,
     OpAdd,
     OpSub,
