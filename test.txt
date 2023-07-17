@@ -11,4 +11,3 @@ let m=5; // m
 let x=x+m;
 
 // final
-k
