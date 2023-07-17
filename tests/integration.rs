@@ -121,6 +121,6 @@ fn test_file() {
 
 #[test]
 fn test_if() {
-    output_has("if.txt", "2\n2\n3\n4\n5\n6\n\"endq\"\n");
+    output_has("if.txt", "2\n2\n3\n4\n5\n6\n\"end\"\n");
     output_has("if2.txt", "20\n\"x\"\n2\n70\n80\n60\n50\n\"z\"\n10\n50\n");
 }

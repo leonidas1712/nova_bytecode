@@ -125,17 +125,6 @@ impl<'src> Parser<'src> {
 
         self.declaration(chunk, true)?; // to execute if true
 
-        let next_ip=chunk.get_ip().unwrap(); 
-
-        // update opjump
-        // let if_false_jmp=chunk.get_op_mut(if_false_idx).unwrap();
-        // match if_false_jmp {
-        //     OpIfFalseJump(k) => {
-        //         *k=next_ip;
-        //     },
-        //     _ => unreachable!()
-        // }
-
         // emit op_jump here so that if branch skips the else
         let jmp_idx=chunk.write_op(OpJump(0), self.line);
 
@@ -169,18 +158,13 @@ impl<'src> Parser<'src> {
         debug!("HERE");
 
         
-        // if match(semicolon) -> is_stmt true
-        // else: is_stmt false
+  
+        // self.is_stmt=true;
 
-        // if self.match_token(TokenSemiColon) {
-        //     self.is_stmt=true;
-        //     self.declaration(chunk)?; // after if body
-        // } else {
-        //     self.is_stmt=true;
-        //     self.expression(chunk)?; // after if body
 
         self.is_stmt=true;
-        // self.declaration(chunk, true)?;
+        // // self.advance();
+        // self.expression(chunk)?;
 
         Ok(())
     }
@@ -227,11 +211,6 @@ impl<'src> Parser<'src> {
 
         // let value=Value::ObjString(content); // copies out  
         chunk.load_string(content, string.line);
-
-        // chunk.add_string(content.to_string());
-            // add string to strings pool
-            // return hash of string
-            // OpLoadString(hash)
 
         if string.token_type!=TokenStringQuote {
             self.consume(TokenStringQuote)?;
@@ -714,9 +693,13 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("let x = if (true) {
+    let mut p=Parser::new("if (true) {
+        2
+    } else {
         3
-    };");
+    } + 5");
+
+    // let mut p=Parser::new("2+3");
     let mut chunk=Chunk::new();
 
     let res=p.compile(&mut chunk);
