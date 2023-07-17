@@ -15,13 +15,13 @@ use crate::data::stack::STACK_SIZE;
 
 #[derive(Debug)]
 pub struct Compiler<'src> {
-    locals:VecStack<Local<'src>>,
+    locals:Vec<Local<'src>>,
     curr_depth:usize
 }   
 
 impl<'src> Compiler<'src> {
     pub fn new()->Compiler<'src> {
-        Compiler { locals: VecStack::new(STACK_SIZE), curr_depth: 0 }
+        Compiler { locals: Vec::with_capacity(STACK_SIZE), curr_depth: 0 }
     }
 
     pub fn begin_scope(&mut self) {
@@ -40,7 +40,7 @@ impl<'src> Compiler<'src> {
         let mut count:usize=0;
         // pop vars from curr scope
         loop {
-            match self.locals.peek() {
+            match self.locals.last() {
                 Some(loc) => {
                     if loc.depth==curr {
                         break;
@@ -61,11 +61,15 @@ impl<'src> Compiler<'src> {
         self.curr_depth > 0
     }
 
+    /// If local found, return corresponding index in value stack to resolve
+    pub fn resolve_local(&self, token:Token<'src>) {
+    }
+
     /// Only add local if curr scope is local
     pub fn add_local(&mut self, token:Token<'src>)->Result<()> {
         if self.is_local() {
             let local=Local::new(token, self.curr_depth);
-            self.locals.push(local)?;
+            self.locals.push(local);
         }
 
         Ok(())

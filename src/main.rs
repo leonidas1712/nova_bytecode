@@ -6,6 +6,7 @@ use nova::utils::file::run_file;
 
 use std::env::args;
 use std::process::ExitCode;
+use std::vec;
 
 fn run_main()->Result<()> {
     let cmd_args:Vec<String>=args().collect();

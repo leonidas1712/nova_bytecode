@@ -12,7 +12,7 @@
         }
     }
 
-    200
+    200 // is_stmt false here when exp last
 }
 
 let glob=20;

@@ -1,9 +1,6 @@
 {
     let x=2;
-    let y=3;
-    {
-        let y=2;
-    }
-
-    200 // is_stmt false when last is expr - use to treat as expr when..
+    let y=20;
 }
+
+let z=30;

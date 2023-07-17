@@ -334,6 +334,8 @@ impl<'src> Parser<'src> {
         // use hash to get value instead of full string (less work at runtime)
         let ident_content=ident.content.to_string();
 
+        // using ident token: try to resolve local => use local if possible
+
         // debug!("match equals:{}", self.match_token(TokenEqual));
 
         // Set var here
@@ -349,7 +351,8 @@ impl<'src> Parser<'src> {
             // declareVariable() here - if global do nothing. else, add local with ident
             self.compiler.add_local(ident)?;
 
-            debug!("Var name:{}, compiler aft: {:?}", ident.content, self.compiler);
+            debug!("var_name:{}, compiler aft: {:?}", ident.content, self.compiler);
+            debug!("CHUNK:{}", chunk);
 
             // dont emit set if local
             // defineVariable - 
@@ -358,6 +361,7 @@ impl<'src> Parser<'src> {
             }
 
             // set var
+            // let 
             chunk.write_op(OpSetGlobal(ident_content), ident.line);
 
 
@@ -594,11 +598,15 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("x=2; // x");
-    let mut chunk=Chunk::new();
+    // let mut p=Parser::new("x=2; // x");
+    // let mut chunk=Chunk::new();
 
-    let res=p.compile(&mut chunk);
-    dbg!(chunk);
+    // let res=p.compile(&mut chunk);
+    // dbg!(chunk);
+    // dbg!(res);
+
+    let s = vec![2,3,4];
+    let res=s.partition_point(|x| x==&1);
     dbg!(res);
 }
 
