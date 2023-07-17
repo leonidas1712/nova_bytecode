@@ -154,7 +154,7 @@ pub mod tests {
         println!("{}", c2);
         
         let mut vm=VM::new();
-        let res=vm.run(c2, true).unwrap();
+        let res=vm.run(&mut c2, true).unwrap();
     
         assert_eq!(res.to_string(), "-5");
         
@@ -169,6 +169,6 @@ pub mod tests {
         chunk.write_op(Inst::OpReturn, 1);
 
         let mut vm=VM::new();
-        let res=vm.run(chunk, true);
+        let res=vm.run(&mut chunk, true);
     }
 }

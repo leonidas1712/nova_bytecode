@@ -82,7 +82,7 @@ impl VM {
             },
             None => {
                 let msg=format!("Invalid hash for string (not interned)");
-                self.err(self.ip, &msg)?;
+                self.err(&msg)?;
                 unreachable!()
             }
         }
@@ -91,7 +91,7 @@ impl VM {
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
-    pub fn run(&mut self, chunk:Chunk, reset:bool)->Result<Value> {
+    pub fn run(&mut self, chunk:&mut Chunk, reset:bool)->Result<Value> {
         if reset {
             self.reset();
         }
@@ -215,9 +215,8 @@ impl VM {
                         None => {
 
                             // use string interning in chunk to store hash->string for strings
-                            let line=chunk.get_line_of_op(self.ip).expect("Invalid index for op line");
                             let msg=format!("Variable '{}' is not defined.", ident);
-                            self.err(line, &msg)?;
+                            self.err(&msg)?;
                         }
                     }
     
@@ -237,10 +236,14 @@ impl VM {
         parser.compile(&mut chunk)?;
 
         // let chunk=compile(source)?; // turn source into bytecode, consts etc
-        match self.run(chunk, reset) {
+        match self.run(&mut chunk, reset) {
             Ok(val) => Ok(val),
             Err(msg) => {
-                let msg=format!("[line {}] {}", self.ip, msg);
+                // let curr_inst=s
+                // let curr_inst=chunk.get_op(self.ip).unwrap();
+                let line=chunk.get_line_of_op(self.ip).unwrap();
+
+                let msg=format!("[line {}] {}", line, msg);
                 errn!(msg)
             },
         }
@@ -263,11 +266,12 @@ impl VM {
     }
 
      /// Always returns err variant
-     fn err(&self, line:usize, msg:&str)->Result<()> {
+     fn err(&self, msg:&str)->Result<()> {
         // (RuntimeError) [line 1] Error at end - Expected a token
-        let line=format!("[line {}]", line);
 
-        let msg=format!("{} {}", line, msg.to_string());
+        let msg=format!("{}", msg.to_string());
+        
+        log::debug!("{msg}");
         err_other!(msg)
     }
 }

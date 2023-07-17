@@ -42,7 +42,7 @@ impl<'src> Parser<'src> {
 
         let delim_scanner=DelimiterScanner::new(delimiters);
 
-        Parser { scanner, compiler, prev_tok: None, curr_tok: None, line:1, delim_scanner, is_stmt:false }
+        Parser { scanner, compiler, prev_tok: None, curr_tok: None, line:1, delim_scanner, is_stmt:true }
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
@@ -105,6 +105,13 @@ impl<'src> Parser<'src> {
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
+        log::debug!("xpr");
+        log::debug!("{}", self.is_stmt);
+
+        // if !self.is_stmt {
+        //     return err
+        // }
+
         self.parse_precedence(chunk, PrecAssign)?;
 
         // is_stmt if prev tok is semicolon - for "x=5;"
