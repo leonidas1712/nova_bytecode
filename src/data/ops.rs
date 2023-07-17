@@ -8,14 +8,15 @@ use crate::utils::{err::*};
 // type UnaryOp=fn(&mut Value);
 
 
+// no point hashing opget/set because it needs to be hashed later/stored
 #[derive(Debug)]
 // Instruction
 // binaryop: takes two args from stack, applies op, pushes onto stack
 pub enum Inst {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
-    OpGetGlobal(u64), // hash of variable name
-    OpSetGlobal(String), // hash of variable name
+    OpGetGlobal(String), 
+    OpSetGlobal(String),
     OpNegate,
     OpAdd,
     OpSub,
@@ -31,7 +32,6 @@ impl Display for Inst {
 
 pub type IntType=isize;
 
-#[derive(Debug,Clone)]
 // idea: ValueStack might need to be dynamic so it can own values
 // but CallStack with CallFrames might not need to be
     // CallStack: owns CallFrame (T=CallFrame)
@@ -60,11 +60,11 @@ pub type IntType=isize;
     // Function is referred to in callframe as well but other values may only be on val stack?
 
 // store Ident(String,line) so we can retrieve for err
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone)]
 pub enum Value {
     Number(IntType),
     Bool(bool),
-    ObjString(String),
+    ObjString(String), // change to use u64 -> Copy
     Unit // empty type
 }
 

@@ -3,6 +3,4 @@ let x=5;
 let x=10;
 
 // different occurence: different line, but should use same constant
-let y=x+2;
-
-let x=z+y;
+// let y=x+2;

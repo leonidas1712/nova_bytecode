@@ -62,6 +62,11 @@ impl VM {
         self.globals.insert(hash, value);
     }
 
+    fn get_global(&self, identifier:&String)->Option<&Value> {
+        let hash=calc_hash(identifier);
+        self.globals.get(&hash)
+    }
+
     /// Add string and return hash of the string. Doesn't add if string already exists
     fn add_string(&mut self, string:String)->u64 {
         let hash=calc_hash(&string);
@@ -178,9 +183,9 @@ impl VM {
                     log::debug!("Set:{:?}",self.globals);
                 },
                 // idx of identifier in constants
-                OpGetGlobal(hash) => {
-                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, hash);
-                    let value=self.globals.get(hash); // could add line num to value
+                OpGetGlobal(ident) => {
+                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, ident);
+                    let value=self.get_global(ident); // could add line num to value
 
                     match value {
                         Some(val) => {

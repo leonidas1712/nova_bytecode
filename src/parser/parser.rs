@@ -345,8 +345,7 @@ impl<'src> Parser<'src> {
             self.consume(TokenSemiColon)?;
 
         } else {    
-            let hash=calc_hash(&ident_content);
-            chunk.write_op(OpGetGlobal(hash), ident.line);
+            chunk.write_op(OpGetGlobal(ident_content), ident.line);
 
         }
         Ok(())
