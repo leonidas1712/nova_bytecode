@@ -376,6 +376,7 @@ impl<'src> Parser<'src> {
     // New scope for Compiler
     fn begin_scope(&mut self, chunk: &mut Chunk)->Result<()> {
         log::debug!("Began scope");
+        self.compiler.begin_scope();
         Ok(())
     }
 

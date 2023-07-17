@@ -23,6 +23,18 @@ impl<'src> Compiler<'src> {
     pub fn new()->Compiler<'src> {
         Compiler { locals: VecStack::new(STACK_SIZE), curr_depth: 0 }
     }
+
+    pub fn begin_scope(&mut self) {
+        self.curr_depth+=1;
+    }
+
+    pub fn end_scope(&mut self) {
+        self.curr_depth+=1;
+    }
+
+    pub fn is_local(&self)->bool {
+        self.curr_depth > 0
+    }
 }
 
 #[derive(Debug)]
