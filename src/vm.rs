@@ -64,6 +64,8 @@ impl VM {
             };
         }
 
+        log::debug!("Chunk at start:{}", chunk);
+
         loop {
             // let curr=self.get_curr_inst(&chunk);
             let curr=chunk.get_op(self.ip);

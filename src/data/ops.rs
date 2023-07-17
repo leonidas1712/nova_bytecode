@@ -1,5 +1,5 @@
-use std::{fmt::{Display}, vec};
-
+use std::{fmt::{Display}, vec, collections::{HashMap, hash_map::DefaultHasher}, hash::Hasher};
+use std::hash::Hash;
 use crate::utils::{err::*};
 
 // Inst, Chunk, Value
@@ -8,7 +8,7 @@ use crate::utils::{err::*};
 // type UnaryOp=fn(&mut Value);
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 // Instruction
 // binaryop: takes two args from stack, applies op, pushes onto stack
 pub enum Inst {
@@ -32,9 +32,6 @@ impl Display for Inst {
 pub type IntType=isize;
 
 #[derive(Debug,Clone)]
-// Value on the Stack (size known at compile-time)
-    // can't do Rc<Obj> because Rc doesn't impl Copy
-
 // idea: ValueStack might need to be dynamic so it can own values
 // but CallStack with CallFrames might not need to be
     // CallStack: owns CallFrame (T=CallFrame)
@@ -58,6 +55,8 @@ pub type IntType=isize;
 
 // Observation: Rc may only be needed for Function (?)
     // Function is referred to in callframe as well but other values may only be on val stack?
+
+#[derive(Hash, PartialEq, Eq)]
 pub enum Value {
     Number(IntType),
     Bool(bool),
@@ -90,6 +89,14 @@ impl Value {
             Self::Unit => true,
             _ => false
         }
+    }
+
+    pub fn get_hash(&self)->u64 {
+        // let mut hasher:Box<dyn Hasher>=Box::new(DefaultHasher::new());
+        // calc_hash(self)
+        let mut s=DefaultHasher::new();
+        self.hash(&mut s);
+        s.finish()
     }
 }
 
@@ -145,18 +152,21 @@ impl Lines {
     }
 }
 // represents a series of bytecode instructions along with context
+// need to return an index: to benefit from cache locality instead of associating vals with insts direct
+// Value->usize (for checking if val exists)
 #[derive(Debug)]
 pub struct Chunk  {
-    ops:Vec<Inst>,
-    constants:Vec<Value>, // pool of constants
+    ops:Vec<Inst>, // ops stack: order matters
+    constants:Vec<Value>, // pool of constants - order doesnt matter
+    constants_map:HashMap<u64,usize>, // val.hash->idx stored in constants
     op_lines:Lines, // line numbers
-    constant_lines:Lines // two arrs because index goes along with the enum (less confusing)
+    constant_lines:Lines, // two arrs because index goes along with the enum (less confusing),
 }
 
 impl Chunk {
     pub fn new()->Self {
         Chunk {
-            ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new()
+            ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new(), constants_map:HashMap::new()
         }
     }
 
@@ -175,14 +185,35 @@ impl Chunk {
         self.constants.get(idx).map(|v| v.to_owned())
     }
 
+    /// Get index of value given hash. Returns none if hash DNE
+    fn get_idx(&self, hash:u64)->Option<&usize> {
+        self.constants_map.get(&hash)
+    }
+
     /// Returns index where constant was added - for use in OP_CONSTANT
     /// Adds to constants pool
     pub fn add_constant(&mut self, value:Value, line:usize)->usize {
-        let constants=&mut self.constants;
-        constants.push(value);
+        let val_hash=value.get_hash();
+        let val_idx=self.get_idx(val_hash);
 
-        self.constant_lines.add_line(line);
-        constants.len()-1
+        match val_idx {
+            // Exists: return existing index
+            Some(idx) => {
+                *idx
+            },
+            None => {
+                let constants=&mut self.constants;
+                constants.push(value);
+
+                self.constant_lines.add_line(line);
+
+                // add hash to map
+                let idx=constants.len()-1; 
+                self.constants_map.insert(val_hash, idx);
+
+                idx
+            }
+        }
     }
 
     /// add const + add OP_CONSTANT
@@ -217,7 +248,7 @@ impl<'val> Display for Chunk {
             };
             code.push_str(fmt.as_str());
         }
-        code.push_str("\n\nConstants:\n");
+        code.push_str("\n\nUnique constants:\n");
 
         for (idx,c) in self.constants.iter().enumerate() {
             let fmt=format!("{} (line {})\n", c.to_string().as_str(), self.constant_lines.get_line(idx).unwrap());
