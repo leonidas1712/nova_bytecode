@@ -11,11 +11,11 @@ use crate::utils::{err::*};
 #[derive(Debug)]
 // Instruction
 // binaryop: takes two args from stack, applies op, pushes onto stack
-pub enum Inst {
+pub enum Inst<'src> {
     OpReturn,
     OpConstant(usize), // idx in const pool, -> load idx onto stack
     OpGetGlobal(u64), // hash of variable name
-    OpSetGlobal(String), // hash of variable name
+    OpSetGlobal(&'src str), // hash of variable name
     OpNegate,
     OpAdd,
     OpSub,
@@ -23,7 +23,7 @@ pub enum Inst {
     OpDiv,
 }
 
-impl Display for Inst {
+impl<'src> Display for Inst<'src> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -97,7 +97,6 @@ impl Value {
 
     pub fn get_hash(&self)->u64 {
         // let mut hasher:Box<dyn Hasher>=Box::new(DefaultHasher::new());
-        // calc_hash(self)
         let mut s=DefaultHasher::new();
         self.hash(&mut s);
         s.finish()
@@ -159,15 +158,15 @@ impl Lines {
 // need to return an index: to benefit from cache locality instead of associating vals with insts direct
 // Value->usize (for checking if val exists)
 #[derive(Debug)]
-pub struct Chunk  {
-    ops:Vec<Inst>, // ops stack: order matters
+pub struct Chunk<'src>  {
+    ops:Vec<Inst<'src>>, // ops stack: order matters
     constants:Vec<Value>, // pool of constants - order doesnt matter
     constants_map:HashMap<u64,usize>, // val.hash->idx stored in constants
     op_lines:Lines, // line numbers
     constant_lines:Lines, // two arrs because index goes along with the enum (less confusing),
 }
 
-impl Chunk {
+impl<'src> Chunk<'src> {
     pub fn new()->Self {
         Chunk {
             ops:vec![], constants:vec![], op_lines:Lines::new(), constant_lines:Lines::new(), constants_map:HashMap::new()
@@ -180,7 +179,7 @@ impl Chunk {
         self.ops.get(idx)
     }
 
-    pub fn write_op(&mut self, op:Inst, line:usize) {
+    pub fn write_op(&mut self, op:Inst<'src>, line:usize) {
         self.ops.push(op);
         self.op_lines.add_line(line);
     }
@@ -235,7 +234,7 @@ impl Chunk {
     }
 }
 
-impl<'val> Display for Chunk {
+impl<'src> Display for Chunk<'src>{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut code=String::from("Ops:\n");
         for (idx,op) in self.ops.iter().enumerate() {

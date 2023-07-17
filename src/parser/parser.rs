@@ -31,7 +31,7 @@ pub struct Parser<'src> {
     1. 
 */
 
-// Parser's job: go from Token stream to a Chunk with all Insts and Consts (compile)
+// Parser's job: go from Token stream to a Chunk<'src> with all Insts and Consts (compile)
 impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
         let scanner=Scanner::new(source);
@@ -48,7 +48,7 @@ impl<'src> Parser<'src> {
     // ParseFn: assume that the token to parse is set in self.prev
 
     // expect_token_type(ty)->Result<()>
-    pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
+    pub fn number(&mut self, chunk: &mut Chunk<'src>)->Result<()>{
         let prev=self.expect_prev()?;
         self.expect_token_type(prev, TokenInteger, "integer")?; // only errs when bug in parser
 
@@ -61,7 +61,7 @@ impl<'src> Parser<'src> {
     }
 
     // unary called based on rules table
-    pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
+    pub fn unary(&mut self, chunk:&mut Chunk<'src>)->Result<()>{
         let prev=self.expect_prev()?;
         // next expression result goes onto stack
         // PrecUnary higher than binary => -1+2 means - will bind 1 and prevent + from consuming
@@ -75,7 +75,7 @@ impl<'src> Parser<'src> {
     }
 
     // binary called based on rules table
-    pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
+    pub fn binary(&mut self, chunk:&mut Chunk<'src>)->Result<()>{
         // log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
         // let rule=self.expect_rule(prev)?;
@@ -103,7 +103,7 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-    fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
+    fn expression(&mut self, chunk:&mut Chunk<'src>)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
         self.parse_precedence(chunk, PrecAssign)?;
 
@@ -115,7 +115,7 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-    fn grouping(&mut self, chunk:&mut Chunk)->Result<()> {
+    fn grouping(&mut self, chunk:&mut Chunk<'src>)->Result<()> {
         self.expression(chunk)?;
         self.consume(TokenRightParen)?;
         Ok(())
@@ -124,7 +124,7 @@ impl<'src> Parser<'src> {
     // curr should be TokenString
     // advance so that curr is right past ending quote
     // string literal
-    fn string(&mut self, chunk: &mut Chunk)->Result<()> {
+    fn string(&mut self, chunk: &mut Chunk<'src>)->Result<()> {
         let string=self.consume_one_of(vec![TokenString,TokenStringQuote])?;
         let content=if string.token_type!=TokenStringQuote { string.content.to_string() } else { String::from("") };
 
@@ -138,7 +138,7 @@ impl<'src> Parser<'src> {
     }
 
     // call based on enum
-    fn call_parse_fn(&mut self, chunk:&mut Chunk, ty:ParseFn, can_assign:bool)->Result<()>{
+    fn call_parse_fn(&mut self, chunk:&mut Chunk<'src>, ty:ParseFn, can_assign:bool)->Result<()>{
         match ty {
             ParseNumber => self.number(chunk),
             ParseUnary => self.unary(chunk),
@@ -149,7 +149,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_precedence(&mut self, chunk: &mut Chunk, prec:Precedence)->Result<()> {
+    fn parse_precedence(&mut self, chunk: &mut Chunk<'src>, prec:Precedence)->Result<()> {
         self.advance()?;
         // get rule based on parser.prev.type
         let prev=self.expect_prev()?;
@@ -302,13 +302,13 @@ impl<'src> Parser<'src> {
     }
 
     /// add string to constants and return index in constants
-    fn add_string(&mut self, chunk: &mut Chunk, ident:Token<'src>)->usize {
+    fn add_string(&mut self, chunk: &mut Chunk<'src>, ident:Token<'src>)->usize {
         let string=Value::ObjString(ident.content.to_string());
         chunk.add_constant(string, ident.line)
     }
 
     /// Consume identifier, equals and emit OP_SET_GLOBAL
-    fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {
+    fn parse_variable_assignment(&mut self, chunk: &mut Chunk<'src>)->Result<()> {
         let ident=self.consume(TokenIdent)?;
 
         self.consume(TokenEqual)?;
@@ -317,23 +317,23 @@ impl<'src> Parser<'src> {
         // hash the contents not the ptr
         // let mut ident_hash=ident.hash_content();
 
-        chunk.write_op(OpSetGlobal(ident.content.to_string()), ident.line);
+        chunk.write_op(OpSetGlobal(ident.content), ident.line);
 
         Ok(())
     }
 
     /// Parse get for an identifier - prefix func for TokenIdent
-    fn parse_ident(&mut self, chunk: &mut Chunk, can_assign:bool)->Result<()> {
+    fn parse_ident(&mut self, chunk: &mut Chunk<'src>, can_assign:bool)->Result<()> {
         // get identifier
         let ident=self.expect_prev()?;
         self.expect_token_type(ident, TokenIdent, "identifier")?;
 
         // use hash to get value instead of full string (less work at runtime)
-        let ident_content=ident.content.to_string();
+        // let ident_content=ident.content.to_string();
 
         // log::debug!("match equals:{}", self.match_token(TokenEqual));
 
-        // write op here
+        // assignment: x=5;
         if self.match_token(TokenEqual) {
             if !can_assign {
                 let msg=format!("Can't assign to {}", ident.content);
@@ -341,11 +341,12 @@ impl<'src> Parser<'src> {
             }
 
             self.expression(chunk)?;
-            chunk.write_op(OpSetGlobal(ident_content), ident.line);
+            chunk.write_op(OpSetGlobal(ident.content), ident.line);
             self.consume(TokenSemiColon)?;
 
-        } else {    
-            let hash=calc_hash(&ident_content);
+        } else { // get variable e.g x+y
+            // hash of actual string works with &str because String impl Borrow<str> so hash(&String) == hash(&str)
+            let hash=calc_hash(&ident.content);
             chunk.write_op(OpGetGlobal(hash), ident.line);
 
         }
@@ -355,7 +356,7 @@ impl<'src> Parser<'src> {
     /// Grammar functions
     
     // let x=2;
-    fn let_declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+    fn let_declaration(&mut self, chunk: &mut Chunk<'src>)->Result<()>  {
         self.parse_variable_assignment(chunk)?;
         self.consume(TokenSemiColon)?;
         Ok(())
@@ -363,7 +364,7 @@ impl<'src> Parser<'src> {
 
     // does (expression | statement)
     /// Return true if expression was compiled, else false
-    fn declaration(&mut self, chunk: &mut Chunk)->Result<bool>  {
+    fn declaration(&mut self, chunk: &mut Chunk<'src>)->Result<bool>  {
         // Put statement types here
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
@@ -374,7 +375,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    pub fn compile(&mut self, chunk: &mut Chunk)->Result<()> {
+    pub fn compile(&mut self, chunk: &mut Chunk<'src>)->Result<()> {
         // at first: only exprs
 
         self.advance()?;
@@ -399,7 +400,7 @@ impl<'src> Parser<'src> {
         // Ok(())
     }
 
-    pub fn end_compile(&mut self, chunk:&mut Chunk) {
+    pub fn end_compile(&mut self, chunk:&mut Chunk<'src>) {
         chunk.write_op(Inst::OpReturn, self.line);
     }
 
