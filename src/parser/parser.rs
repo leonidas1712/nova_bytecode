@@ -424,10 +424,7 @@ impl<'src> Parser<'src> {
         debug!("End scope after: {:?}", self.compiler);
 
         debug!("Popped: {count}");
-        // count number of locals popped and emit that many pop insts
-        // for _ in 0..count {
-        //     chunk.write_op(OpPop, self.line);
-        // }
+    
         chunk.write_op(OpPopN(count), self.line);
         Ok(())
     }
@@ -442,6 +439,10 @@ impl<'src> Parser<'src> {
             self.begin_scope(chunk)?;
             self.block(chunk)?;
             self.end_scope(chunk)?;
+        } else if self.match_token(TokenPrint) {
+            self.expression(chunk)?;
+            chunk.write_op(OpPrint, self.line);
+            self.consume(TokenSemiColon)?;
         } else {
             self.expression(chunk)?;
         }

@@ -20,6 +20,7 @@ pub enum Inst {
     OpGetLocal(usize),
     OpSetLocal(usize), // idx into value stack
     OpLoadString(u64),
+    OpPrint,
     OpNegate,
     OpAdd,
     OpSub,

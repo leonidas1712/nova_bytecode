@@ -245,6 +245,12 @@ impl VM {
                 },
                 OpSetLocal(idx) => {
                     debug!("Set loc:{}", idx);
+                },
+                OpPrint =>  {
+                    let pop=self.value_stack.peek();
+                    if let Some(value) = pop {
+                        println!("{}", self.print_value(*value));
+                    }
                 }
             }
 
