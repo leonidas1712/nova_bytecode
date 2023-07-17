@@ -61,7 +61,7 @@ pub type IntType=isize;
     // Function is referred to in callframe as well but other values may only be on val stack?
 
 // store Ident(String,line) so we can retrieve for err
-#[derive(Hash, PartialEq, Eq, Debug, Clone)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Value {
     Number(IntType),
     Bool(bool),

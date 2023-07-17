@@ -1,12 +1,8 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::Hash;
-
+use crate::compiler::Compiler;
 use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
 use crate::data::ops::*;
-use crate::utils::constants::SPACE;
 use crate::utils::err::*;
-use crate::utils::misc::calc_hash;
 
 use Inst::*;
 
@@ -19,6 +15,7 @@ use super::rules::ParseRule;
 
 #[derive(Debug)]
 pub struct Parser<'src> {
+    compiler:Compiler<'src>,
     scanner:Scanner<'src>,
     prev_tok:Option<Token<'src>>,
     curr_tok:Option<Token<'src>>,
@@ -36,6 +33,8 @@ pub struct Parser<'src> {
 impl<'src> Parser<'src> {
     pub fn new<'s>(source:&'s str)->Parser<'s> {
         let scanner=Scanner::new(source);
+        let compiler=Compiler::new();
+
         let delimiters:Vec<Delimiter> = vec![
             Delimiter::new(TokenLeftParen, TokenRightParen, false),
             Delimiter::new(TokenStringQuote, TokenStringQuote, true)
@@ -43,7 +42,7 @@ impl<'src> Parser<'src> {
 
         let delim_scanner=DelimiterScanner::new(delimiters);
 
-        Parser { scanner, prev_tok: None, curr_tok: None, line:1, delim_scanner, is_stmt:false }
+        Parser { scanner, compiler, prev_tok: None, curr_tok: None, line:1, delim_scanner, is_stmt:false }
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
@@ -211,7 +210,6 @@ impl<'src> Parser<'src> {
 
 
         Ok(())
-        // self.call_parse_fn(chunk, prefix_fn) // REMOVE
     }
 
     // Err, Err - report consecutive errors until non-err or end
@@ -226,10 +224,8 @@ impl<'src> Parser<'src> {
         }
 
         let peek=self.scanner.peek();
-        // if c.is_some() {
-        //     let c=c.unwrap();
-        //     println!("{}", c==SPACE);
-        // }
+       
+
         // set curr to none if scanner is finished
         if peek.is_none() || peek.unwrap().is_ascii_whitespace() {
             // println!("Prev:{:?}", self.prev_tok);
@@ -255,6 +251,11 @@ impl<'src> Parser<'src> {
         }
 
         Ok(())
+    }
+
+    /// Return true if current_tok is ty else false. None if empty
+    fn check(&mut self, ty:TokenType)->Option<bool> {
+        self.curr_tok.map(|t| t.token_type==ty)
     }
     
     /// Match token type against curr_tok: return false if not the same, else advance and return true
@@ -365,19 +366,55 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-    // does (expression | statement)
-    /// Return true if expression was compiled, else false
-    fn declaration(&mut self, chunk: &mut Chunk)->Result<bool>  {
-        // Put statement types here
-        if self.match_token(TokenLet) {
-            self.let_declaration(chunk)?;
-            Ok(false)
-        } else {
-            self.expression(chunk)?;
-            Ok(true)
-        }
+    // New scope for Compiler
+    fn begin_scope(&mut self, chunk: &mut Chunk)->Result<()> {
+        log::debug!("Began scope");
+        Ok(())
     }
 
+    // Block
+    fn block(&mut self, chunk: &mut Chunk)->Result<()> {
+        log::debug!("blk");
+        
+        loop {
+            match self.check(TokenRightBrace) {
+                // not right brace: keep going
+                Some(b) if !b => {
+                    self.declaration(chunk)?;
+                },
+                _ => {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenRightBrace)?;
+        Ok(())
+    }
+
+    // End compiler scope
+    fn end_scope(&mut self, chunk: &mut Chunk)->Result<()> {
+        log::debug!("End scope");
+        Ok(())
+    }
+
+    /// does (expression | statement)
+    fn declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+        // Put statement types here - switch on statement
+        if self.match_token(TokenLet) {
+            self.let_declaration(chunk)?;
+        } else if self.match_token(TokenLeftBrace) {
+            self.begin_scope(chunk)?;
+            self.block(chunk)?;
+            self.end_scope(chunk)?;
+        } else {
+            self.expression(chunk)?;
+        }
+
+        Ok(())
+    }
+
+    // create a new compiler 
     pub fn compile(&mut self, chunk: &mut Chunk)->Result<()> {
         // at first: only exprs
 

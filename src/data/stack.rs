@@ -34,7 +34,7 @@ impl<T:Display + Copy> Display for FixedStack<T> {
 // needs to be const so stack size known at compile time
 // Fixed size value stack - less overhead than Vec
 
-const STACK_SIZE:usize=2000;
+pub const STACK_SIZE:usize=2000;
 pub struct FixedStack<T:Copy> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot
