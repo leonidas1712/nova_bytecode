@@ -1,3 +1,4 @@
+use nova::data::ops::Value;
 // source -> scanner -> tokens -> compile -> bytecode -> vm.interpret(bytecode) -> result 
 use nova::nova_repl;
 use nova::vm::VM;
@@ -9,8 +10,10 @@ use std::process::ExitCode;
 use std::vec;
 
 fn run_main()->Result<()> {
-    let r=vec!["hi","hello"];
-    r.iter().rev().enumerate().for_each(|x| println!("{} {}", x.0, x.1));
+    let mut r=vec![Value::Number(1), Value::Number(2)];
+    r[0]=Value::Number(3);
+    dbg!(r[0]);
+
     let cmd_args:Vec<String>=args().collect();
     let argc=cmd_args.len();
 

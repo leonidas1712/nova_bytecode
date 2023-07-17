@@ -129,6 +129,15 @@ impl <T> VecStack<T> {
         self.stack.clear()
     }
 
+    pub fn get(&self, idx:usize)->Option<&T>{
+        self.stack.get(idx)
+    }
+
+    pub fn set(&mut self, idx:usize, item:T) {
+        // self.stack.set
+        self.stack[1]=item;
+    }
+
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }

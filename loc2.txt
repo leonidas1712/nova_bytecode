@@ -2,5 +2,5 @@ let z=30;
 {
     let x=z+1;
     let y=40;
-    print(x);
+    print(x); // prints last value on stack
 }
