@@ -178,7 +178,7 @@ impl<'src> Parser<'src> {
         }
 
         let prefix_fn=prefix.unwrap();
-
+        
         let can_assign=prec.get_precedence_val() <= PrecAssign.get_precedence_val();
 
         self.call_parse_fn(chunk, prefix_fn, can_assign)?;
@@ -320,22 +320,23 @@ impl<'src> Parser<'src> {
         }
     }  
 
-    /// Consume identifier, equals and emit OP_SET_GLOBAL
+    /// Consume identifier, equals and return ident + line --emit OP_SET_GLOBAL--
+    /// parseVariable
     fn parse_variable_assignment(&mut self, chunk: &mut Chunk)->Result<()> {
         let ident=self.consume(TokenIdent)?;
 
         self.consume(TokenEqual)?;
         self.expression(chunk)?;
 
-        // hash the contents not the ptr
-        // let mut ident_hash=ident.hash_content();
-
         chunk.write_op(OpSetGlobal(ident.content.to_string()), ident.line);
 
         Ok(())
     }
 
-    /// Parse get for an identifier - prefix func for TokenIdent
+    /// Parse identifier - prefix func for TokenIdent
+    /// Either get the variable or set it
+    /// can_assign when previous precedence is not too high e.g !false=2; => err but x=2; ok
+    /// namedVariable
     fn parse_ident(&mut self, chunk: &mut Chunk, can_assign:bool)->Result<()> {
         // get identifier
         let ident=self.expect_prev()?;
@@ -367,9 +368,9 @@ impl<'src> Parser<'src> {
     /// Grammar functions
     
     // let x=2;
+    // varDeclaration
     fn let_declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
-        self.parse_variable_assignment(chunk)?;
-        self.consume(TokenSemiColon)?;
+        self.parse_precedence(chunk, PrecAssign)?;
         Ok(())
     }
 
