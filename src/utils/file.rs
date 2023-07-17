@@ -23,9 +23,9 @@ fn read_file(filename: &str) -> Result<String> {
     }
 }
 
-pub fn run_file(filename:&str, vm:&mut VM)->Result<()> {
+use crate::data::ops::Value;
+pub fn run_file(filename:&str, vm:&mut VM)->Result<Value> {
     let source=read_file(filename)?;
     // dont reset vm
-    vm.interpret_with_reset(&source, false)?;
-    Ok(())
+   vm.interpret_with_reset(&source, false)
 }

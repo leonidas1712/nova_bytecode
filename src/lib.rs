@@ -9,6 +9,7 @@ pub mod compiler;
 pub mod scanner;
 pub mod parser;
 
+use utils::file::run_file;
 use vm::VM;
 use rustyline::{DefaultEditor, error::ReadlineError};
 
@@ -24,14 +25,39 @@ pub fn init_logger() {
         .init();
 }
 
-pub fn process_cmd(cmd:&str, vm:&VM) {
-    match cmd {
+pub fn process_cmd(cmd:&str, vm:&mut VM) {
+    let cmd=cmd.to_string();
+    let mut cmd=cmd.split(" ");
+
+    let cmd_name=cmd.next();
+
+    if cmd_name.is_none() {
+        println!("Empty command");
+    }
+
+    let cmd_name=cmd_name.unwrap();
+
+    match cmd_name {
         "vm" => {
             println!("Process vm");
             println!("{:?}", vm);
         },
+        "import" => {
+            let arg=cmd.next();
+            if arg.is_none() {
+                println!("No file specified.");
+                return;
+            }
+            let arg=arg.unwrap();
+
+            let res=run_file(arg, vm);
+            if res.is_err() {
+                let res=res.unwrap_err().to_string();
+                println!("Error from file '{}': {}", arg, res);
+            }
+        },
         _ => {
-            println!("Unknown command: {}", cmd)
+            println!("Unknown command: {}", cmd_name)
         }
     }
 }
@@ -67,7 +93,7 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 
                 if inp.starts_with(CMD_PREFIX) {
                     let cmd= &inp[CMD_PREFIX.len()..];
-                    process_cmd(cmd, &vm);
+                    process_cmd(cmd, &mut vm);
                     continue;
                 }
 
