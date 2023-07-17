@@ -14,6 +14,8 @@ const VAL_STACK_MAX:usize=2000;
 // get: use hash of string name to get value
 // set: set hash -> value
 // get name using hash:?
+
+#[derive(Debug)]
 pub struct VM {
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
@@ -154,8 +156,9 @@ impl VM {
                         None => {
 
                             // use string interning in chunk to store hash->string for strings
+                            let line=chunk.get_line_of_op(self.ip).expect("Invalid index for op line");
                             let msg=format!("Variable is not defined.");
-                            self.err(1, &msg)?;
+                            self.err(line, &msg)?;
                         }
                     }
     

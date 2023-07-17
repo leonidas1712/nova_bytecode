@@ -56,6 +56,7 @@ pub type IntType=isize;
 // Observation: Rc may only be needed for Function (?)
     // Function is referred to in callframe as well but other values may only be on val stack?
 
+// store Ident(String,line) so we can retrieve for err
 #[derive(Hash, PartialEq, Eq)]
 pub enum Value {
     Number(IntType),

@@ -24,6 +24,19 @@ pub fn init_logger() {
         .init();
 }
 
+pub fn process_cmd(cmd:&str, vm:&VM) {
+    match cmd {
+        "vm" => {
+            println!("Process vm");
+            println!("{:?}", vm);
+        },
+        _ => {
+            println!("Unknown command: {}", cmd)
+        }
+    }
+}
+
+
 pub fn nova_repl(mut vm:VM)->Result<()> {
     let mut rl = DefaultEditor::new().unwrap();
 
@@ -53,7 +66,8 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
                 rl.add_history_entry(inp.clone().trim()).unwrap();
 
                 if inp.starts_with(CMD_PREFIX) {
-                    println!("Command: {}", &inp[CMD_PREFIX.len()..]);
+                    let cmd= &inp[CMD_PREFIX.len()..];
+                    process_cmd(cmd, &vm);
                     continue;
                 }
 
