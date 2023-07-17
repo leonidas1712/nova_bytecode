@@ -20,7 +20,8 @@ pub enum Inst {
     OpGetLocal(usize),
     OpSetLocal(usize), // idx into value stack
     OpLoadString(u64),
-    OpIfJump,
+    OpIfFalseJump(usize), // jump to idx if cond is false
+    OpJump(usize), // unconditional jump when branch is taken
     OpPrint,
     OpNegate,
     OpAdd,
@@ -102,6 +103,7 @@ impl Value {
     pub fn expect_bool(&self)->Result<bool> {
         match self {
             Self::Bool(b) => Ok(*b),
+            Self::Number(n) => Ok(!n.eq(&0)),
             Self::ObjString(_) => err_other!("Expected bool but got a string"),
             _ => err_other!("Expected bool but got: {}", self.to_string())
         }
@@ -210,9 +212,15 @@ impl Chunk {
         self.ops.get(idx)
     }
 
-    pub fn write_op(&mut self, op:Inst, line:usize) {
+    pub fn get_op_mut(&mut self, idx:usize)->Option<&mut Inst> {
+        self.ops.get_mut(idx)
+    }
+
+    /// return index where op was written
+    pub fn write_op(&mut self, op:Inst, line:usize)->usize {
         self.ops.push(op);
         self.op_lines.add_line(line);
+        self.ops.len()-1
     }
 
     pub fn get_constant(&self, idx:usize)->Option<Value> {

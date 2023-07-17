@@ -99,21 +99,28 @@ fn err_out(name:&str) -> String {
     err
 }
 
-fn output_has(name:&str, pat:&str)->bool{
+fn output_has(name:&str, pat:&str) {
     let res=output_from_file(name);
     dbg!(res);
-    output_from_file(name).contains(pat)
+    let res=output_from_file(name).contains(pat);
+    assert!(res);
 }
 
 use std::process::Command;
 #[test]
 fn test_file() {
     // let r=output_from_file("test1.txt").contains("hello");
-    assert!(output_has("scope.txt", "\n30\n10\n20\n30\n10\n"));
-    assert!(output_has("locals", "70\n110\n40\n170\n180\n"));
-    assert!(output_has("locals2", "177"));
+    output_has("scope.txt", "\n30\n10\n20\n30\n10\n");
+    output_has("locals", "70\n110\n40\n170\n180\n");
+    output_has("locals2", "177");
     
     let t="652\n20\n200\n";
     assert!(err_out("src3").contains("'m' is not defined."));
-    assert!(output_has("src3", t));
+    output_has("src3", t);
+}
+
+#[test]
+fn test_if() {
+    output_has("if.txt", "2\n2\n3\n4\n5\n6\n\"endq\"\n");
+    output_has("if2.txt", "20\n\"x\"\n2\n70\n80\n60\n50\n\"z\"\n10\n50\n");
 }

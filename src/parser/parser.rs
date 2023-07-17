@@ -69,11 +69,15 @@ impl<'src> Parser<'src> {
         // PrecUnary higher than binary => -1+2 means - will bind 1 and prevent + from consuming
         self.parse_precedence(chunk, PrecUnary)?; 
 
-        match prev.token_type {
-            TokenMinus => chunk.write_op(Inst::OpNegate, prev.line),
-            TokenNot => chunk.write_op(Inst::OpNot, prev.line),
-            _ => ()
-        }
+
+        let op = match prev.token_type {
+            TokenMinus => OpNegate,
+            TokenNot => OpNot,
+            _ => unreachable!()
+        };
+
+        chunk.write_op(op, prev.line);
+
         Ok(())
     }
 
@@ -107,28 +111,83 @@ impl<'src> Parser<'src> {
     }
 
     // should return result from branch selected
+
+    // use parse_precedence if expression
     fn if_expression(&mut self, chunk:&mut Chunk)->Result<()> {
-        debug!("if");
+        self.consume(TokenLeftParen)?;
         self.expression(chunk)?; // conditional
-        // debug!("istmt after if cons: {}", self.is_stmt);
-
-        // save current ip
-        
+        self.consume(TokenRightParen)?;
+ 
+        // write jump (incomplete)
         self.is_stmt=true;
-        chunk.write_op(Inst::OpIfJump, self.line);
+        let if_false_idx=chunk.write_op(Inst::OpIfFalseJump(0), self.line);
 
-        self.expression(chunk)?; // if true
 
-        debug!("chunk if : {}", chunk);
+        self.declaration(chunk, true)?; // to execute if true
+
+        let next_ip=chunk.get_ip().unwrap(); 
+
+        // update opjump
+        // let if_false_jmp=chunk.get_op_mut(if_false_idx).unwrap();
+        // match if_false_jmp {
+        //     OpIfFalseJump(k) => {
+        //         *k=next_ip;
+        //     },
+        //     _ => unreachable!()
+        // }
+
+        // emit op_jump here so that if branch skips the else
+        let jmp_idx=chunk.write_op(OpJump(0), self.line);
+
+
+        self.is_stmt=true;
+        // handle else
+        if self.match_token(TokenElse) {
+            self.declaration(chunk, true)?;
+        }
+
+        debug!("Ip after else: {}", chunk.get_ip().unwrap());
+
+        let jmp_after_if=chunk.get_ip().unwrap();
+        let jmp=chunk.get_op_mut(jmp_idx).unwrap();
+        match jmp {
+            OpJump(k) => {
+                *k=jmp_after_if;
+            },
+            _ => unreachable!()
+        }
+
+        // update iffalsejump to be after opjump
+        let if_false_jmp=chunk.get_op_mut(if_false_idx).unwrap();
+        match if_false_jmp {
+            OpIfFalseJump(k) => {
+                *k=jmp_idx;
+            },
+            _ => unreachable!()
+        }
+
+        debug!("HERE");
+
+        
+        // if match(semicolon) -> is_stmt true
+        // else: is_stmt false
+
+        // if self.match_token(TokenSemiColon) {
+        //     self.is_stmt=true;
+        //     self.declaration(chunk)?; // after if body
+        // } else {
+        //     self.is_stmt=true;
+        //     self.expression(chunk)?; // after if body
+
+        self.is_stmt=true;
+        // self.declaration(chunk, true)?;
 
         Ok(())
     }
 
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
-        // assign is the lowest valid precedence: other ops can bind as much as possible
-        debug!("Expr, chunk:{}", chunk);
-        debug!("Is Statement: {}", self.is_stmt);
+        // assign is the lowest valid precedence: other ops can bind as much as possibl
 
         // Block expression
         if self.match_token(TokenLeftBrace) {
@@ -136,10 +195,7 @@ impl<'src> Parser<'src> {
             self.block_expression(chunk)?;
             self.end_scope(chunk)?;
             return Ok(())
-        } else if self.match_token(TokenIf) {
-            self.if_expression(chunk)?;
-            return Ok(())
-        }
+        } 
 
         if !self.is_stmt {
             return self.report_err("Expressions not allowed immediately after another expression.")
@@ -157,6 +213,7 @@ impl<'src> Parser<'src> {
 
     fn grouping(&mut self, chunk:&mut Chunk)->Result<()> {
         self.expression(chunk)?;
+        // self.declaration(chunk)?;
         self.consume(TokenRightParen)?;
         Ok(())
     }
@@ -330,6 +387,13 @@ impl<'src> Parser<'src> {
     /// ty is the expected token to match curr_tok
     fn consume(&mut self, ty:TokenType)->Result<Token<'src>>{
         let type_string=ty.get_repr();
+
+        // if self.prev_tok.map(|x| x.token_type.eq(&ty)).unwrap_or(false) && self.curr_tok.is_none() {
+        //     // return Ok(self.prev_tok.unwrap());
+        //     let res=self.prev_tok.take().unwrap();
+        //     return Ok(res);
+        // }
+
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
@@ -384,7 +448,6 @@ impl<'src> Parser<'src> {
         let mut get_op:Inst;
 
         let try_local=self.compiler.resolve_local(ident);
-        debug!("TRY LOC FOR {:?}: {:?}", ident, try_local);
 
         if let Some(idx) = try_local {
             get_op=OpGetLocal(idx);
@@ -404,10 +467,6 @@ impl<'src> Parser<'src> {
 
             // declareVariable() here - if global do nothing. else, add local with ident
             let local_added=self.compiler.add_local(ident);
-
-            debug!("var_name:{}, compiler aft: {:?}", ident.content, self.compiler);
-            debug!("CHUNK:{}", chunk);
-
 
             // local_added: idx where loc was added      
             let mut set_op:Inst;
@@ -438,20 +497,17 @@ impl<'src> Parser<'src> {
 
     // New scope for Compiler
     fn begin_scope(&mut self, chunk: &mut Chunk)->Result<()> {
-        debug!("Began scope");
         self.compiler.begin_scope();
         Ok(())
     }
 
     // Block
-    fn block_expression(&mut self, chunk: &mut Chunk)->Result<()> {
-        debug!("blk");
-        
+    fn block_expression(&mut self, chunk: &mut Chunk)->Result<()> {        
         loop {
             match self.check(TokenRightBrace) {
                 // not right brace: keep going
                 Some(b) if !b => {
-                    self.declaration(chunk)?;
+                    self.declaration(chunk, false)?;
                 },
                 _ => {
                     break;
@@ -466,11 +522,6 @@ impl<'src> Parser<'src> {
     // End compiler scope
     fn end_scope(&mut self, chunk: &mut Chunk)->Result<()> {
         let count=self.compiler.end_scope();
-        debug!("End scope after: {:?}", self.compiler);
-
-        debug!("Popped: {count}");
-
-        debug!("Parser:{:?}", self);
 
         let is_expr=!self.is_stmt;
     
@@ -479,7 +530,12 @@ impl<'src> Parser<'src> {
     }
 
     /// does (expression | statement)
-    fn declaration(&mut self, chunk: &mut Chunk)->Result<()>  {
+    fn declaration(&mut self, chunk: &mut Chunk, can_end:bool)->Result<()>  {
+        if let None = self.scanner.peek() {
+            if can_end {
+                return Ok(())
+            }
+        }
         // Put statement types here - switch on statement
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
@@ -488,6 +544,9 @@ impl<'src> Parser<'src> {
             self.expression(chunk)?;
             chunk.write_op(OpPrint, self.line);
             self.consume(TokenSemiColon)?;
+        } else if self.match_token(TokenIf) {
+            self.if_expression(chunk)?;
+            return Ok(())
         } else {
             self.expression(chunk)?;
         }
@@ -504,7 +563,7 @@ impl<'src> Parser<'src> {
         self.advance()?;
 
         while let Some(_) = self.curr_tok {
-            self.declaration(chunk)?;
+            self.declaration(chunk, false)?;
         }
 
         debug!("After finishing: is_stmt {}", self.is_stmt);
@@ -655,7 +714,9 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("if 2 3 4");
+    let mut p=Parser::new("let x = if (true) {
+        3
+    };");
     let mut chunk=Chunk::new();
 
     let res=p.compile(&mut chunk);

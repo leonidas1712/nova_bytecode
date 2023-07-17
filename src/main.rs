@@ -33,11 +33,12 @@ fn run_main()->Result<()> {
         run_file(&file_name, &mut vm)?;
 
         if let Some(tok) = no_shell {
-            if !tok.eq("-o") {
-                nova_repl(vm)?;
+            if tok.eq("-o") {
+                return Ok(())
             }
         }
 
+        nova_repl(vm)?;
         Ok(())
     } else {
         err_other!("Usage: nova [path]")

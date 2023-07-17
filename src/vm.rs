@@ -121,6 +121,7 @@ impl VM {
         loop {
             // let curr=self.get_curr_inst(&chunk);
             let curr=chunk.get_op(self.ip);
+            debug!("CURR_OP:{:?}", curr);
             if curr.is_none() {
                 break Ok(Value::Unit) // exit code 1
             }  
@@ -275,8 +276,21 @@ impl VM {
                         println!("{}", self.print_value(*value));
                     }
                 },
-                OpIfJump => {
-                    
+                // idx to jump to if cond is false
+                OpIfFalseJump(idx) => {
+                    let cond=self.value_stack.pop()?;
+                    let cond=cond.expect_bool()?;
+
+                    if !cond {
+                        debug!("new ip:{}", *idx);
+                        self.ip=*idx;
+                        debug!("new ip set:{}", self.ip);
+                    }
+
+                },
+                // jump past else
+                OpJump(idx) => {
+                    self.ip=*idx;
                 },
                 OpTrue => self.value_stack.push(Value::Bool(true))?,
                 OpFalse => self.value_stack.push(Value::Bool(false))?,

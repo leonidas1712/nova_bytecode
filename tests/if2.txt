@@ -1,0 +1,36 @@
+if (true) {
+    let x=2;
+
+    if (false) {
+        print(10);
+    } else {
+        print(20);
+        print("x");
+        print(x);
+
+        if (true) {
+            print(70);
+            print(80);
+            let z=10;
+
+            if (false) {
+                
+            } else {
+                print(60);
+
+                print(50);
+                print("z");
+                print(z);
+            }
+        } else {
+            print(20);
+        }
+    }
+
+} else {
+    print(3);
+    print(6);
+}
+
+print(50);
+
