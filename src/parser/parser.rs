@@ -107,12 +107,12 @@ impl<'src> Parser<'src> {
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
-        debug!("xpr");
-        debug!("{}", self.is_stmt);
+        debug!("Expr, chunk:{}", chunk);
+        debug!("Is Statement: {}", self.is_stmt);
 
-        // if !self.is_stmt {
-        //     return err
-        // }
+        if !self.is_stmt {
+            return self.report_err("Subsequent expressions not allowed.")
+        }
 
         self.parse_precedence(chunk, PrecAssign)?;
 
@@ -423,6 +423,7 @@ impl<'src> Parser<'src> {
         // Put statement types here - switch on statement
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
+
         } else if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;
             self.block(chunk)?;
@@ -491,7 +492,13 @@ impl<'src> Parser<'src> {
 
     /// Report error without a reference token. Always returns err variant
     fn report_err<K>(&self, msg:K)->Result<()> where K:ToString {
-        self.report_msg(Token::err(self.line), msg)
+        debug!("{:?}", self);
+        if let Some(tok) = self.curr_tok {
+            self.report_msg(tok, msg)
+
+        } else {
+            self.report_msg(Token::err(self.line), msg)
+        }
     }
 
 
