@@ -48,9 +48,12 @@ pub fn process_cmd(cmd:&str, vm:&mut VM) {
                 println!("No file specified.");
                 return;
             }
-            let arg=arg.unwrap();
+            let mut arg=arg.unwrap().to_string();
+            if !arg.ends_with(".txt") {
+                arg.push_str(".txt");
+            }
 
-            let res=run_file(arg, vm);
+            let res=run_file(&arg, vm);
             if res.is_err() {
                 let res=res.unwrap_err().to_string();
                 println!("Error when importing file '{}': {}", arg, res);

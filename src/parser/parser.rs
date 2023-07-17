@@ -9,6 +9,8 @@ use Inst::*;
 use super::rules::*;
 use super::rules::ParseRule;
 
+use log::debug;
+
 // add stacks to track () and string ""
 // open token, close token for each pair
 // creates a new stack for each pair and tracks => hashmap
@@ -76,7 +78,7 @@ impl<'src> Parser<'src> {
 
     // binary called based on rules table
     pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
-        // log::debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
+        // debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
         // let rule=self.expect_rule(prev)?;
         let rule=ParseRule::get_rule(prev.token_type);
@@ -105,8 +107,8 @@ impl<'src> Parser<'src> {
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
-        log::debug!("xpr");
-        log::debug!("{}", self.is_stmt);
+        debug!("xpr");
+        debug!("{}", self.is_stmt);
 
         // if !self.is_stmt {
         //     return err
@@ -332,7 +334,7 @@ impl<'src> Parser<'src> {
         // use hash to get value instead of full string (less work at runtime)
         let ident_content=ident.content.to_string();
 
-        // log::debug!("match equals:{}", self.match_token(TokenEqual));
+        // debug!("match equals:{}", self.match_token(TokenEqual));
 
         // Set var here
         if self.match_token(TokenEqual) {
@@ -347,7 +349,7 @@ impl<'src> Parser<'src> {
             // declareVariable() here - if global do nothing. else, add local with ident
             self.compiler.add_local(ident)?;
 
-            log::debug!("Var name:{}, compiler aft: {:?}", ident.content, self.compiler);
+            debug!("Var name:{}, compiler aft: {:?}", ident.content, self.compiler);
 
             // dont emit set if local
             // defineVariable - 
@@ -378,14 +380,14 @@ impl<'src> Parser<'src> {
 
     // New scope for Compiler
     fn begin_scope(&mut self, chunk: &mut Chunk)->Result<()> {
-        log::debug!("Began scope");
+        debug!("Began scope");
         self.compiler.begin_scope();
         Ok(())
     }
 
     // Block
     fn block(&mut self, chunk: &mut Chunk)->Result<()> {
-        log::debug!("blk");
+        debug!("blk");
         
         loop {
             match self.check(TokenRightBrace) {
@@ -405,8 +407,8 @@ impl<'src> Parser<'src> {
 
     // End compiler scope
     fn end_scope(&mut self, chunk: &mut Chunk)->Result<()> {
-        log::debug!("End scope");
         self.compiler.end_scope();
+        debug!("End scope after: {:?}", self.compiler);
         Ok(())
     }
 
@@ -436,7 +438,7 @@ impl<'src> Parser<'src> {
             let res=self.declaration(chunk)?;
         }
 
-        log::debug!("After finishing: is_stmt {}", self.is_stmt);
+        debug!("After finishing: is_stmt {}", self.is_stmt);
 
         // return value for expr
         if !self.is_stmt {

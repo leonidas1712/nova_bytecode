@@ -29,12 +29,12 @@ impl<'src> Compiler<'src> {
     }
 
     pub fn end_scope(&mut self) {
-        self.curr_depth-=1;
-
         if !self.is_local() {
             return;
         }
         
+        self.curr_depth-=1;
+
         let curr=self.curr_depth;
         // pop vars from curr scope
         loop {
