@@ -4,10 +4,16 @@ use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
+use crate::utils::misc::calc_hash;
 
 const VAL_STACK_MAX:usize=2000;
 
 // may not need to store chunk
+
+// variables: stores hash of string name -> Value
+// get: use hash of string name to get value
+// set: set hash -> value
+// get name using hash:?
 pub struct VM {
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
@@ -34,6 +40,12 @@ impl VM {
 
     fn add_global(&mut self, hash:u64, value:Value) {
         self.globals.insert(hash, value);
+    }
+
+    /// Get global value given string name
+    pub fn get_global_value<K>(&self, name:K)->Option<&Value> where K:ToString{
+        let hash=calc_hash(name.to_string());
+        self.globals.get(&hash)
     }
 
     /// Always returns err variant
@@ -123,10 +135,7 @@ impl VM {
                 OpDiv => bin_op!(/),   
                 OpSetGlobal(hash) => {
                     log::debug!("OpSet");
-                    log::debug!("{:?}", self.value_stack);
-                    
-                    // let name=chunk.get_constant(*idx).expect("Invalid index for OpSetGlobal");
-                    // let name=name.expect_string()?;
+                    log::debug!("{:?}", self.value_stack);        
 
                     let value=self.value_stack.pop()?;
                     self.add_global(*hash, value);
@@ -136,9 +145,6 @@ impl VM {
                 // idx of identifier in constants
                 OpGetGlobal(hash) => {
                     log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, hash);
-                    // let name=chunk.get_constant(*idx).expect("Invalid index for OpGetGlobal");
-                    // let name=name.expect_string()?;
-
                     let value=self.globals.get(hash); // could add line num to value
 
                     match value {
@@ -146,7 +152,6 @@ impl VM {
                             self.value_stack.push(val.to_owned())?;
                         },
                         None => {
-                            // let line=chunk.get_line_of_constant(*idx).expect("Invalid index for get line");
 
                             // use string interning in chunk to store hash->string for strings
                             let msg=format!("Variable is not defined.");
@@ -162,7 +167,7 @@ impl VM {
         }
     }
 
-    // false: don't reset for run
+    /// false: don't reset for run
     pub fn interpret_with_reset(&mut self, source:&str, reset:bool)->Result<Value>{
         let mut chunk=Chunk::new();
         let mut parser=Parser::new(source);

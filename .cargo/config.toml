@@ -1,2 +1,3 @@
 [alias]
 int="test --test integration"
+nova="run --release"

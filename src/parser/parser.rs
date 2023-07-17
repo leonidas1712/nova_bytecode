@@ -105,6 +105,12 @@ impl<'src> Parser<'src> {
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possible
         self.parse_precedence(chunk, PrecAssign)?;
+
+        // is_stmt if prev tok is semicolon - for "x=5;"
+        self.is_stmt=self.expect_prev()
+            .ok()
+            .map(|tok| tok.token_type.eq(&TokenSemiColon))
+            .unwrap_or(false);
         Ok(())
     }
 
@@ -327,7 +333,6 @@ impl<'src> Parser<'src> {
 
         // write op here
         if self.match_token(TokenEqual) {
-            println!("here");
             if !can_assign {
                 let msg=format!("Can't assign to {}", ident.content);
                 self.report_msg(ident, msg)?;

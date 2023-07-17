@@ -85,16 +85,20 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 // Test helperss
 use crate::data::ops::Chunk;
 use crate::parser::parser::Parser;
-pub fn test_input(inp:&str, exp:&str) {
+
+/// Output from running inp
+pub fn get_output(inp:&str)->String {
     let mut vm=VM::new();
     let res=vm.interpret(inp);
 
-    let string=match res {
+    match res {
         Ok(val) => val.to_string(),
         Err(err) => err.to_string()
-    };
+    }
+}
 
-    assert_eq!(string, exp);
+pub fn test_input(inp:&str, exp:&str) {
+    assert_eq!(get_output(inp), exp);
 }
 
 pub fn test_input_many(v:&Vec<(&str, &str)>) {
