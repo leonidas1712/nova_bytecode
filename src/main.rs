@@ -1,4 +1,5 @@
 use nova::data::ops::Value;
+use nova::data::stack::STACK_SIZE;
 // source -> scanner -> tokens -> compile -> bytecode -> vm.interpret(bytecode) -> result 
 use nova::nova_repl;
 use nova::vm::VM;
@@ -6,13 +7,19 @@ use nova::utils::err::*;
 use nova::utils::file::run_file;
 
 use std::env::args;
+use std::ops::Index;
 use std::process::ExitCode;
 use std::vec;
 
+fn get_idx()->usize {
+    200
+}
+
 fn run_main()->Result<()> {
-    let mut r=vec![Value::Number(1), Value::Number(2)];
-    r[0]=Value::Number(3);
-    dbg!(r[0]);
+    let mut stack:[Option<u32>; 10]=[None;10];
+    // stack[x]=Some(100);
+    // dbg!(stack[4]);
+
 
     let cmd_args:Vec<String>=args().collect();
     let argc=cmd_args.len();

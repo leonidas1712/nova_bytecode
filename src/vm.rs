@@ -35,7 +35,7 @@ const VAL_STACK_MAX:usize=2000;
 #[derive(Debug)]
 pub struct VM {
     ip:usize, // index of next op to execute,
-    value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
+    value_stack:FixedStack<Value>, // this should have same layout as Compiler.locals,
     globals:HashMap<u64,Value>, // store u64 hash -> value instead
     // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
@@ -48,7 +48,7 @@ impl VM {
     pub fn new()->VM {
         VM {
             ip:0,
-            value_stack:VecStack::new(VAL_STACK_MAX),
+            value_stack:FixedStack::new(),
             globals:HashMap::new(),
             strings:StringIntern::new()
         }

@@ -1,6 +1,6 @@
 
 use crate::utils::err::*;
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 use std::vec;
 
 pub trait Stack<T> {
@@ -15,7 +15,7 @@ pub trait Stack<T> {
     fn is_empty(&self) -> bool;
 }
 
-impl<T:Display + Copy> Display for FixedStack<T> {
+impl<T:Display + Copy + Debug> Display for FixedStack<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut items:Vec<String>=vec![];
 
@@ -35,12 +35,14 @@ impl<T:Display + Copy> Display for FixedStack<T> {
 // Fixed size value stack - less overhead than Vec
 
 pub const STACK_SIZE:usize=2000;
-pub struct FixedStack<T:Copy> {
+
+#[derive(Debug)]
+pub struct FixedStack<T:Copy + Debug> {
     stack:[Option<T>; STACK_SIZE],
     stack_top:usize // the next place to slot
 }
 
-impl<T:Copy> FixedStack <T> {
+impl<T:Copy + Debug> FixedStack <T> {
     pub fn new()-> FixedStack<T> {
         let stack:[Option<T>;STACK_SIZE]=[None;STACK_SIZE];
         FixedStack {
@@ -48,9 +50,23 @@ impl<T:Copy> FixedStack <T> {
             stack_top:0
         }
     }
+
+    /// None if value at the index is none or idx is out of bounds
+    fn get(&self, idx:usize)->Option<T> {
+        if idx < STACK_SIZE {
+            self.stack[idx]
+        } else {
+            None
+        }
+    }
+
+    /// Panics if idx is invalid
+    fn set(&mut self, idx:usize, item:T) {
+        self.stack[idx]=Some(item);
+    }
 }
 
-impl<T:Copy> Stack<T> for FixedStack <T> {
+impl<T:Copy + Debug> Stack<T> for FixedStack <T> {
     fn push(&mut self,val: T)->Result<()>{
         if self.stack_top > STACK_SIZE {
             return errn!("Maximum stack size {} exceeded: stack overflow", STACK_SIZE);
