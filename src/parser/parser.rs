@@ -1,6 +1,5 @@
-
-
-use std::vec;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hash;
 
 use crate::scanner::delim::{Delimiter, DelimiterScanner};
 use crate::scanner::{tokens::*, Scanner};
@@ -305,10 +304,12 @@ impl<'src> Parser<'src> {
         let ident=self.consume(TokenIdent)?;
 
         self.consume(TokenEqual)?;
-        let idx=self.add_string(chunk, ident);
         self.expression(chunk)?;
 
-        chunk.write_op(OpSetGlobal(idx), ident.line);
+        // hash the contents not the ptr
+        let mut ident_hash=ident.hash_content();
+
+        chunk.write_op(OpSetGlobal(ident_hash), ident.line);
 
         Ok(())
     }
@@ -319,9 +320,8 @@ impl<'src> Parser<'src> {
         let ident=self.expect_prev()?;
         self.expect_token_type(ident, TokenIdent, "identifier")?;
 
-        // add identifier as constant to pool
-        let idx=self.add_string(chunk, ident);
-
+        // use hash to get value instead of full string (less work at runtime)
+        let ident_hash=ident.hash_content();
 
         // log::debug!("match equals:{}", self.match_token(TokenEqual));
 
@@ -334,10 +334,11 @@ impl<'src> Parser<'src> {
             }
 
             self.expression(chunk)?;
-            chunk.write_op(OpSetGlobal(idx), ident.line);
+            chunk.write_op(OpSetGlobal(ident_hash), ident.line);
             self.consume(TokenSemiColon)?;
+
         } else {    
-            chunk.write_op(OpGetGlobal(idx), ident.line);
+            chunk.write_op(OpGetGlobal(ident_hash), ident.line);
 
         }
         Ok(())

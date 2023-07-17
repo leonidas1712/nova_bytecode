@@ -1,7 +1,9 @@
 use std::fmt::Display;
 use std::str::Chars;
 use std::iter::Peekable;
+
 use crate::utils::constants::*;
+use crate::utils::misc::calc_hash;
 
 #[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
 pub enum TokenType {
@@ -140,6 +142,11 @@ impl<'src>  Token<'src> {
 
     pub fn debug_print(&self)->String {
         format!("{}:line {}", self.to_string(), self.line)
+    }
+
+    /// Hash of the contents of the token (string)
+    pub fn hash_content(&self)->u64 {
+        calc_hash(self.content.to_string())
     }
 }
 

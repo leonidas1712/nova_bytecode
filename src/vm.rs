@@ -11,8 +11,8 @@ const VAL_STACK_MAX:usize=2000;
 pub struct VM {
     ip:usize, // index of next op to execute,
     value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
-    globals:HashMap<String,Value>
-    // call_stack: VecStack<CallFrame<'function>>
+    globals:HashMap<u64,Value> // store u64 hash -> value instead
+    // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
 }
 
@@ -32,8 +32,8 @@ impl VM {
         self.value_stack.clear();
     }
 
-    fn add_global(&mut self, name:String, value:Value) {
-        self.globals.insert(name, value);
+    fn add_global(&mut self, hash:u64, value:Value) {
+        self.globals.insert(hash, value);
     }
 
     /// Always returns err variant
@@ -121,33 +121,36 @@ impl VM {
                 OpSub => bin_op!(-),   
                 OpMul => bin_op!(*),
                 OpDiv => bin_op!(/),   
-                OpSetGlobal(idx) => {
+                OpSetGlobal(hash) => {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);
                     
+                    // let name=chunk.get_constant(*idx).expect("Invalid index for OpSetGlobal");
+                    // let name=name.expect_string()?;
+
                     let value=self.value_stack.pop()?;
-                    let name=chunk.get_constant(*idx).expect("Invalid index for OpSetGlobal");
-                    let name=name.expect_string()?;
-                    self.add_global(name.clone(), value);
+                    self.add_global(*hash, value);
 
                     log::debug!("Set:{:?}",self.globals);
                 },
                 // idx of identifier in constants
-                OpGetGlobal(idx) => {
-                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, idx);
-                    let name=chunk.get_constant(*idx).expect("Invalid index for OpGetGlobal");
-                    let name=name.expect_string()?;
+                OpGetGlobal(hash) => {
+                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, hash);
+                    // let name=chunk.get_constant(*idx).expect("Invalid index for OpGetGlobal");
+                    // let name=name.expect_string()?;
 
-                    let value=self.globals.get(name); // could add line num to value
+                    let value=self.globals.get(hash); // could add line num to value
 
                     match value {
                         Some(val) => {
                             self.value_stack.push(val.to_owned())?;
                         },
                         None => {
-                            let line=chunk.get_line_of_constant(*idx).expect("Invalid index for get line");
-                            let msg=format!("Variable '{}' is not defined.", name);
-                            self.err(line, &msg)?;
+                            // let line=chunk.get_line_of_constant(*idx).expect("Invalid index for get line");
+
+                            // use string interning in chunk to store hash->string for strings
+                            let msg=format!("Variable is not defined.");
+                            self.err(1, &msg)?;
                         }
                     }
     
