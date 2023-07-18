@@ -271,9 +271,14 @@ impl VM {
 
                 },
                 OpPrint =>  {
-                    let pop=self.value_stack.peek();
-                    if let Some(value) = pop {
-                        println!("{}", self.print_value(*value));
+                    // let pop=self.value_stack.peek();
+                    // if let Some(value) = pop {
+                    //     println!("{}", self.print_value(*value));
+                    // }
+
+                    let pop=self.value_stack.pop();
+                    if let Ok(value) = pop {
+                        println!("{}", self.print_value(value));
                     }
                 },
                 // idx to jump to if cond is false

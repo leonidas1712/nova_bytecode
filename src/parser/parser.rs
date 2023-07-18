@@ -441,7 +441,7 @@ impl<'src> Parser<'src> {
                 self.report_msg(ident, msg)?;
             }
 
-            self.expression(chunk)?;
+            self.expression(chunk)?; // assign to expression
             self.consume(TokenSemiColon)?;
 
             // declareVariable() here - if global do nothing. else, add local with ident
