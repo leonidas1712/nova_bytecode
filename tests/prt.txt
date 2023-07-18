@@ -1,0 +1,11 @@
+{
+    let x=2;
+    print(x);
+
+    let z=x+1;
+
+    print(z);
+
+    let k=x+z;
+    print(k);
+}
