@@ -1,0 +1,2 @@
+1. by default parse if as a statement (inside declaration)
+2. but inside expression also allow if as a possibility + add if as prefix

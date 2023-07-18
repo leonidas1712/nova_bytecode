@@ -26,7 +26,7 @@ if (true) {
             print(20);
         }
     }
-
+200
 } else {
     print(3);
     print(6);

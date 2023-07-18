@@ -113,6 +113,7 @@ impl<'src> Parser<'src> {
     // should return result from branch selected
 
     // use parse_precedence if expression
+    
     fn if_expression(&mut self, chunk:&mut Chunk)->Result<()> {
         self.consume(TokenLeftParen)?;
         self.expression(chunk)?; // conditional
@@ -162,7 +163,10 @@ impl<'src> Parser<'src> {
         // self.is_stmt=true;
 
 
-        self.is_stmt=true;
+        // stmt: other statements can follow this
+        // because of this op return is not emitted so the last value remains on the stack
+        self.is_stmt=true; 
+
         // // self.advance();
         // self.expression(chunk)?;
 
@@ -172,7 +176,7 @@ impl<'src> Parser<'src> {
 
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possibl
-
+        debug!("EXPRESSION {:?}", self);
         // Block expression
         if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;

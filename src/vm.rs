@@ -46,6 +46,12 @@ pub struct VM {
 
 impl VM {
     pub fn new()->VM {
+        let y=if true {
+            2
+        } else {
+            3
+        };
+
         VM {
             ip:0,
             value_stack:FixedStack::new(),
@@ -115,6 +121,7 @@ impl VM {
                 }
             };
         }
+        
 
         log::debug!("Chunk at start:{}", chunk);
 
@@ -143,10 +150,10 @@ impl VM {
                 // not is_expr: nothing at the end to return => return Unit
                 OpEndScope(n, is_expr) => {
                     // empty block
-                    if *n==0 && !is_expr {
-                        self.value_stack.push(Value::Unit)?;
-                        // debug!("What");
-                    }
+                    // if *n==0 && !is_expr {
+                    //     self.value_stack.push(Value::Unit)?;
+                    //     // debug!("What");
+                    // }
 
                     let mut ret_expr:Option<Value>=None;
 
