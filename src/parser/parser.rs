@@ -697,11 +697,11 @@ fn test_parse() {
 
 #[test]
 fn test_debug() {
-    let mut p=Parser::new("if (true) {
-        2
-    } else {
-        3
-    } + 5");
+    let mut p=Parser::new("
+        if (true) {
+            print(2);
+        }
+    ");
 
     // let mut p=Parser::new("2+3");
     let mut chunk=Chunk::new();

@@ -1,2 +1,17 @@
 1. by default parse if as a statement (inside declaration)
 2. but inside expression also allow if as a possibility + add if as prefix
+3. when if is a statement: OpPop at the end if the last value was an expression
+4. if (true) { 2 } on its own should be disallowed => returns expr
+    -> set is_stmt=false when return
+
+
+
+if (true) {
+    2
+} else {
+    print(3);
+}
+// should be disallowed because else last is_stmt and if last is expr
+
+how to check whether last value was an expr or stmt
+

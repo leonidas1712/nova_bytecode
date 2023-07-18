@@ -27,7 +27,14 @@ fn prt(stdout:&mut dyn Write, s:&str) {
 pub fn init_logger() {
     env_logger::Builder::from_default_env()
         .filter_module("nova", LevelFilter::Debug)
-        .format_timestamp(None)
+        .format(|buf,rec| {
+            writeln!(buf, "[{} {}] [line {}] {}",
+            rec.level(),
+            rec.file().unwrap_or("unknown file"),
+            rec.line().unwrap_or(0),
+            rec.args()
+            )
+        })
         .init();
 }
 
