@@ -140,6 +140,7 @@ impl<'src> Scanner<'src> {
     // no match: token ident, else use the last match possible
     // e.g '==' => last match is TokenEqEq
     // advance the scanner
+    // this is basically a discrete finite automaton
     fn check_trie(&mut self, char:char)->Token<'src>{
         let mut curr_node=&KEYWORDS_TRIE.root;
 

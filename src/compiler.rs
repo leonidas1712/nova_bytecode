@@ -89,7 +89,7 @@ impl<'src> Compiler<'src> {
 
 #[derive(Debug)]
 pub struct Local<'src> {
-    token:Token<'src>,
+    token:Token<'src>, // identifier e.g "x"
     depth:usize
 }
 
