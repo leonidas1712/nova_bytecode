@@ -1,0 +1,14 @@
+if (false) {
+    let x=2;
+
+    if (true) {
+        300
+    }
+
+    "end if"
+}
+
+else {
+    let y=3;
+    
+}

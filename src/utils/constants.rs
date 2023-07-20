@@ -113,6 +113,8 @@ fn setup_keywords()->Trie<&'static str,TokenType>{
     trie
 }
 
+use std::io;
+
 lazy_static! {
     pub static ref KEYWORDS_TRIE:Trie<&'static str,TokenType> = {
         let trie=setup_keywords();

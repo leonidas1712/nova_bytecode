@@ -23,9 +23,15 @@ fn read_file(filename: &str) -> Result<String> {
     }
 }
 
-pub fn run_file(filename:&str)->Result<VM> {
-    let source=read_file(filename)?;
-    let mut vm=VM::new();
-    vm.interpret_with_reset(&source, false)?;
-    Ok(vm)
+use crate::data::ops::Value;
+pub fn run_file(filename:&str, vm:&mut VM)->Result<Value> {
+    let mut file=filename.to_string();
+
+    if !file.ends_with(".txt") {
+        file.push_str(".txt");
+    }
+
+    let source=read_file(&file)?;
+    // dont reset vm
+   vm.interpret_with_reset(&source, false)
 }

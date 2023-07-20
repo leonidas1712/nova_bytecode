@@ -1,0 +1,24 @@
+let m=10;
+
+{
+    let m = 20;
+    let m = m+10;
+    print(m);
+    
+    {
+        k=10;
+        print(k);
+
+        {
+            z=20;
+            print(z);
+
+            {
+                j=30;
+                print(j);
+            }
+        }
+    }
+}
+
+print(m);

@@ -1,0 +1,17 @@
+if (true) {
+    print(2);
+
+    let y= if (true) {
+        2
+    }; // invalid: no else
+
+    let z= if (true) {
+        2
+    } else {
+        3
+    }; // ok
+
+    if (true) {
+        print(z);
+    } // ok since previous was statement
+}

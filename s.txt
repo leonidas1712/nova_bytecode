@@ -1,0 +1,19 @@
+if (true) {
+    print(30);
+
+    if (true) {
+        print("inner");
+
+        if (true) {
+            print("true");
+        } else {
+            print("else");
+        }
+
+       // 50 disallowed because expect Unit
+    }
+
+    40 // should disallow because its not on the rhs of an assignment or op (it works rn)
+}
+
+

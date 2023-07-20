@@ -1,0 +1,8 @@
+
+// leaves on the stack if the value is not consumed
+
+if (true) {
+    50
+} else {
+    60
+}

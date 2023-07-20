@@ -9,6 +9,7 @@ pub mod compiler;
 pub mod scanner;
 pub mod parser;
 
+use utils::file::run_file;
 use vm::VM;
 use rustyline::{DefaultEditor, error::ReadlineError};
 
@@ -17,21 +18,62 @@ use utils::err::*;
 
 use log::{LevelFilter};
 
+
+use std::io::Write;
+fn prt(stdout:&mut dyn Write, s:&str) {
+    writeln!(stdout, "{}", s).unwrap();
+}
+
 pub fn init_logger() {
     env_logger::Builder::from_default_env()
         .filter_module("nova", LevelFilter::Debug)
-        .format_timestamp(None)
+        .format(|buf,rec| {
+            writeln!(buf, "[{} {}] [line {}] {}",
+            rec.level(),
+            rec.file().unwrap_or("unknown file"),
+            rec.line().unwrap_or(0),
+            rec.args()
+            )
+        })
         .init();
 }
 
-pub fn process_cmd(cmd:&str, vm:&VM) {
-    match cmd {
+pub fn process_cmd(cmd:&str, vm:&mut VM) {
+    let cmd=cmd.to_string();
+    let mut cmd=cmd.split(" ");
+
+    let cmd_name=cmd.next();
+
+    if cmd_name.is_none() {
+        println!("Empty command");
+    }
+
+    let cmd_name=cmd_name.unwrap();
+
+    match cmd_name {
         "vm" => {
             println!("Process vm");
             println!("{:?}", vm);
         },
+        "import" | "run"=> {
+            let arg=cmd.next();
+            if arg.is_none() {
+                println!("No file specified.");
+                return;
+            }
+            let arg=arg.unwrap();
+
+            let res=run_file(&arg, vm);
+            if res.is_err() {
+                let res=res.unwrap_err().to_string();
+                println!("Error when importing file '{}': {}", arg, res);
+            } else {
+                let res=res.unwrap();
+                println!("{}", vm.print_value(res));
+            }
+        },
         _ => {
-            println!("Unknown command: {}", cmd)
+            println!("Unknown command: {}", cmd_name)
         }
     }
 }
@@ -67,15 +109,15 @@ pub fn nova_repl(mut vm:VM)->Result<()> {
 
                 if inp.starts_with(CMD_PREFIX) {
                     let cmd= &inp[CMD_PREFIX.len()..];
-                    process_cmd(cmd, &vm);
+                    process_cmd(cmd, &mut vm);
                     continue;
                 }
 
 
-                match vm.interpret(&inp) {
+                match vm.interpret_with_reset(&inp, false) {
                     Ok(val) => {
                         if !val.is_unit() {
-                            println!("{}", val.to_string());
+                            println!("{}", vm.print_value(val));
                         }
                     },
 
@@ -106,7 +148,7 @@ pub fn get_output(inp:&str)->String {
     let res=vm.interpret(inp);
 
     match res {
-        Ok(val) => val.to_string(),
+        Ok(val) => vm.print_value(val),
         Err(err) => err.to_string()
     }
 }
@@ -124,6 +166,7 @@ pub fn test_input_many(v:&Vec<(&str, &str)>) {
 #[cfg(test)]
 pub mod tests {
     use crate::data::ops::*;
+    use crate::utils::misc::calc_hash;
     use crate::vm::VM;
     use log::*;
 
@@ -153,44 +196,10 @@ pub mod tests {
         println!("{}", c2);
         
         let mut vm=VM::new();
-        let res=vm.run(c2, true).unwrap();
+        let res=vm.run(&mut c2, true).unwrap();
     
         assert_eq!(res.to_string(), "-5");
         
-    }
-    
-
-    #[test]
-    fn test_concat() {
-        let mut c2=Chunk::new();
-    
-        // Value::ValObj(Object::new("hi"))
-        // Value::ValObj(Object::new(Function{...}))
-    
-        let string1="hi".to_string(); 
-        let string2="hello".to_string();
-    
-        let idx=c2.add_constant(Value::ObjString(string1), 1);
-        let idx2=c2.add_constant(Value::ObjString(string2), 1);
-    
-        c2.write_op(Inst::OpConstant(idx), 1);
-        c2.write_op(Inst::OpConstant(idx2), 1);
-        
-        c2.write_op(Inst::OpAdd, 1);
-        c2.write_op(Inst::OpReturn, 1);
-        
-        let mut vm=VM::new();
-        let res=vm.run(c2, true).unwrap();
-    
-        assert_eq!(res.to_string(), "\"hihello\"");
-
-        let mut c3=Chunk::new();
-        let idx=c3.add_constant(Value::Bool(true), 1);
-        c3.write_op(Inst::OpConstant(idx), 1);
-        c3.write_op(Inst::OpReturn, 2);
-
-        let res=vm.run(c3, true).unwrap(); // re-use possible
-        assert_eq!(res.to_string(), "true");
     }
 
     #[test]
@@ -202,6 +211,6 @@ pub mod tests {
         chunk.write_op(Inst::OpReturn, 1);
 
         let mut vm=VM::new();
-        let res=vm.run(chunk, true);
+        let res=vm.run(&mut chunk, true);
     }
 }

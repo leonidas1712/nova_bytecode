@@ -4,7 +4,7 @@ declaration -> letDecl | statement
 
 letDecl -> "let" IDENT ("=" expression); // let x = 2;
 
-expression  -> letExpr | logic_or
+expression  -> letExpr | logic_or | block
 
 letExpr ->  (let (IDENT expression)+ (expression)?)
 
@@ -14,7 +14,7 @@ primary - true | false | number | string | ident | '(' expression ')'
 
 
 // inner
-statement -> exprStmt | block
+statement -> exprStmt 
 
 exprStmt -> expression ';'
 

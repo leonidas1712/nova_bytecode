@@ -140,6 +140,7 @@ impl<'src> Scanner<'src> {
     // no match: token ident, else use the last match possible
     // e.g '==' => last match is TokenEqEq
     // advance the scanner
+    // this is basically a discrete finite automaton
     fn check_trie(&mut self, char:char)->Token<'src>{
         let mut curr_node=&KEYWORDS_TRIE.root;
 
@@ -375,6 +376,13 @@ pub fn test_many() {
     let code="(x $ y + map >> succ)";
     let mut s=Scanner::new(code);
     assert_eq!(s.serialize(), "[TokenLeftParen('('),TokenIdent('x'),TokenInfix('$'),TokenIdent('y'),TokenPlus('+'),TokenIdent('map'),TokenPipe('>>'),TokenIdent('succ'),TokenRightParen(')')]");
+}
+
+#[test]
+fn test_debug() {
+    let code="print(2)";
+    let mut s=Scanner::new(code);
+    dbg!(s.serialize());
 }
 
 

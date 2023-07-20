@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::process::id;
+
+use log::debug;
 
 use crate::data::{ops::*, stack::*};
 use crate::parser::parser::*;
 use crate::utils::err::*;
 use crate::data::ops::Inst::*;
-use crate::utils::misc::calc_hash;
+use crate::utils::misc::{calc_hash, StringIntern};
 
 const VAL_STACK_MAX:usize=2000;
 
@@ -32,48 +35,47 @@ const VAL_STACK_MAX:usize=2000;
 #[derive(Debug)]
 pub struct VM {
     ip:usize, // index of next op to execute,
-    value_stack:VecStack<Value>, // this should have same layout as Compiler.locals,
+    value_stack:FixedStack<Value>, // this should have same layout as Compiler.locals,
     globals:HashMap<u64,Value>, // store u64 hash -> value instead
     // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
-    strings:HashMap<u64,String> // string interning
+    strings:StringIntern 
 }
 
 // VM: runtime (compilation ends with the chunk)
 
 impl VM {
     pub fn new()->VM {
+        let y=if true {
+            2
+        } else {
+            3
+        };
+
         VM {
             ip:0,
-            value_stack:VecStack::new(VAL_STACK_MAX),
+            value_stack:FixedStack::new(),
             globals:HashMap::new(),
-            strings:HashMap::new()
+            strings:StringIntern::new()
         }
     }
 
     fn reset(&mut self) {
-        self.ip=0;
-        self.value_stack.clear();
+        // self.ip=0;
+        // self.value_stack.clear();
+        self.globals.clear();
+        self.strings.clear();
     }
 
     /// Add global variable given identifier
     fn add_global(&mut self, identifier:String, value:Value) {
-        let hash=self.add_string(identifier);
+        let hash=self.strings.add_string(identifier);
         self.globals.insert(hash, value);
     }
 
-    /// Add string and return hash of the string. Doesn't add if string already exists
-    fn add_string(&mut self, string:String)->u64 {
-        let hash=calc_hash(&string);
-        if !self.strings.contains_key(&hash) {
-            self.strings.insert(hash, string);
-        } 
-        hash
-    }
-
-    /// Get string given its hash if it is interned
-    fn get_string(&mut self, hash:u64)->Option<&String> {
-        self.strings.get(&hash)
+    fn get_global(&self, identifier:&String)->Option<&Value> {
+        let hash=calc_hash(identifier);
+        self.globals.get(&hash)
     }
 
     /// Get global value given string name
@@ -82,19 +84,29 @@ impl VM {
         self.globals.get(&hash)
     }
 
-    /// Always returns err variant
-    fn err(&self, line:usize, msg:&str)->Result<()> {
-        // (RuntimeError) [line 1] Error at end - Expected a token
-        let line=format!("[line {}]", line);
-
-        let msg=format!("{} {}", line, msg.to_string());
-        errn!(msg)
+    /// returns string interned in hash
+    fn expect_string(&self, hash:u64)->Result<&String> {
+        match self.strings.get_string(hash) {
+            Some(sref) => {
+                return Ok(sref)
+            },
+            None => {
+                let msg=format!("Invalid hash for string (not interned)");
+                self.err(&msg)?;
+                unreachable!()
+            }
+        }
     }
 
     // &'c mut VM<'c> - the excl. ref must live as long as the object => we can't take any other refs once the 
         // ref is created
     // &mut VM<'c> -> an exclusive ref to VM that has its own lifetime
-    pub fn run(&mut self, chunk:Chunk, reset:bool)->Result<Value> {
+
+    // Always clear val stack and ip before run. reset: clear variables and strings
+    pub fn run(&mut self, chunk:&mut Chunk, reset:bool)->Result<Value> {
+        self.value_stack.clear();
+        self.ip = 0;
+
         if reset {
             self.reset();
         }
@@ -109,12 +121,14 @@ impl VM {
                 }
             };
         }
+        
 
         log::debug!("Chunk at start:{}", chunk);
 
         loop {
             // let curr=self.get_curr_inst(&chunk);
             let curr=chunk.get_op(self.ip);
+            debug!("CURR_OP:{:?}", curr);
             if curr.is_none() {
                 break Ok(Value::Unit) // exit code 1
             }  
@@ -125,8 +139,37 @@ impl VM {
                 // print top of stack and break   
                 OpReturn => {
                     let res=self.value_stack.pop()?;
+                    log::debug!("Return:{}", res);
                     break Ok(res);
                 },
+                OpPop => {
+                    self.value_stack.pop()?;
+                },
+                // n = num to pop
+                // if nothing to pop => no statements
+                // not is_expr: nothing at the end to return => return Unit
+                OpEndScope(n, is_expr) => {
+                    // empty block
+                    // if *n==0 && !is_expr {
+                    //     self.value_stack.push(Value::Unit)?;
+                    //     // debug!("What");
+                    // }
+
+                    let mut ret_expr:Option<Value>=None;
+
+                    // pop and save return value
+                    if *is_expr {
+                        ret_expr.replace(self.value_stack.pop()?);
+                    }
+
+                    for _ in 0..*n {
+                        self.value_stack.pop()?;
+                    }
+
+                    if let Some(val) = ret_expr {
+                        self.value_stack.push(val)?;
+                    }
+                },  
                 // get constant at idx in chunk, push onto stack
                 OpConstant(idx) => {
                     let i=*idx;
@@ -138,6 +181,21 @@ impl VM {
 
                     let get=get?;
                     self.value_stack.push(get)?;
+                },
+                // if hash doesnt exist in strings, add loaded str from chunk to strings. else, loadfrom interned
+                OpLoadString(hash) => {
+                    log::debug!("Load str:{}", hash);
+                    let hash=*hash;
+                    let has_interned=self.strings.has_string(hash);
+
+                    if !has_interned {
+                        let load=chunk.strings.get_string(hash).expect("Invalid string hash from chunk");
+                        self.strings.add_string(load.to_string());
+                        log::debug!("Loaded str:{}", load);
+                    }
+
+                    let obj_str=Value::ObjString(hash);
+                    self.value_stack.push(obj_str)?;
                 },
                 OpNegate => {
                     let stack=&mut self.value_stack;
@@ -154,11 +212,16 @@ impl VM {
                         let right=right.expect_int()?;
                         stack.push(Value::num(left + right))?;
                     } else if left.expect_string().is_ok() {
-                        let left=left.expect_string()?;
-                        let right=right.expect_string()?;
+                        let left_hash=left.expect_string()?;
+                        let right_hash=right.expect_string()?;
+
+                        let left=self.strings.get_string(left_hash).unwrap();
+                        let right=self.strings.get_string(right_hash).unwrap();
                         let left=left.to_owned();
                         let res=left+right;
-                        stack.push(Value::ObjString(res))?;
+
+                        let hash=self.strings.add_string(res);
+                        stack.push(Value::ObjString(hash))?;
                     } else {
                         let msg=format!("Expected number or string but got: {}", left.to_string());
                         return errn!(msg);
@@ -171,6 +234,7 @@ impl VM {
                     log::debug!("OpSet");
                     log::debug!("{:?}", self.value_stack);        
 
+                    // get value to set
                     let value=self.value_stack.pop()?;
 
                     self.add_global(identifier.to_string(), value);
@@ -178,9 +242,9 @@ impl VM {
                     log::debug!("Set:{:?}",self.globals);
                 },
                 // idx of identifier in constants
-                OpGetGlobal(hash) => {
-                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, hash);
-                    let value=self.globals.get(hash); // could add line num to value
+                OpGetGlobal(ident) => {
+                    log::debug!("Get {:?} {:?} idx:{}", self.globals, chunk, ident);
+                    let value=self.get_global(ident); // could add line num to value
 
                     match value {
                         Some(val) => {
@@ -189,13 +253,63 @@ impl VM {
                         None => {
 
                             // use string interning in chunk to store hash->string for strings
-                            let line=chunk.get_line_of_op(self.ip).expect("Invalid index for op line");
-                            // let name=self.get_string(hash).expect(msg)
-                            let msg=format!("Variable is not defined.");
-                            self.err(line, &msg)?;
+                            let msg=format!("Variable '{}' is not defined.", ident);
+                            self.err(&msg)?;
                         }
                     }
     
+                },
+                OpGetLocal(idx) => {
+                    let val=self.value_stack.get(*idx).expect(format!("Bad idx for GetLocal: {}", idx).as_str());
+                    debug!("Get loc:{}, item:{:?}", idx, val);
+                    self.value_stack.push(val)?;
+
+                },
+                // leave value there
+                OpSetLocal(idx) => {
+                    let val=self.value_stack.peek();
+                    if let Some(v) = val {
+                        debug!("Set loc:{}, val:{:?}", idx, v);
+                        self.value_stack.set(*idx, *v);
+                    } else {
+                        self.err("No value to set local variable")?;
+                    }
+                    
+
+                },
+                OpPrint =>  {
+                    // let pop=self.value_stack.peek();
+                    // if let Some(value) = pop {
+                    //     println!("{}", self.print_value(*value));
+                    // }
+
+                    let pop=self.value_stack.pop();
+                    if let Ok(value) = pop {
+                        println!("{}", self.print_value(value));
+                    }
+                },
+                // idx to jump to if cond is false
+                OpIfFalseJump(idx) => {
+                    let cond=self.value_stack.pop()?;
+                    let cond=cond.expect_bool()?;
+
+                    if !cond {
+                        debug!("new ip:{}", *idx);
+                        self.ip=*idx;
+                        debug!("new ip set:{}", self.ip);
+                    }
+
+                },
+                // jump past else
+                OpJump(idx) => {
+                    self.ip=*idx;
+                },
+                OpTrue => self.value_stack.push(Value::Bool(true))?,
+                OpFalse => self.value_stack.push(Value::Bool(false))?,
+                OpNot => {
+                    let val=self.value_stack.pop()?;
+                    let val=val.expect_bool()?;
+                    self.value_stack.push(Value::Bool(!val))?;
                 }
             }
 
@@ -212,10 +326,43 @@ impl VM {
         parser.compile(&mut chunk)?;
 
         // let chunk=compile(source)?; // turn source into bytecode, consts etc
-        self.run(chunk, reset)
+        match self.run(&mut chunk, reset) {
+            Ok(val) => Ok(val),
+            Err(msg) => {
+                // let curr_inst=s
+                // let curr_inst=chunk.get_op(self.ip).unwrap();
+                let line=chunk.get_line_of_op(self.ip).unwrap();
+
+                let msg=format!("[line {}] {}", line, msg);
+                errn!(msg)
+            },
+        }
     }
 
+    /// Resets vm before running
     pub fn interpret(&mut self, source:&str)->Result<Value>{
         self.interpret_with_reset(source, true)
+    }
+
+    /// Get string representation of value 
+    pub fn print_value(&mut self, value:Value)->String {
+        match value {
+            Value::ObjString(hash) => {
+                let load=self.strings.get_string(hash);
+                let load=load.expect("Invalid string printed: not found in VM intern");
+                format!("\"{}\"",load.to_string())
+            },
+            _ => value.to_string()
+        }
+    }
+
+     /// Always returns err variant
+     fn err(&self, msg:&str)->Result<()> {
+        // (RuntimeError) [line 1] Error at end - Expected a token
+
+        let msg=format!("{}", msg.to_string());
+        
+        log::debug!("{msg}");
+        err_other!(msg)
     }
 }
