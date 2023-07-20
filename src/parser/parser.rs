@@ -17,7 +17,7 @@ use log::debug;
 
 #[derive(Debug)]
 pub struct Parser<'src> {
-    compiler:Compiler<'src>,
+    compiler:Compiler,
     scanner:Scanner<'src>,
     prev_tok:Option<Token<'src>>,
     curr_tok:Option<Token<'src>>,
@@ -430,7 +430,7 @@ impl<'src> Parser<'src> {
         // set get_op here
         let mut get_op:Inst;
 
-        let try_local=self.compiler.resolve_local(ident);
+        let try_local=self.compiler.resolve_local(ident.content);
 
         if let Some(idx) = try_local {
             get_op=OpGetLocal(idx);
@@ -449,7 +449,7 @@ impl<'src> Parser<'src> {
             self.consume(TokenSemiColon)?;
 
             // declareVariable() here - if global do nothing. else, add local with ident
-            let local_added=self.compiler.add_local(ident);
+            let local_added=self.compiler.add_local(ident.content);
 
             // local_added: idx where loc was added      
             let mut set_op:Inst;

@@ -72,6 +72,13 @@ pub type IntType=isize;
 
 // store Ident(String,line) so we can retrieve for err
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+// 16 bytes - could benefit from using &Value in stack so that everything is 8 bytes (ptr size)
+// page size: 16kb on M1 Mac -> 1024 values fit in one page
+// M1 Mac TLB=32MB -> 2^11 pages = 2048 pages
+// 2048*1024 ~ 2M values can fit in the TLB - the stack can be size 2M and still benefit from TLB cache locality
+
+// CPU cache size on M1: 128kb => 8192 values while still benefiting from cache locality
+
 pub enum Value {
     Number(IntType),
     Bool(bool),
