@@ -1,0 +1,3 @@
+if (true) {
+    200 // treat as expression - if 200 was omitted treat as stmt
+}

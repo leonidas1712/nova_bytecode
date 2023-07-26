@@ -48,9 +48,10 @@ impl<'src> Parser<'src> {
     }
 
     // ParseFn: assume that the token to parse is set in self.prev
+    // Helpers for each parse type
 
     // expect_token_type(ty)->Result<()>
-    pub fn number(&mut self, chunk: &mut Chunk)->Result<()>{
+    fn number(&mut self, chunk: &mut Chunk)->Result<()>{
         let prev=self.expect_prev()?;
         self.expect_token_type(prev, TokenInteger, "integer")?; // only errs when bug in parser
 
@@ -63,7 +64,7 @@ impl<'src> Parser<'src> {
     }
 
     // unary called based on rules table
-    pub fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
+    fn unary(&mut self, chunk:&mut Chunk)->Result<()>{
         let prev=self.expect_prev()?;
         // next expression result goes onto stack
         // PrecUnary higher than binary => -1+2 means - will bind 1 and prevent + from consuming
@@ -82,7 +83,7 @@ impl<'src> Parser<'src> {
     }
 
     // binary called based on rules table
-    pub fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
+    fn binary(&mut self, chunk:&mut Chunk)->Result<()>{
         // debug!("Called binary, curr_tok:{:?}, prev:{:?}", &self.curr_tok, &self.prev_tok);
         let prev=self.expect_prev()?; // operator
         // let rule=self.expect_rule(prev)?;
@@ -130,9 +131,10 @@ impl<'src> Parser<'src> {
         let jmp_idx=chunk.write_op(OpJump(0), self.line);
 
 
-        self.is_stmt=true;
+        // self.is_stmt=true;
         // handle else
         if self.match_token(TokenElse) {
+            self.is_stmt=true; // set to true so if next is expr can be parsed
             self.declaration(chunk, true)?;
         }
 
@@ -159,13 +161,12 @@ impl<'src> Parser<'src> {
         debug!("HERE");
 
         
-  
-        // self.is_stmt=true;
-
+        debug!("if is_stmt at the end:{}", self.is_stmt);
 
         // stmt: other statements can follow this
         // because of this op return is not emitted so the last value remains on the stack
         self.is_stmt=true; 
+
 
         // // self.advance();
         // self.expression(chunk)?;
@@ -173,10 +174,10 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-
+    // An expression must leave a value on the stack
     fn expression(&mut self, chunk:&mut Chunk)->Result<()>{
         // assign is the lowest valid precedence: other ops can bind as much as possibl
-        debug!("EXPRESSION {:?}", self);
+        // debug!("EXPRESSION {:?}", self);
         // Block expression
         if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;
@@ -192,10 +193,14 @@ impl<'src> Parser<'src> {
         self.parse_precedence(chunk, PrecAssign)?;
 
         // is_stmt if prev tok is semicolon - for "x=5;"
-        self.is_stmt=self.expect_prev()
+        let is_stmt=self.expect_prev()
             .ok()
             .map(|tok| tok.token_type.eq(&TokenSemiColon))
             .unwrap_or(false);
+
+        debug!("Expression is_stmt:{}", is_stmt);
+
+        self.is_stmt=is_stmt;
         Ok(())
     }
 
@@ -371,12 +376,6 @@ impl<'src> Parser<'src> {
     fn consume(&mut self, ty:TokenType)->Result<Token<'src>>{
         let type_string=ty.get_repr();
 
-        // if self.prev_tok.map(|x| x.token_type.eq(&ty)).unwrap_or(false) && self.curr_tok.is_none() {
-        //     // return Ok(self.prev_tok.unwrap());
-        //     let res=self.prev_tok.take().unwrap();
-        //     return Ok(res);
-        // }
-
         if let Some(tok) = self.curr_tok {
             if tok.token_type.eq(&ty) {
                 self.advance()?;
@@ -539,7 +538,7 @@ impl<'src> Parser<'src> {
         Ok(())
     }
 
-    // create a new compiler 
+    /// Compile input string into the provided chunk. This is the entry point to the parser.
     pub fn compile(&mut self, chunk: &mut Chunk)->Result<()> {
         // at first: only exprs
 

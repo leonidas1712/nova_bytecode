@@ -46,12 +46,6 @@ pub struct VM {
 
 impl VM {
     pub fn new()->VM {
-        let y=if true {
-            2
-        } else {
-            3
-        };
-
         VM {
             ip:0,
             globals:HashMap::new(),
@@ -128,7 +122,7 @@ impl VM {
 
         log::debug!("Chunk at start:{}", chunk);
 
-        loop {
+        let res=loop {
             // let curr=self.get_curr_inst(&chunk);
             let curr=chunk.get_op(self.ip);
             debug!("CURR_OP:{:?}", curr);
@@ -318,7 +312,10 @@ impl VM {
 
             // advance ip - may cause issue since ip advanced before match (unavoidable)
             self.ip+=1;
-        }
+        };
+
+        log::debug!("Stack at the end:{:?}", value_stack);
+        res
     }
 
     /// false: don't reset for run

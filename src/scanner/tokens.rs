@@ -60,6 +60,7 @@ pub enum TokenType {
 
 impl TokenType {
     //  actual repr e.g LeftParen -> '('
+    // TODO: using a trie is bad for cache util. change to use PHF
      pub fn get_repr(&self)->String{
         let trie=KEYWORDS_TRIE.get_key_from_value(*self).map(|x| x.to_string());
 
