@@ -1,1 +1,2 @@
-20;
+if (false) 
+    print(2)

@@ -1,10 +1,10 @@
 program -> (expression | declaration)+  // one or more expressions/statements
 
-declaration -> letDecl | statement
+declaration -> letDecl | statement | expression
 
-letDecl -> "let" IDENT ("=" expression); // let x = 2;
+letDecl -> "let" IDENT ("=" expression);    // let x = 2;
 
-expression  -> letExpr | logic_or | block
+expression  -> letExpr | logic_or | blockExpr | ifExpr
 
 letExpr ->  (let (IDENT expression)+ (expression)?)
 
@@ -14,12 +14,15 @@ primary - true | false | number | string | ident | '(' expression ')'
 
 
 // inner
-statement -> exprStmt 
+statement -> exprStmt | blockStmt | ifStmt
 
-exprStmt -> expression ';'
+exprStmt -> expression';'
 
-block       -> '{' declaration* expression }'                      // Block of statements + expr ret value
+blockExpr -> '{' declaration* expression }'                      // Block of statements + expr ret value
 
+blockStmt -> '{' declaration* declaration';' }'                      // Block of statements + expr ret value
+
+ifExpr -> 
 
 
 // util
