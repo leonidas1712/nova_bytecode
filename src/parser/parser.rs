@@ -181,7 +181,7 @@ impl<'src> Parser<'src> {
         // Block expression
         if self.match_token(TokenLeftBrace) {
             self.begin_scope(chunk)?;
-            self.block_expression(chunk)?;
+            self.block(chunk)?;
             self.end_scope(chunk)?;
             return Ok(())
         } 
@@ -484,7 +484,8 @@ impl<'src> Parser<'src> {
     }
 
     // Block
-    fn block_expression(&mut self, chunk: &mut Chunk)->Result<()> {        
+    // polymorphic: behave as statement or expr based on last evaluated expr
+    fn block(&mut self, chunk: &mut Chunk)->Result<()> {        
         loop {
             match self.check(TokenRightBrace) {
                 // not right brace: keep going
@@ -498,6 +499,7 @@ impl<'src> Parser<'src> {
         }
 
         self.consume(TokenRightBrace)?;
+        debug!("BLOCK IS_STMT:{}", self.is_stmt);
         Ok(())
     }
 

@@ -322,6 +322,7 @@ impl VM {
     pub fn interpret_with_reset(&mut self, source:&str, reset:bool)->Result<Value>{
         let mut chunk=Chunk::new();
         let mut parser=Parser::new(source);
+        20;
 
         parser.compile(&mut chunk)?;
 
