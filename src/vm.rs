@@ -35,7 +35,7 @@ const VAL_STACK_MAX:usize=2000;
 #[derive(Debug)]
 pub struct VM {
     ip:usize, // index of next op to execute,
-    value_stack:FixedStack<Value>, // this should have same layout as Compiler.locals,
+    // value_stack:FixedStack<Value>, // this should have same layout as Compiler.locals,
     globals:HashMap<u64,Value>, // store u64 hash -> value instead
     // call_stack: VecStack<CallFrame<'function>> 
         // call frame refers to function potentially on value stack
@@ -54,7 +54,6 @@ impl VM {
 
         VM {
             ip:0,
-            value_stack:FixedStack::new(),
             globals:HashMap::new(),
             strings:StringIntern::new()
         }
@@ -62,7 +61,7 @@ impl VM {
 
     fn reset(&mut self) {
         // self.ip=0;
-        // self.value_stack.clear();
+        // value_stack.clear();
         self.globals.clear();
         self.strings.clear();
     }
@@ -104,7 +103,11 @@ impl VM {
 
     // Always clear val stack and ip before run. reset: clear variables and strings
     pub fn run(&mut self, chunk:&mut Chunk, reset:bool)->Result<Value> {
-        self.value_stack.clear();
+        // value_stack.clear();
+
+        // new stack for each run
+        let mut value_stack:FixedStack<Value> = FixedStack::new();
+
         self.ip = 0;
 
         if reset {
@@ -114,7 +117,7 @@ impl VM {
         macro_rules! bin_op {
             ($op:tt) => {
                 {
-                    let stack=&mut self.value_stack;
+                    let stack=&mut value_stack;
                     let right=stack.pop()?.expect_int()?;
                     let left=stack.pop()?.expect_int()?;
                     stack.push(Value::num(left $op right))?;
@@ -138,12 +141,12 @@ impl VM {
             match curr { 
                 // print top of stack and break   
                 OpReturn => {
-                    let res=self.value_stack.pop()?;
+                    let res=value_stack.pop()?;
                     log::debug!("Return:{}", res);
                     break Ok(res);
                 },
                 OpPop => {
-                    self.value_stack.pop()?;
+                    value_stack.pop()?;
                 },
                 // n = num to pop
                 // if nothing to pop => no statements
@@ -151,7 +154,7 @@ impl VM {
                 OpEndScope(n, is_expr) => {
                     // empty block
                     // if *n==0 && !is_expr {
-                    //     self.value_stack.push(Value::Unit)?;
+                    //     value_stack.push(Value::Unit)?;
                     //     // debug!("What");
                     // }
 
@@ -159,15 +162,15 @@ impl VM {
 
                     // pop and save return value
                     if *is_expr {
-                        ret_expr.replace(self.value_stack.pop()?);
+                        ret_expr.replace(value_stack.pop()?);
                     }
 
                     for _ in 0..*n {
-                        self.value_stack.pop()?;
+                        value_stack.pop()?;
                     }
 
                     if let Some(val) = ret_expr {
-                        self.value_stack.push(val)?;
+                        value_stack.push(val)?;
                     }
                 },  
                 // get constant at idx in chunk, push onto stack
@@ -180,7 +183,7 @@ impl VM {
                         .ok_or(errn_i!("Invalid index for constant:{}", i));
 
                     let get=get?;
-                    self.value_stack.push(get)?;
+                    value_stack.push(get)?;
                 },
                 // if hash doesnt exist in strings, add loaded str from chunk to strings. else, loadfrom interned
                 OpLoadString(hash) => {
@@ -195,15 +198,15 @@ impl VM {
                     }
 
                     let obj_str=Value::ObjString(hash);
-                    self.value_stack.push(obj_str)?;
+                    value_stack.push(obj_str)?;
                 },
                 OpNegate => {
-                    let stack=&mut self.value_stack;
+                    let stack=&mut value_stack;
                     let top=stack.pop()?.expect_int()?;
                     stack.push(Value::num(top*-1))?;
                 },
                 OpAdd =>  {
-                    let stack=&mut self.value_stack;
+                    let stack=&mut value_stack;
                     let right=stack.pop()?;
                     let left=stack.pop()?;
 
@@ -232,10 +235,10 @@ impl VM {
                 OpDiv => bin_op!(/),   
                 OpSetGlobal(identifier) => {
                     log::debug!("OpSet");
-                    log::debug!("{:?}", self.value_stack);        
+                    log::debug!("{:?}", value_stack);        
 
                     // get value to set
-                    let value=self.value_stack.pop()?;
+                    let value=value_stack.pop()?;
 
                     self.add_global(identifier.to_string(), value);
 
@@ -248,7 +251,7 @@ impl VM {
 
                     match value {
                         Some(val) => {
-                            self.value_stack.push(val.to_owned())?;
+                            value_stack.push(val.to_owned())?;
                         },
                         None => {
 
@@ -260,17 +263,17 @@ impl VM {
     
                 },
                 OpGetLocal(idx) => {
-                    let val=self.value_stack.get(*idx).expect(format!("Bad idx for GetLocal: {}", idx).as_str());
+                    let val=value_stack.get(*idx).expect(format!("Bad idx for GetLocal: {}", idx).as_str());
                     debug!("Get loc:{}, item:{:?}", idx, val);
-                    self.value_stack.push(val)?;
+                    value_stack.push(val)?;
 
                 },
                 // leave value there
                 OpSetLocal(idx) => {
-                    let val=self.value_stack.peek();
+                    let val=value_stack.peek();
                     if let Some(v) = val {
                         debug!("Set loc:{}, val:{:?}", idx, v);
-                        self.value_stack.set(*idx, *v);
+                        value_stack.set(*idx, *v);
                     } else {
                         self.err("No value to set local variable")?;
                     }
@@ -278,19 +281,19 @@ impl VM {
 
                 },
                 OpPrint =>  {
-                    // let pop=self.value_stack.peek();
+                    // let pop=value_stack.peek();
                     // if let Some(value) = pop {
                     //     println!("{}", self.print_value(*value));
                     // }
 
-                    let pop=self.value_stack.pop();
+                    let pop=value_stack.pop();
                     if let Ok(value) = pop {
                         println!("{}", self.print_value(value));
                     }
                 },
                 // idx to jump to if cond is false
                 OpIfFalseJump(idx) => {
-                    let cond=self.value_stack.pop()?;
+                    let cond=value_stack.pop()?;
                     let cond=cond.expect_bool()?;
 
                     if !cond {
@@ -304,12 +307,12 @@ impl VM {
                 OpJump(idx) => {
                     self.ip=*idx;
                 },
-                OpTrue => self.value_stack.push(Value::Bool(true))?,
-                OpFalse => self.value_stack.push(Value::Bool(false))?,
+                OpTrue => value_stack.push(Value::Bool(true))?,
+                OpFalse => value_stack.push(Value::Bool(false))?,
                 OpNot => {
-                    let val=self.value_stack.pop()?;
+                    let val=value_stack.pop()?;
                     let val=val.expect_bool()?;
-                    self.value_stack.push(Value::Bool(!val))?;
+                    value_stack.push(Value::Bool(!val))?;
                 }
             }
 
