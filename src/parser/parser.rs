@@ -524,6 +524,7 @@ impl<'src> Parser<'src> {
         if self.match_token(TokenLet) {
             self.let_declaration(chunk)?;
 
+        // unit
         } else if self.match_token(TokenPrint) {
             self.expression(chunk)?;
             chunk.write_op(OpPrint, self.line);

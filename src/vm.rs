@@ -147,10 +147,10 @@ impl VM {
                 // not is_expr: nothing at the end to return => return Unit
                 OpEndScope(n, is_expr) => {
                     // empty block
-                    // if *n==0 && !is_expr {
-                    //     value_stack.push(Value::Unit)?;
-                    //     // debug!("What");
-                    // }
+                    if *n==0 && !is_expr {
+                        value_stack.push(Value::Unit)?;
+                        // debug!("What");
+                    }
 
                     let mut ret_expr:Option<Value>=None;
 

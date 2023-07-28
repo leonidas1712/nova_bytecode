@@ -9,11 +9,27 @@ use nova::utils::file::run_file;
 use std::env::args;
 use std::process::ExitCode;
 
+fn ok()->usize {
+    {
+        2
+    };
+
+    { 
+        3
+    };
+
+    { 
+        4
+    }
+}
+
 
 fn run_main()->Result<()> {
     let mut stack:[Option<u32>; 10]=[None;10];
     // stack[x]=Some(100);
     // dbg!(stack[4]);
+
+    
 
 
 
