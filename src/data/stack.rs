@@ -15,7 +15,7 @@ pub trait Stack<T> {
     fn is_empty(&self) -> bool;
 }
 
-impl<T:Display + Copy + Debug> Display for FixedStack<T> {
+impl<T:Display + Copy + Debug, const N:usize> Display for FixedStack<T, N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut items:Vec<String>=vec![];
 
@@ -36,12 +36,12 @@ impl<T:Display + Copy + Debug> Display for FixedStack<T> {
 
 pub const STACK_SIZE:usize=2000;
 
-pub struct FixedStack<T:Copy + Debug> {
-    stack:[Option<T>; STACK_SIZE],
+pub struct FixedStack<T:Copy + Debug, const N:usize> {
+    stack:[Option<T>; N],
     stack_top:usize // the next place to slot
 }
 
-impl<T:Copy + Debug> Debug for FixedStack<T> {
+impl<T:Copy + Debug, const N:usize> Debug for FixedStack<T, N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut v:Vec<String>=vec![];
         for i in 0..self.stack_top {
@@ -54,9 +54,9 @@ impl<T:Copy + Debug> Debug for FixedStack<T> {
     }
 }
 
-impl<T:Copy + Debug> FixedStack <T> {
-    pub fn new()-> FixedStack<T> {
-        let stack:[Option<T>;STACK_SIZE]=[None;STACK_SIZE];
+impl<T:Copy + Debug, const N:usize> FixedStack <T, N> {
+    pub fn new()-> FixedStack<T, N> {
+        let stack:[Option<T>;N]=[None;N];
         FixedStack {
             stack,
             stack_top:0
@@ -78,7 +78,7 @@ impl<T:Copy + Debug> FixedStack <T> {
     }
 }
 
-impl<T:Copy + Debug> Stack<T> for FixedStack <T> {
+impl<T:Copy + Debug, const N:usize> Stack<T> for FixedStack <T, N> {
     fn push(&mut self,val: T)->Result<()>{
         if self.stack_top > STACK_SIZE {
             return errn!("Maximum stack size {} exceeded: stack overflow", STACK_SIZE);
@@ -210,7 +210,7 @@ fn test_vec_stack() {
 
 #[test]
 fn test_stack() {
-    let mut st:FixedStack<usize>=FixedStack::new();
+    let mut st:FixedStack<usize, 20>=FixedStack::new();
 
     st.push(10);
     st.push(20);

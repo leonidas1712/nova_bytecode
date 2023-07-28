@@ -100,7 +100,7 @@ impl VM {
         // value_stack.clear();
 
         // new stack for each run
-        let mut value_stack:FixedStack<Value> = FixedStack::new();
+        let mut value_stack:FixedStack<Value, STACK_SIZE> = FixedStack::new();
 
         self.ip = 0;
 
