@@ -124,6 +124,7 @@ impl<K,V> Trie<K,V> where K:ToString + Hash, V:Hash + Display + Clone + Eq {
         strings
     }
 
+    // get_all in trie
     pub fn get_all(&self)->Vec<String>{
         let mut st:Vec<char>=vec![];
         Self::get_all_from_node(&self.root, &mut st)
